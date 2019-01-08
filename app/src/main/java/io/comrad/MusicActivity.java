@@ -18,7 +18,7 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
-public class music_activity extends AppCompatActivity {
+public class MusicActivity extends AppCompatActivity {
     private static final int MY_PERMISSION_REQUEST = 1;
 
     ArrayList<String> arrayList;
@@ -30,16 +30,16 @@ public class music_activity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_music_activity);
+        setContentView(R.layout.activity_music);
 
-        if(ContextCompat.checkSelfPermission(music_activity.this,
+        if(ContextCompat.checkSelfPermission(MusicActivity.this,
                 Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            if(ActivityCompat.shouldShowRequestPermissionRationale(music_activity.this,
+            if(ActivityCompat.shouldShowRequestPermissionRationale(MusicActivity.this,
                     Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                ActivityCompat.requestPermissions(music_activity.this,
+                ActivityCompat.requestPermissions(MusicActivity.this,
                         new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
             } else {
-                ActivityCompat.requestPermissions(music_activity.this,
+                ActivityCompat.requestPermissions(MusicActivity.this,
                         new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
             }
         } else {
@@ -85,7 +85,7 @@ public class music_activity extends AppCompatActivity {
         switch (requestCode) {
             case MY_PERMISSION_REQUEST: {
                 if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    if(ContextCompat.checkSelfPermission(music_activity.this,
+                    if(ContextCompat.checkSelfPermission(MusicActivity.this,
                             Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
                         Toast.makeText(this, "Permission granted!", Toast.LENGTH_SHORT).show();
 
