@@ -1,20 +1,15 @@
 package io.comrad;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Bundle;
 import android.provider.MediaStore;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -23,10 +18,7 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
-import static android.content.ContentValues.TAG;
-
-public class ScrollingActivity extends Activity {
-
+public class music_activity extends AppCompatActivity {
     private static final int MY_PERMISSION_REQUEST = 1;
 
     ArrayList<String> arrayList;
@@ -38,25 +30,16 @@ public class ScrollingActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_scrolling);
+        setContentView(R.layout.activity_music_activity);
 
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
-
-        if(ContextCompat.checkSelfPermission(ScrollingActivity.this,
+        if(ContextCompat.checkSelfPermission(music_activity.this,
                 Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            if(ActivityCompat.shouldShowRequestPermissionRationale(ScrollingActivity.this,
+            if(ActivityCompat.shouldShowRequestPermissionRationale(music_activity.this,
                     Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                ActivityCompat.requestPermissions(ScrollingActivity.this,
+                ActivityCompat.requestPermissions(music_activity.this,
                         new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
             } else {
-                ActivityCompat.requestPermissions(ScrollingActivity.this,
+                ActivityCompat.requestPermissions(music_activity.this,
                         new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
             }
         } else {
@@ -65,7 +48,7 @@ public class ScrollingActivity extends Activity {
     }
 
     public void showMusic() {
-        listView = (ListView) findViewById(R.id.musicList);
+        listView = (ListView) findViewById(R.id.musicView);
         arrayList = new ArrayList<>();
         getMusic();
         adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, arrayList);
@@ -102,7 +85,7 @@ public class ScrollingActivity extends Activity {
         switch (requestCode) {
             case MY_PERMISSION_REQUEST: {
                 if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    if(ContextCompat.checkSelfPermission(ScrollingActivity.this,
+                    if(ContextCompat.checkSelfPermission(music_activity.this,
                             Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
                         Toast.makeText(this, "Permission granted!", Toast.LENGTH_SHORT).show();
 
@@ -115,26 +98,5 @@ public class ScrollingActivity extends Activity {
                 return;
             }
         }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_scrolling, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 }
