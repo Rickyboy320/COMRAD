@@ -26,15 +26,22 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import io.comrad.R;
 
+import static android.bluetooth.BluetoothAdapter.SCAN_MODE_CONNECTABLE;
+import static android.bluetooth.BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE;
+import static android.bluetooth.BluetoothAdapter.SCAN_MODE_NONE;
+
 public class P2PActivity extends Activity {
+
+    public final static String SERVICE_NAME = "COMRAD";
+    public final static UUID SERVICE_UUID = UUID.fromString("7337958a-460f-4b0c-942e-5fa111fb2bee");
 
     private final static int REQUEST_ENABLE_BT = 1;
     private final static int PERMISSION_REQUEST = 2;
     private P2PReceiver receiver;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,10 +74,10 @@ public class P2PActivity extends Activity {
         LinearLayoutManager mng = new LinearLayoutManager(this);
         peerView.setLayoutManager(mng);
 
-        PeerAdapter recylerAdapter = new PeerAdapter(peerList);
-        peerView.setAdapter(recylerAdapter);
+        final PeerAdapter peerAdapter = new PeerAdapter(peerList);
+        peerView.setAdapter(peerAdapter);
 
-        receiver = new P2PReceiver(recylerAdapter);
+        receiver = new P2PReceiver(peerAdapter);
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         registerReceiver(receiver, filter);
 
@@ -84,7 +91,15 @@ public class P2PActivity extends Activity {
                     // Bluetooth is already in modo discovery mode, we cancel to restart it again
                     bluetoothAdapter.cancelDiscovery();
                 }
-                bluetoothAdapter.startDiscovery();            }
+                bluetoothAdapter.startDiscovery();
+                peerList.clear();
+                peerAdapter.notifyDataSetChanged();
+
+                Intent discoverableIntent =
+                        new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+                discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
+                startActivity(discoverableIntent);
+            }
         });
 
         Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
@@ -94,6 +109,7 @@ public class P2PActivity extends Activity {
             for (BluetoothDevice device : pairedDevices) {
                 String deviceName = device.getName();
                 String deviceHardwareAddress = device.getAddress(); // MAC address
+                System.out.println(device.getBluetoothClass().toString());
             }
         }
     }
@@ -102,6 +118,30 @@ public class P2PActivity extends Activity {
     private void registerComponents()
     {
 
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(requestCode == REQUEST_ENABLE_BT) {
+            if(resultCode == SCAN_MODE_NONE) {
+                Toast toast = Toast.makeText(getApplicationContext(), "This device is not connectable.", Toast.LENGTH_LONG);
+                toast.show();
+            } else if(resultCode == SCAN_MODE_CONNECTABLE) {
+                Toast toast = Toast.makeText(getApplicationContext(), "This device is not discoverable, but can be connected.", Toast.LENGTH_LONG);
+                toast.show();
+            } else if(resultCode == SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
+                Toast toast = Toast.makeText(getApplicationContext(), "This device is now discoverable!", Toast.LENGTH_LONG);
+                toast.show();
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        if(requestCode == PERMISSION_REQUEST) {
+            //TODO
+        }
     }
 
     @Override

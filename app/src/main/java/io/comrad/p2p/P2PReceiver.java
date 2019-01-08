@@ -21,7 +21,6 @@ public class P2PReceiver extends BroadcastReceiver
             // Discovery has found a device. Get the BluetoothDevice
             // object and its info from the Intent.
             BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-            String deviceName = device.getName();
             this.peerAdapter.getList().add(device.getAddress());
             this.peerAdapter.notifyDataSetChanged();
         }
