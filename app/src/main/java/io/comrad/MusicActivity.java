@@ -10,27 +10,28 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
-
+import android.bluetooth.BluetoothDevice;
 import java.util.ArrayList;
+
 
 public class MusicActivity extends AppCompatActivity {
     private static final int MY_PERMISSION_REQUEST = 1;
-
-    ArrayList<String> arrayList;
-
+    ArrayList<Song> arrayList;
     ListView listView;
-
-    ArrayAdapter<String> adapter;
+    ArrayAdapter<Song> adapter;
+    BluetoothDevice owner;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_music);
+        // TODO: Set owner.
 
         if(ContextCompat.checkSelfPermission(MusicActivity.this,
                 Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
@@ -51,7 +52,7 @@ public class MusicActivity extends AppCompatActivity {
         listView = (ListView) findViewById(R.id.musicView);
         arrayList = new ArrayList<>();
         getMusic();
-        adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, arrayList);
+        adapter = new ArrayAdapter<Song>(this, android.R.layout.simple_list_item_1, arrayList);
         listView.setAdapter((adapter));
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -71,11 +72,19 @@ public class MusicActivity extends AppCompatActivity {
         if (songCursor != null && songCursor.moveToFirst()) {
             int songTitle = songCursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
             int songArtist = songCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);
+            int songLocation = songCursor.getColumnIndex(MediaStore.Audio.Media.DATA);
+            int songSize = songCursor.getColumnIndex(MediaStore.Audio.Media.SIZE);
+            String currentTitle;
+            String currentArtist;
+            String currentLocation;
+            int currentSize;
 
             do {
-                String currentTitle = songCursor.getString(songTitle);
-                String currentArtist = songCursor.getString(songArtist);
-                arrayList.add(currentTitle + "\n" + currentArtist);
+                currentTitle = songCursor.getString(songTitle);
+                currentArtist = songCursor.getString(songArtist);
+                currentLocation = songCursor.getString(songLocation);
+                currentSize = songCursor.getInt(songSize);
+                arrayList.add(new Song(currentTitle, currentArtist, currentLocation, currentSize, owner));
             } while (songCursor.moveToNext());
         }
     }
