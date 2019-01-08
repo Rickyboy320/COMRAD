@@ -59,6 +59,7 @@ public class MusicActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 // open music player to play desired song.
+                Log.d("songClick", arrayList.get(i).toString());
             }
         });
 
