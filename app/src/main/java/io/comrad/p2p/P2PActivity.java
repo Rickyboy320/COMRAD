@@ -4,35 +4,20 @@ import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.wifi.p2p.WifiP2pDevice;
-import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
 import io.comrad.R;
 
-import static android.bluetooth.BluetoothAdapter.SCAN_MODE_CONNECTABLE;
-import static android.bluetooth.BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE;
-import static android.bluetooth.BluetoothAdapter.SCAN_MODE_NONE;
+import java.util.*;
+
+import static android.bluetooth.BluetoothAdapter.*;
 
 public class P2PActivity extends Activity {
 
@@ -79,6 +64,8 @@ public class P2PActivity extends Activity {
 
         receiver = new P2PReceiver(peerAdapter);
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+        filter.addAction(BluetoothDevice.ACTION_UUID);
         registerReceiver(receiver, filter);
 
         Button discoverButton = findViewById(R.id.discover);
@@ -88,17 +75,19 @@ public class P2PActivity extends Activity {
                 toast.show();
 
                 if (bluetoothAdapter.isDiscovering()) {
-                    // Bluetooth is already in modo discovery mode, we cancel to restart it again
+                    // Bluetooth is already in discovery mode, we cancel to restart it again
                     bluetoothAdapter.cancelDiscovery();
                 }
-                bluetoothAdapter.startDiscovery();
                 peerList.clear();
                 peerAdapter.notifyDataSetChanged();
+                bluetoothAdapter.startDiscovery();
 
                 Intent discoverableIntent =
                         new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
                 discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
                 startActivity(discoverableIntent);
+
+                new P2PServerThread(bluetoothAdapter).start();
             }
         });
 
@@ -109,7 +98,7 @@ public class P2PActivity extends Activity {
             for (BluetoothDevice device : pairedDevices) {
                 String deviceName = device.getName();
                 String deviceHardwareAddress = device.getAddress(); // MAC address
-                System.out.println(device.getBluetoothClass().toString());
+                System.out.println("Bonded: " +  deviceHardwareAddress + ", " + Arrays.toString(device.getUuids()));
             }
         }
     }

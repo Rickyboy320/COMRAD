@@ -1,4 +1,4 @@
-package io.comrad;
+package io.comrad.p2p;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
@@ -6,8 +6,6 @@ import android.bluetooth.BluetoothSocket;
 import android.util.Log;
 
 import java.io.IOException;
-
-import io.comrad.p2p.P2PActivity;
 
 import static android.content.ContentValues.TAG;
 
