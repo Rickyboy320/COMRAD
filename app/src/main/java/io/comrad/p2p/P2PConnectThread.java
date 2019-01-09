@@ -15,10 +15,8 @@ public class P2PConnectThread extends Thread {
         this.targetDevice = targetDevice;
         try {
             socket = targetDevice.createRfcommSocketToServiceRecord(P2PActivity.SERVICE_UUID);
-            System.out.println("Created socket: " + socket);
         } catch(IOException e) {
             e.printStackTrace();
-            System.out.println("Failed socket: " + e);
             //TODO: Add toast
         }
 
@@ -47,7 +45,7 @@ public class P2PConnectThread extends Thread {
     }
 
     private void handleConnection() {
-        System.out.println(socket);
+        new P2PConnectedThread(this.socket).start();
     }
 
     public void cancel() {

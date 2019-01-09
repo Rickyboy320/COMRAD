@@ -26,30 +26,24 @@ public class P2PServerThread extends Thread {
 
     public void run() {
         BluetoothSocket socket;
-        System.out.println("Starting to run server");
-        // Keep listening until exception occurs or a socket is returned.
         while (true) {
             try {
                 socket = mmServerSocket.accept();
-                System.out.println("Accepted socket: " + socket);
             } catch (IOException e) {
                 Log.e(TAG, "Socket's accept() method failed", e);
                 break;
             }
 
             if (socket != null) {
-                // A connection was accepted. Perform work associated with
-                // the connection in a separate thread.
-                System.out.println("Added socket: " + socket);
-                addSocket(socket);
+                handleConnection(socket);
                 socket = null;
             }
         }
     }
 
-    public void addSocket(BluetoothSocket socket)
+    public void handleConnection(BluetoothSocket socket)
     {
-        System.out.println("HI");
+        new P2PConnectedThread(socket).start();
     }
 
     // Closes the connect socket and causes the thread to finish.

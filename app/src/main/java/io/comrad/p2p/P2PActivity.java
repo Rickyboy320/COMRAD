@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.ParcelUuid;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -15,7 +16,10 @@ import android.widget.Button;
 import android.widget.Toast;
 import io.comrad.R;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 import static android.bluetooth.BluetoothAdapter.*;
 
@@ -107,9 +111,15 @@ public class P2PActivity extends Activity {
         if (pairedDevices.size() > 0) {
             // There are paired devices. Get the name and address of each paired device.
             for (BluetoothDevice device : pairedDevices) {
-                String deviceName = device.getName();
-                String deviceHardwareAddress = device.getAddress(); // MAC address
-                System.out.println("Bonded: " +  deviceHardwareAddress + ", " + Arrays.toString(device.getUuids()));
+                if(device.getUuids() == null) {
+                    continue;
+                }
+
+                for(ParcelUuid uuid : device.getUuids()) {
+                    if(uuid.getUuid().equals(P2PActivity.SERVICE_UUID)) {
+                        new P2PConnectThread(device).start();
+                    }
+                }
             }
         }
     }
