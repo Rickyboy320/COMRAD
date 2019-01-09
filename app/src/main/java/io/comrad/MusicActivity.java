@@ -26,7 +26,7 @@ public class MusicActivity extends AppCompatActivity {
     ListView listView;
     ArrayAdapter<Song> adapter;
     BluetoothDevice owner;
-
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,6 +48,9 @@ public class MusicActivity extends AppCompatActivity {
         }
     }
 
+    /*
+     * Calls functions to retrieve all music on the device and shows them in a listview.
+     */
     public void showMusic() {
         listView = (ListView) findViewById(R.id.musicView);
         arrayList = new ArrayList<>();
@@ -58,13 +61,33 @@ public class MusicActivity extends AppCompatActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                // open music player to play desired song.
+                // TODO open music player to play desired song.
                 Log.d("songClick", arrayList.get(i).toString());
             }
         });
 
+        // TODO Use this code to add songs coming from the network.
+        this.addSong(new Song("Heyheya", "Jemoeder", "../java.meme", 5, owner));
+
     }
 
+    /*
+     * Adds a song to the adapter for viewing in the listview.s
+     */
+    public void addSong(Song song) {
+        adapter.add(song);
+    }
+
+    /*
+     * Adds multiple songs to the adapter for viewing in the lisview.
+     */
+    public void addSongs(ArrayList<Song> songs) {
+        adapter.addAll(songs);
+    }
+
+    /*
+     * Retrieves all music on the device and adds them to the class variable arrayList.
+     */
     public void getMusic() {
         ContentResolver contentResolver = getContentResolver();
         Uri songUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
@@ -80,6 +103,7 @@ public class MusicActivity extends AppCompatActivity {
             String currentLocation;
             int currentSize;
 
+            // Loop over the found songs and add them to the arraylist
             do {
                 currentTitle = songCursor.getString(songTitle);
                 currentArtist = songCursor.getString(songArtist);
@@ -90,7 +114,9 @@ public class MusicActivity extends AppCompatActivity {
         }
     }
 
-    // @Override
+    /*
+     * Asks for a permission and shows the result in a toast.
+     */
     public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) {
         switch (requestCode) {
             case MY_PERMISSION_REQUEST: {
