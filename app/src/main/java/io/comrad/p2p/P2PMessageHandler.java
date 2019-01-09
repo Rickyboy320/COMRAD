@@ -6,6 +6,9 @@ import android.os.Handler;
 import android.os.Message;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class P2PMessageHandler extends Handler {
 
     public static final int MESSAGE_TOAST = 1;
@@ -15,6 +18,8 @@ public class P2PMessageHandler extends Handler {
     public static final String TOAST = "Toast";
 
     private final Activity activity;
+
+    private final List<P2PConnectedThread> threads = new ArrayList<>();
 
     public P2PMessageHandler(Activity activity) {
         this.activity = activity;
@@ -52,6 +57,16 @@ public class P2PMessageHandler extends Handler {
     public void sendBuffer(byte[] buffer, int bufferSize) {
         Message readMsg = this.obtainMessage(P2PMessageHandler.MESSAGE_READ, bufferSize, -1, buffer);
         readMsg.sendToTarget();
+    }
+
+    public void addThread(P2PConnectedThread thread) {
+        this.threads.add(thread);
+    }
+
+    public void sendMessageToPeers(String message) {
+        for(P2PConnectedThread thread : threads) {
+            thread.write(message.getBytes());
+        }
     }
 
 }

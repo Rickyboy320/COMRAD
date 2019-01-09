@@ -73,7 +73,7 @@ public class P2PActivity extends Activity {
         final PeerAdapter peerAdapter = new PeerAdapter(peerList);
         peerView.setAdapter(peerAdapter);
 
-        receiver = new P2PReceiver(peerAdapter);
+        receiver = new P2PReceiver(peerAdapter, handler);
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
         filter.addAction(BluetoothDevice.ACTION_UUID);
@@ -128,6 +128,13 @@ public class P2PActivity extends Activity {
                 }
             }
         }
+
+        Button sendMessage = findViewById(R.id.sendMessage);
+        sendMessage.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                handler.sendMessageToPeers("Hello world!");
+            }
+        });
     }
 
 

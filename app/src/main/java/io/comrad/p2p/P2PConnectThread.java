@@ -45,7 +45,9 @@ public class P2PConnectThread extends Thread {
     }
 
     private void handleConnection() {
-        new P2PConnectedThread(this.socket, this.handler).start();
+        P2PConnectedThread thread = new P2PConnectedThread(this.socket, this.handler);
+        this.handler.addThread(thread);
+        thread.start();
     }
 
     public void cancel() {

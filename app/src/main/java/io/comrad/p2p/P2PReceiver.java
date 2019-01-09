@@ -11,12 +11,14 @@ import java.util.List;
 
 public class P2PReceiver extends BroadcastReceiver
 {
+    private P2PMessageHandler handler;
     private PeerAdapter peerAdapter;
     private List<BluetoothDevice> unknownDevices = new ArrayList<>();
 
-    P2PReceiver(PeerAdapter peerAdapter)
+    P2PReceiver(PeerAdapter peerAdapter, P2PMessageHandler handler)
     {
         this.peerAdapter = peerAdapter;
+        this.handler = handler;
     }
 
     @Override
@@ -38,7 +40,7 @@ public class P2PReceiver extends BroadcastReceiver
     private void hailMary()
     {
         for(BluetoothDevice device : this.unknownDevices) {
-            new P2PConnectThread(device).start();
+            new P2PConnectThread(device, handler).start();
         }
     }
 }
