@@ -81,13 +81,24 @@ public class P2PActivity extends Activity {
                 peerList.clear();
                 peerAdapter.notifyDataSetChanged();
                 bluetoothAdapter.startDiscovery();
+            }
+        });
 
-                Intent discoverableIntent =
-                        new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+        Button serverButton = findViewById(R.id.server);
+        serverButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
                 discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
                 startActivity(discoverableIntent);
 
                 new P2PServerThread(bluetoothAdapter).start();
+            }
+        });
+
+        Button stopDiscovery = findViewById(R.id.stopDiscovery);
+        stopDiscovery.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                bluetoothAdapter.cancelDiscovery();
             }
         });
 

@@ -9,6 +9,18 @@
         android:layout_height="wrap_content"
         android:text="Discover Devices" />
 
+    <Button
+            android:text="Start Server"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/server"/>
+
+    <Button
+            android:text="Stop Discovering"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/stopDiscovery"/>
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/peersList"
         android:layout_width="match_parent"
