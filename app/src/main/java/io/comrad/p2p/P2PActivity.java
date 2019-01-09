@@ -7,8 +7,12 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.os.ParcelUuid;
+import android.provider.SyncStateContract;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
@@ -30,6 +34,7 @@ public class P2PActivity extends Activity {
 
     private final static int REQUEST_ENABLE_BT = 1;
     private final static int PERMISSION_REQUEST = 2;
+
     private P2PReceiver receiver;
 
     @Override
@@ -45,6 +50,8 @@ public class P2PActivity extends Activity {
 
     private void enableBluetooth()
     {
+        final P2PMessageHandler handler = new P2PMessageHandler(this);
+
         final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (bluetoothAdapter == null) {
             Toast toast = Toast.makeText(getApplicationContext(), "This device does not support bluetooth.", Toast.LENGTH_LONG);
@@ -95,7 +102,7 @@ public class P2PActivity extends Activity {
                 discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
                 startActivity(discoverableIntent);
 
-                new P2PServerThread(bluetoothAdapter).start();
+                new P2PServerThread(bluetoothAdapter, handler).start();
             }
         });
 
@@ -109,7 +116,6 @@ public class P2PActivity extends Activity {
         Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
 
         if (pairedDevices.size() > 0) {
-            // There are paired devices. Get the name and address of each paired device.
             for (BluetoothDevice device : pairedDevices) {
                 if(device.getUuids() == null) {
                     continue;
@@ -117,7 +123,7 @@ public class P2PActivity extends Activity {
 
                 for(ParcelUuid uuid : device.getUuids()) {
                     if(uuid.getUuid().equals(P2PActivity.SERVICE_UUID)) {
-                        new P2PConnectThread(device).start();
+                        new P2PConnectThread(device, handler).start();
                     }
                 }
             }
@@ -161,4 +167,7 @@ public class P2PActivity extends Activity {
         // Don't forget to unregister the ACTION_FOUND receiver.
         unregisterReceiver(receiver);
     }
+
+    private final Handler mHandler = new Handler() {
+    };
 }

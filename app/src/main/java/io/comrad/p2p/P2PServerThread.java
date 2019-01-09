@@ -7,30 +7,32 @@ import android.util.Log;
 
 import java.io.IOException;
 
-import static android.content.ContentValues.TAG;
-
 public class P2PServerThread extends Thread {
-    private final BluetoothServerSocket mmServerSocket;
+    private final P2PMessageHandler handler;
+    private final BluetoothServerSocket serverSocket;
 
-    public P2PServerThread(BluetoothAdapter adapter) {
+    public P2PServerThread(BluetoothAdapter adapter, P2PMessageHandler handler) {
+        this.handler = handler;
+
         BluetoothServerSocket tmp = null;
         try {
             tmp = adapter.listenUsingRfcommWithServiceRecord(P2PActivity.SERVICE_NAME, P2PActivity.SERVICE_UUID);
-            System.out.println("Setup server: " + tmp);
+            this.handler.sendToast("Started server... now listening for incoming connections.");
         } catch (IOException e) {
-            System.out.println("Failed: " + e);
-            Log.e(TAG, "Socket's listen() method failed", e);
+            this.handler.sendToast("Failed to listen using a Rfcomm Socket.");
+            e.printStackTrace();
         }
-        mmServerSocket = tmp;
+        serverSocket = tmp;
     }
 
     public void run() {
         BluetoothSocket socket;
         while (true) {
             try {
-                socket = mmServerSocket.accept();
+                socket = serverSocket.accept();
             } catch (IOException e) {
-                Log.e(TAG, "Socket's accept() method failed", e);
+                this.handler.sendToast("Failed to accept connection.");
+                e.printStackTrace();
                 break;
             }
 
@@ -43,15 +45,16 @@ public class P2PServerThread extends Thread {
 
     public void handleConnection(BluetoothSocket socket)
     {
-        new P2PConnectedThread(socket).start();
+        new P2PConnectedThread(socket, this.handler).start();
     }
 
     // Closes the connect socket and causes the thread to finish.
     public void cancel() {
         try {
-            mmServerSocket.close();
+            serverSocket.close();
         } catch (IOException e) {
-            Log.e(TAG, "Could not close the connect socket", e);
+            this.handler.sendToast("Could not close the server socket.");
+            e.printStackTrace();
         }
     }
 }

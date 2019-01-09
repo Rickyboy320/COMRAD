@@ -7,17 +7,20 @@ import java.io.IOException;
 
 public class P2PConnectThread extends Thread {
 
+    private final P2PMessageHandler handler;
     private final BluetoothDevice targetDevice;
     private final BluetoothSocket socket;
 
-    public P2PConnectThread(BluetoothDevice targetDevice) {
-        BluetoothSocket socket = null;
+    public P2PConnectThread(BluetoothDevice targetDevice, P2PMessageHandler handler) {
+        this.handler = handler;
         this.targetDevice = targetDevice;
+
+        BluetoothSocket socket = null;
         try {
             socket = targetDevice.createRfcommSocketToServiceRecord(P2PActivity.SERVICE_UUID);
         } catch(IOException e) {
+            handler.sendToast("Could not create Rfcomm Socket.");
             e.printStackTrace();
-            //TODO: Add toast
         }
 
         this.socket = socket;
@@ -27,11 +30,8 @@ public class P2PConnectThread extends Thread {
         // TODO: Potentially disable discoverability;
 
         try {
-            System.out.println("Attempting connection socket: " + socket);
             this.socket.connect();
-            System.out.println("Successfully connected with: " + targetDevice.getAddress() + " : " + targetDevice.getName());
         } catch(IOException e) {
-            System.out.println("Failed conneciton: " + e);
             try {
                 this.socket.close();
             } catch(IOException e1) {
@@ -40,18 +40,19 @@ public class P2PConnectThread extends Thread {
             return;
         }
 
-        System.out.println("Complete!");
+        this.handler.sendToast("Connected with: " + targetDevice.getAddress() + " : " + targetDevice.getName());
         handleConnection();
     }
 
     private void handleConnection() {
-        new P2PConnectedThread(this.socket).start();
+        new P2PConnectedThread(this.socket, this.handler).start();
     }
 
     public void cancel() {
         try {
             this.socket.close();
         } catch(IOException e) {
+            this.handler.sendToast("Failed to close client socket.");
             e.printStackTrace();
         }
     }
