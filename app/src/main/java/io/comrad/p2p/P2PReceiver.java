@@ -34,7 +34,7 @@ public class P2PReceiver extends BroadcastReceiver
         if (BluetoothDevice.ACTION_FOUND.equals(action)) {
             BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 
-            if(handler.hasPeer(device.getAddress()))
+            if(handler.hasPeer(device.getAddress()) || P2PConnectThread.isConnecting(device.getAddress()))
             {
                 return;
             }
@@ -61,7 +61,7 @@ public class P2PReceiver extends BroadcastReceiver
 
             fetchNextDevice(device);
 
-            if(handler.hasPeer(device.getAddress())) {
+            if(handler.hasPeer(device.getAddress()) || P2PConnectThread.isConnecting(device.getAddress())) {
                 return;
             }
 

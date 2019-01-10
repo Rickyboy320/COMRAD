@@ -140,6 +140,11 @@ public class P2PActivity extends Activity {
         if (pairedDevices.size() > 0) {
             for (BluetoothDevice device : pairedDevices) {
                 System.out.println(device.getAddress() + " : " + Arrays.toString(device.getUuids()));
+                if(this.handler.hasPeer(device.getAddress()) || P2PConnectThread.isConnecting(device.getAddress()))
+                {
+                    continue;
+                }
+
                 if (device.getUuids() != null) {
                     for (ParcelUuid uuid : device.getUuids()) {
                         if (uuid.getUuid().equals(P2PActivity.SERVICE_UUID)) {

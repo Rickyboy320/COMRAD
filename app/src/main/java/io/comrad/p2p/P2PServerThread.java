@@ -67,6 +67,8 @@ public class P2PServerThread extends Thread {
 
     public void handleConnection(BluetoothSocket socket)
     {
+        this.handler.sendToast("Connected with: " + socket.getRemoteDevice().getAddress() + " : " + socket.getRemoteDevice().getName());
+
         P2PConnectedThread thread = new P2PConnectedThread(socket, this.handler);
         this.handler.addPeer(socket.getRemoteDevice().getAddress(), thread);
         thread.start();
