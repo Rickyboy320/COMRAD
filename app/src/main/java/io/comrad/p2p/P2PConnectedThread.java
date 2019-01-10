@@ -23,13 +23,13 @@ public class P2PConnectedThread extends Thread {
         try {
             tmpIn = socket.getInputStream();
         } catch (IOException e) {
-            handler.sendToast( "Error occurred when creating input stream");
+            handler.sendToast( "Error occurred when creating input stream.");
             e.printStackTrace();
         }
         try {
             tmpOut = socket.getOutputStream();
         } catch (IOException e) {
-            handler.sendToast("Error occurred when creating output stream");
+            handler.sendToast("Error occurred when creating output stream.");
             e.printStackTrace();
         }
 
@@ -46,7 +46,7 @@ public class P2PConnectedThread extends Thread {
                 bufferSize = input.read(buffer);
                 handler.sendBuffer(buffer, bufferSize);
             } catch(IOException e) {
-                handler.sendToast("Input stream was disconnected");
+                handler.sendToast("Input stream was disconnected.");
                 e.printStackTrace();
                 break;
             }
@@ -57,9 +57,8 @@ public class P2PConnectedThread extends Thread {
     public void write(byte[] bytes) {
         try {
             output.write(bytes);
-            handler.sendToast(String.valueOf(bytes));
         } catch (IOException e) {
-            handler.sendToast("Error occurred when sending data");
+            handler.sendToast("Error occurred when sending data.");
             e.printStackTrace();
         }
     }

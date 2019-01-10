@@ -7,7 +7,6 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.ParcelUuid;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.widget.LinearLayoutManager;
@@ -30,7 +29,8 @@ public class P2PActivity extends Activity {
     public final static UUID SERVICE_UUID = UUID.fromString("7337958a-460f-4b0c-942e-5fa111fb2bee");
 
     private final static int REQUEST_ENABLE_BT = 1;
-    private final static int PERMISSION_REQUEST = 2;
+    private final static int REQUEST_DISCOVER = 2;
+    private final static int PERMISSION_REQUEST = 3;
 
     private P2PReceiver receiver;
 
@@ -51,8 +51,7 @@ public class P2PActivity extends Activity {
 
         final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (bluetoothAdapter == null) {
-            Toast toast = Toast.makeText(getApplicationContext(), "This device does not support bluetooth.", Toast.LENGTH_LONG);
-            toast.show();
+            Toast.makeText(getApplicationContext(), "This device does not support bluetooth.", Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -79,11 +78,11 @@ public class P2PActivity extends Activity {
         Button discoverButton = findViewById(R.id.discover);
         discoverButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Toast toast = Toast.makeText(getApplicationContext(), "Discovering devices...", Toast.LENGTH_LONG);
-                toast.show();
+                Toast.makeText(getApplicationContext(), "Discovering devices...", Toast.LENGTH_LONG).show();
+
+                connectToBondedDevices(bluetoothAdapter, handler);
 
                 if (bluetoothAdapter.isDiscovering()) {
-                    // Bluetooth is already in discovery mode, we cancel to restart it again
                     bluetoothAdapter.cancelDiscovery();
                 }
                 peerList.clear();
@@ -97,7 +96,7 @@ public class P2PActivity extends Activity {
             public void onClick(View v) {
                 Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
                 discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
-                startActivity(discoverableIntent);
+                startActivityForResult(discoverableIntent, REQUEST_DISCOVER);
 
                 new P2PServerThread(bluetoothAdapter, handler).start();
             }
@@ -106,12 +105,23 @@ public class P2PActivity extends Activity {
         Button stopDiscovery = findViewById(R.id.stopDiscovery);
         stopDiscovery.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Toast toast = Toast.makeText(getApplicationContext(), "Stopped discovering.", Toast.LENGTH_LONG);
-                toast.show();
+                Toast.makeText(getApplicationContext(), "Stopped discovering.", Toast.LENGTH_LONG).show();
                 bluetoothAdapter.cancelDiscovery();
             }
         });
 
+        Button sendMessage = findViewById(R.id.sendMessage);
+        sendMessage.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                handler.sendMessageToPeers("Hello world!");
+            }
+        });
+
+        connectToBondedDevices(bluetoothAdapter, handler);
+    }
+
+
+    private void connectToBondedDevices(BluetoothAdapter bluetoothAdapter, P2PMessageHandler handler) {
         Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
 
         if (pairedDevices.size() > 0) {
@@ -128,14 +138,7 @@ public class P2PActivity extends Activity {
             }
         }
 
-        Button sendMessage = findViewById(R.id.sendMessage);
-        sendMessage.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                handler.sendMessageToPeers("Hello world!");
-            }
-        });
     }
-
 
     private void registerComponents()
     {
@@ -145,16 +148,13 @@ public class P2PActivity extends Activity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(requestCode == REQUEST_ENABLE_BT) {
+        if(requestCode == REQUEST_DISCOVER) {
             if(resultCode == SCAN_MODE_NONE) {
-                Toast toast = Toast.makeText(getApplicationContext(), "This device is not connectable.", Toast.LENGTH_LONG);
-                toast.show();
+                Toast.makeText(getApplicationContext(), "This device is not connectable.", Toast.LENGTH_LONG).show();
             } else if(resultCode == SCAN_MODE_CONNECTABLE) {
-                Toast toast = Toast.makeText(getApplicationContext(), "This device is not discoverable, but can be connected.", Toast.LENGTH_LONG);
-                toast.show();
+                Toast.makeText(getApplicationContext(), "This device is not discoverable, but can be connected.", Toast.LENGTH_LONG).show();
             } else if(resultCode == SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
-                Toast toast = Toast.makeText(getApplicationContext(), "This device is now discoverable!", Toast.LENGTH_LONG);
-                toast.show();
+                Toast.makeText(getApplicationContext(), "This device is now discoverable!", Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -170,10 +170,6 @@ public class P2PActivity extends Activity {
     protected void onDestroy() {
         super.onDestroy();
 
-        // Don't forget to unregister the ACTION_FOUND receiver.
         unregisterReceiver(receiver);
     }
-
-    private final Handler mHandler = new Handler() {
-    };
 }
