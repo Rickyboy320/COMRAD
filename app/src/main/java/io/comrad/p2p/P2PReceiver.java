@@ -17,6 +17,7 @@ public class P2PReceiver extends BroadcastReceiver
 
     P2PReceiver(PeerAdapter peerAdapter, P2PMessageHandler handler)
     {
+        this.handler = handler;
         this.peerAdapter = peerAdapter;
         this.handler = handler;
     }
