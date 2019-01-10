@@ -3,12 +3,8 @@ package io.comrad.p2p;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
-import android.os.ParcelUuid;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.Arrays;
 
 public class P2PServerThread extends Thread {
     private final P2PMessageHandler handler;
@@ -26,25 +22,6 @@ public class P2PServerThread extends Thread {
             e.printStackTrace();
         }
         serverSocket = tmp;
-
-
-        try {
-            Method getUuidsMethod = BluetoothAdapter.class.getDeclaredMethod("getUuids", null);
-            ParcelUuid[] uuids = (ParcelUuid[]) getUuidsMethod.invoke(adapter, null);
-
-            if(uuids != null) {
-                System.out.println("===================== Listening to UUIDs: " + Arrays.toString(uuids));
-            } else{
-                System.out.println("Uuids not found, be sure to enable Bluetooth!");
-            }
-
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }
     }
 
     public void run() {
