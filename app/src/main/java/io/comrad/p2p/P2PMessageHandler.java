@@ -30,9 +30,9 @@ public class P2PMessageHandler extends Handler {
         switch (msg.what) {
             case P2PMessageHandler.MESSAGE_WRITE:
                 byte[] writeBuf = (byte[]) msg.obj;
-                // construct a string from the buffer
                 String writeMessage = new String(writeBuf);
                 System.out.println("Writing: " + writeMessage);
+
                 break;
             case P2PMessageHandler.MESSAGE_READ:
                 byte[] readBuf = (byte[]) msg.obj;
@@ -43,13 +43,14 @@ public class P2PMessageHandler extends Handler {
                 break;
             case P2PMessageHandler.MESSAGE_TOAST:
                 Toast.makeText(activity.getApplicationContext(), msg.getData().getString(P2PMessageHandler.TOAST), Toast.LENGTH_SHORT).show();
+                break;
         }
     }
 
     public void sendToast(String message) {
         Message toast = this.obtainMessage(P2PMessageHandler.MESSAGE_TOAST);
         Bundle bundle = new Bundle();
-        bundle.putString("toast", message);
+        bundle.putString(P2PMessageHandler.TOAST, message);
         toast.setData(bundle);
         this.sendMessage(toast);
     }

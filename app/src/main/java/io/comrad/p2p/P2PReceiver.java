@@ -19,7 +19,6 @@ public class P2PReceiver extends BroadcastReceiver
     {
         this.handler = handler;
         this.peerAdapter = peerAdapter;
-        this.handler = handler;
     }
 
     @Override

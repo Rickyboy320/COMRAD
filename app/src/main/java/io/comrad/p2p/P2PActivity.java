@@ -8,11 +8,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
 import android.os.ParcelUuid;
-import android.provider.SyncStateContract;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
@@ -109,6 +106,8 @@ public class P2PActivity extends Activity {
         Button stopDiscovery = findViewById(R.id.stopDiscovery);
         stopDiscovery.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                Toast toast = Toast.makeText(getApplicationContext(), "Stopped discovering.", Toast.LENGTH_LONG);
+                toast.show();
                 bluetoothAdapter.cancelDiscovery();
             }
         });
