@@ -1,13 +1,9 @@
 package io.comrad.p2p;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.widget.Toast;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class P2PMessageHandler extends Handler {
 
@@ -17,11 +13,9 @@ public class P2PMessageHandler extends Handler {
 
     public static final String TOAST = "Toast";
 
-    private final Activity activity;
+    private final P2PActivity activity;
 
-    private final List<P2PConnectedThread> threads = new ArrayList<>();
-
-    public P2PMessageHandler(Activity activity) {
+    public P2PMessageHandler(P2PActivity activity) {
         this.activity = activity;
     }
 
@@ -60,12 +54,20 @@ public class P2PMessageHandler extends Handler {
         readMsg.sendToTarget();
     }
 
-    public void addThread(P2PConnectedThread thread) {
-        this.threads.add(thread);
+    public void addPeer(String mac, P2PConnectedThread thread) {
+        this.activity.peers.put(mac, thread);
+    }
+
+    public void removePeer(String mac) {
+        this.activity.peers.remove(mac);
+    }
+
+    public boolean hasPeer(String mac) {
+        return this.activity.peers.containsKey(mac);
     }
 
     public void sendMessageToPeers(String message) {
-        for(P2PConnectedThread thread : threads) {
+        for(P2PConnectedThread thread : this.activity.peers.values()) {
             thread.write(message.getBytes());
         }
     }

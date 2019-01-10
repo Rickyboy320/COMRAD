@@ -1,5 +1,6 @@
 package io.comrad.p2p;
 
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 
 import java.io.IOException;
@@ -64,12 +65,16 @@ public class P2PConnectedThread extends Thread {
     }
 
     // Call this method from the main activity to shut down the connection.
-    public void cancel() {
+    public void close() {
         try {
             socket.close();
         } catch (IOException e) {
             handler.sendToast("Could not close the connect socket.");
             e.printStackTrace();
         }
+    }
+
+    public BluetoothDevice getRemoteDevice() {
+        return this.socket.getRemoteDevice();
     }
 }

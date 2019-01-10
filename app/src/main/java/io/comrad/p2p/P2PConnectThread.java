@@ -27,8 +27,6 @@ public class P2PConnectThread extends Thread {
     }
 
     public void run() {
-        // TODO: Potentially disable discoverability;
-
         try {
             this.socket.connect();
         } catch(IOException e) {
@@ -37,6 +35,8 @@ public class P2PConnectThread extends Thread {
             } catch(IOException e1) {
                 e1.printStackTrace();
             }
+
+            this.handler.sendToast("Failed to connect with: " + targetDevice.getAddress() + " : " +  targetDevice.getName());
             return;
         }
 
@@ -46,11 +46,11 @@ public class P2PConnectThread extends Thread {
 
     private void handleConnection() {
         P2PConnectedThread thread = new P2PConnectedThread(this.socket, this.handler);
-        this.handler.addThread(thread);
+        this.handler.addPeer(socket.getRemoteDevice().getAddress(), thread);
         thread.start();
     }
 
-    public void cancel() {
+    public void close() {
         try {
             this.socket.close();
         } catch(IOException e) {
