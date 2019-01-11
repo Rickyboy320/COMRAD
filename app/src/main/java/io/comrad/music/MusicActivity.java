@@ -2,25 +2,25 @@ package io.comrad.music;
 
 import android.Manifest;
 import android.app.Activity;
+import android.bluetooth.BluetoothDevice;
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
-import android.bluetooth.BluetoothDevice;
-import java.util.ArrayList;
-
 import io.comrad.R;
+
+import java.util.ArrayList;
 
 
 public class MusicActivity extends Activity {
@@ -65,7 +65,7 @@ public class MusicActivity extends Activity {
         if (requestCode == REQUEST_MUSIC_FILE) {
             // Make sure the request was successful
             if (resultCode == RESULT_OK) {
-                Song resultSong = data.getData();
+                //Song resultSong = data.getData();
 
 
                 // The user picked a contact.

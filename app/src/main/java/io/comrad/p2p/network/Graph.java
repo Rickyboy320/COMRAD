@@ -63,6 +63,10 @@ public class Graph {
     }
 
     public void createNode(String mac) {
+        if(this.hasNode(mac)) {
+            return;
+        }
+
         Node node = new Node(mac);
         this.nodes.add(node);
     }

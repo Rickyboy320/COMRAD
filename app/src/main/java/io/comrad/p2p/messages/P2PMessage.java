@@ -2,16 +2,16 @@ package io.comrad.p2p.messages;
 
 import java.io.*;
 
-public class P2PMessage {
+public class P2PMessage implements Serializable {
     private String destinationMAC;
     private MessageType type;
-    private Object payload;
+    private Serializable payload;
 
     P2PMessage(String destinationMAC, MessageType type) {
         this(destinationMAC, type, null);
     }
 
-    P2PMessage(String destinationMAC, MessageType type, Object payload) {
+    P2PMessage(String destinationMAC, MessageType type, Serializable payload) {
         this.destinationMAC = destinationMAC;
         this.type = type;
         addPayload(payload);
@@ -25,7 +25,7 @@ public class P2PMessage {
         return this.type;
     }
 
-    public byte[] toByteStream() throws IOException {
+    public byte[] toByteArray() throws IOException {
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         byte[] result;
         try {
@@ -39,7 +39,7 @@ public class P2PMessage {
         return result;
     }
 
-    public void addPayload(Object payload) {
+    public void addPayload(Serializable payload) {
         try {
             switch (this.type) {
                 case playlist:
@@ -62,7 +62,7 @@ public class P2PMessage {
         System.out.println("Message: " + this.payload);
     }
 
-    private static Object readAudioFile(String fileURI) throws IOException {
+    private static Serializable readAudioFile(String fileURI) throws IOException {
         File file = new File(fileURI);
         FileInputStream fin = new FileInputStream(file);
         byte[] data = new byte[(int) file.length()];
@@ -92,12 +92,13 @@ public class P2PMessage {
     }
 
     public static P2PMessage readMessage(InputStream byteStream) throws IOException {
-        byte[] buffer = new byte[4096];
+        int buffer_size = 65536;
+        byte[] buffer = new byte[buffer_size];
 
         int readSize = byteStream.read(buffer);
-        if(readSize != -1) {
-            throw new IllegalStateException("Message was too large to read...");
-        }
+        //if(readSize == buffer_size) {
+        //    throw new IllegalStateException("Message was too large to read.. readSize: " + readSize);
+        //}
 
         Object object = readObject(buffer);
         if(!(object instanceof P2PMessage))

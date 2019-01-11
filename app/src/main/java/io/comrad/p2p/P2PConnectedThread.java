@@ -56,7 +56,9 @@ public class P2PConnectedThread extends Thread {
     // Call this from the activity_p2p activity to send data to the remote device.
     public void write(P2PMessage message) {
         try {
-            output.write(message.toByteStream());
+            byte[] stream = message.toByteArray();
+            System.out.println("Size of to send message: " + stream.length);
+            output.write(message.toByteArray());
         } catch (IOException e) {
             handler.sendToastToUI("Error occurred when sending data.");
             e.printStackTrace();

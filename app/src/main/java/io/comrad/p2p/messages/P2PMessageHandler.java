@@ -69,6 +69,7 @@ public class P2PMessageHandler extends Handler {
     }
 
     public void addPeer(String mac, P2PConnectedThread thread) {
+        this.network.createNode(mac);
         this.network.addEdge(this.network.getSelfNode().getMac(), mac);
         this.peerThreads.put(mac, thread);
     }

@@ -5,11 +5,10 @@ import java.util.Collections;
 import java.util.HashSet;
 
 public class Node {
-    private Collection<Node> peers;
+    private Collection<Node> peers = new HashSet<>();
     private String mac;
 
     Node(String mac) {
-        this.peers = new HashSet<>();
         this.mac = mac;
     }
 
