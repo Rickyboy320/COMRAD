@@ -5,6 +5,10 @@ import android.os.Handler;
 import android.os.Message;
 import android.widget.Toast;
 
+import java.io.IOException;
+
+import io.comrad.Messages.BluetoothMsg;
+
 public class P2PMessageHandler extends Handler {
 
     public static final int MESSAGE_TOAST = 1;
@@ -66,9 +70,13 @@ public class P2PMessageHandler extends Handler {
         return this.activity.peers.containsKey(mac);
     }
 
-    public void sendMessageToPeers(String message) {
+    public void sendMessageToPeers(BluetoothMsg message) {
         for(P2PConnectedThread thread : this.activity.peers.values()) {
-            thread.write(message.getBytes());
+            try {
+                thread.write(message.toByteArray());
+            } catch (IOException e){
+                                
+            }
         }
     }
 
