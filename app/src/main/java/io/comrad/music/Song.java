@@ -1,4 +1,4 @@
-package io.comrad;
+package io.comrad.music;
 
 import android.bluetooth.BluetoothDevice;
 
@@ -20,26 +20,26 @@ public class Song {
 
     @Override
     public String toString() {
-        return this.get_songTitle() + "\n" + this.get_songArtist();
+        return this.getSongTitle() + "\n" + this.getSongArtist();
     }
 
-    public String get_songTitle() {
+    public String getSongTitle() {
         return this.songTitle;
     }
 
-    public String get_songArtist() {
+    public String getSongArtist() {
         return this.songArtist;
     }
 
-    public String get_songLocation() {
+    public String getSongLocation() {
         return this.songLocation;
     }
 
-    public int get_songSize() {
+    public int getSongSize() {
         return this.songSize;
     }
 
-    public BluetoothDevice get_owner() {
+    public BluetoothDevice getOwner() {
         return this.owner;
     }
 }

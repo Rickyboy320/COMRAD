@@ -54,7 +54,7 @@ public class P2PConnectedThread extends Thread {
         }
     }
 
-    // Call this from the main activity to send data to the remote device.
+    // Call this from the activity_p2p activity to send data to the remote device.
     public void write(byte[] bytes) {
         try {
             output.write(bytes);
@@ -64,7 +64,7 @@ public class P2PConnectedThread extends Thread {
         }
     }
 
-    // Call this method from the main activity to shut down the connection.
+    // Call this method from the activity_p2p activity to shut down the connection.
     public void close() {
         try {
             socket.close();

@@ -4,31 +4,14 @@
     android:layout_height="match_parent">
 
     <Button
-        android:id="@+id/discover"
+        android:id="@+id/music"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Discover Devices" />
+        android:text="Start musicing" />
 
     <Button
-            android:text="Start Server"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/server"/>
-
-    <Button
-            android:text="Stop Discovering"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/stopDiscovery"/>
-
-    <Button
-        android:id="@+id/sendMessage"
+        android:id="@+id/p2p"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Send Message" />
-
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/peersList"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:text="Start bluetoothing" />
 </LinearLayout>
