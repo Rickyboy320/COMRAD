@@ -1,61 +1,63 @@
-package io.comrad;
+package io.comrad.p2p;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
-import android.util.Log;
 
 import java.io.IOException;
 
-import io.comrad.p2p.P2PActivity;
-
-import static android.content.ContentValues.TAG;
-
 public class P2PServerThread extends Thread {
-    private final BluetoothServerSocket mmServerSocket;
+    private final P2PMessageHandler handler;
+    private final BluetoothServerSocket serverSocket;
 
-    public P2PServerThread(BluetoothAdapter adapter) {
+    public P2PServerThread(BluetoothAdapter adapter, P2PMessageHandler handler) {
+        this.handler = handler;
+
         BluetoothServerSocket tmp = null;
         try {
-            // MY_UUID is the app's UUID string, also used by the client code.
             tmp = adapter.listenUsingRfcommWithServiceRecord(P2PActivity.SERVICE_NAME, P2PActivity.SERVICE_UUID);
+            this.handler.sendToast("Started server... now listening for incoming connections.");
         } catch (IOException e) {
-            Log.e(TAG, "Socket's listen() method failed", e);
+            this.handler.sendToast("Failed to listen using a Rfcomm Socket.");
+            e.printStackTrace();
         }
-        mmServerSocket = tmp;
+        serverSocket = tmp;
     }
 
     public void run() {
         BluetoothSocket socket;
-        // Keep listening until exception occurs or a socket is returned.
         while (true) {
             try {
-                socket = mmServerSocket.accept();
+                socket = serverSocket.accept();
             } catch (IOException e) {
-                Log.e(TAG, "Socket's accept() method failed", e);
+                this.handler.sendToast("Failed to accept connection.");
+                e.printStackTrace();
                 break;
             }
 
             if (socket != null) {
-                // A connection was accepted. Perform work associated with
-                // the connection in a separate thread.
-                addSocket(socket);
+                handleConnection(socket);
                 socket = null;
             }
         }
     }
 
-    public void addSocket(BluetoothSocket socket)
+    public void handleConnection(BluetoothSocket socket)
     {
-        System.out.println("HI");
+        this.handler.sendToast("Connected with: " + socket.getRemoteDevice().getAddress() + " : " + socket.getRemoteDevice().getName());
+
+        P2PConnectedThread thread = new P2PConnectedThread(socket, this.handler);
+        this.handler.addPeer(socket.getRemoteDevice().getAddress(), thread);
+        thread.start();
     }
 
     // Closes the connect socket and causes the thread to finish.
-    public void cancel() {
+    public void close() {
         try {
-            mmServerSocket.close();
+            serverSocket.close();
         } catch (IOException e) {
-            Log.e(TAG, "Could not close the connect socket", e);
+            this.handler.sendToast("Could not close the server socket.");
+            e.printStackTrace();
         }
     }
 }

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <Button
+        android:id="@+id/discover"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Discover Devices" />
+
+    <Button
+            android:text="Start Server"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/server"/>
+
+    <Button
+            android:text="Stop Discovering"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/stopDiscovery"/>
+
+    <Button
+        android:id="@+id/sendMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Send Message" />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/peersList"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+</LinearLayout>
