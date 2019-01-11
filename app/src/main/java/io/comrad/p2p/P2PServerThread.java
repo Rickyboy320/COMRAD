@@ -3,6 +3,7 @@ package io.comrad.p2p;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
+import io.comrad.p2p.messages.P2PMessageHandler;
 
 import java.io.IOException;
 
@@ -16,9 +17,9 @@ public class P2PServerThread extends Thread {
         BluetoothServerSocket tmp = null;
         try {
             tmp = adapter.listenUsingRfcommWithServiceRecord(P2PActivity.SERVICE_NAME, P2PActivity.SERVICE_UUID);
-            this.handler.sendToast("Started server... now listening for incoming connections.");
+            this.handler.sendToastToUI("Started server... now listening for incoming connections.");
         } catch (IOException e) {
-            this.handler.sendToast("Failed to listen using a Rfcomm Socket.");
+            this.handler.sendToastToUI("Failed to listen using a Rfcomm Socket.");
             e.printStackTrace();
         }
         serverSocket = tmp;
@@ -30,7 +31,7 @@ public class P2PServerThread extends Thread {
             try {
                 socket = serverSocket.accept();
             } catch (IOException e) {
-                this.handler.sendToast("Failed to accept connection.");
+                this.handler.sendToastToUI("Failed to accept connection.");
                 e.printStackTrace();
                 break;
             }
@@ -44,7 +45,7 @@ public class P2PServerThread extends Thread {
 
     public void handleConnection(BluetoothSocket socket)
     {
-        this.handler.sendToast("Connected with: " + socket.getRemoteDevice().getAddress() + " : " + socket.getRemoteDevice().getName());
+        this.handler.sendToastToUI("Connected with: " + socket.getRemoteDevice().getAddress() + " : " + socket.getRemoteDevice().getName());
 
         P2PConnectedThread thread = new P2PConnectedThread(socket, this.handler);
         this.handler.addPeer(socket.getRemoteDevice().getAddress(), thread);
@@ -56,7 +57,7 @@ public class P2PServerThread extends Thread {
         try {
             serverSocket.close();
         } catch (IOException e) {
-            this.handler.sendToast("Could not close the server socket.");
+            this.handler.sendToastToUI("Could not close the server socket.");
             e.printStackTrace();
         }
     }

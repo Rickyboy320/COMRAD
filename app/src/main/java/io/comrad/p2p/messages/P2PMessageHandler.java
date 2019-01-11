@@ -1,13 +1,16 @@
-package io.comrad.p2p;
+package io.comrad.p2p.messages;
 
+import android.bluetooth.BluetoothAdapter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.widget.Toast;
+import io.comrad.p2p.P2PActivity;
+import io.comrad.p2p.P2PConnectedThread;
+import io.comrad.p2p.network.Graph;
 
-import java.io.IOException;
-
-import io.comrad.Messages.BluetoothMsg;
+import java.util.HashMap;
+import java.util.Map;
 
 public class P2PMessageHandler extends Handler {
 
@@ -17,10 +20,17 @@ public class P2PMessageHandler extends Handler {
 
     public static final String TOAST = "Toast";
 
+    private Graph network;
+    private final Map<String, P2PConnectedThread> peerThreads = new HashMap<>();
+
     private final P2PActivity activity;
 
     public P2PMessageHandler(P2PActivity activity) {
         this.activity = activity;
+    }
+
+    public void onBluetoothEnable() {
+        this.network = new Graph(BluetoothAdapter.getDefaultAdapter().getAddress());
     }
 
     @Override
@@ -36,7 +46,7 @@ public class P2PMessageHandler extends Handler {
                 byte[] readBuf = (byte[]) msg.obj;
                 String readMessage = new String(readBuf, 0, msg.arg1);
                 System.out.println("Reading: " + readMessage);
-                sendToast("Incoming: " + readMessage);
+                sendToastToUI("Incoming: " + readMessage);
 
                 break;
             case P2PMessageHandler.MESSAGE_TOAST:
@@ -45,7 +55,7 @@ public class P2PMessageHandler extends Handler {
         }
     }
 
-    public void sendToast(String message) {
+    public void sendToastToUI(String message) {
         Message toast = this.obtainMessage(P2PMessageHandler.MESSAGE_TOAST);
         Bundle bundle = new Bundle();
         bundle.putString(P2PMessageHandler.TOAST, message);
@@ -53,30 +63,37 @@ public class P2PMessageHandler extends Handler {
         this.sendMessage(toast);
     }
 
-    public void sendBuffer(byte[] buffer, int bufferSize) {
+    public void sendBufferToUI(byte[] buffer, int bufferSize) {
         Message readMsg = this.obtainMessage(P2PMessageHandler.MESSAGE_READ, bufferSize, -1, buffer);
         readMsg.sendToTarget();
     }
 
     public void addPeer(String mac, P2PConnectedThread thread) {
-        this.activity.peers.put(mac, thread);
+        this.network.createNode(mac);
+        this.network.addEdge(this.network.getSelfNode().getMac(), mac);
+        this.peerThreads.put(mac, thread);
     }
 
     public void removePeer(String mac) {
-        this.activity.peers.remove(mac);
+        this.network.removeNode(mac);
+        this.peerThreads.remove(mac);
     }
 
     public boolean hasPeer(String mac) {
-        return this.activity.peers.containsKey(mac);
+        return this.peerThreads.containsKey(mac);
     }
 
-    public void sendMessageToPeers(BluetoothMsg message) {
-        for(P2PConnectedThread thread : this.activity.peers.values()) {
-            try {
-                thread.write(message.toByteArray());
-            } catch (IOException e){
-                                
-            }
+
+    public void sendMessageToPeers(String message) {
+        P2PMessage p2pMessage = new P2PMessage("..", MessageType.update_network_structure, message);
+        for(P2PConnectedThread thread : this.peerThreads.values()) {
+            thread.write(p2pMessage);
+        }
+    }
+
+    public void closeAllConnections() {
+        for(P2PConnectedThread thread : this.peerThreads.values()) {
+            thread.close();
         }
     }
 

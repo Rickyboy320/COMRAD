@@ -2,6 +2,8 @@ package io.comrad.p2p;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import io.comrad.p2p.messages.P2PMessage;
+import io.comrad.p2p.messages.P2PMessageHandler;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,13 +26,13 @@ public class P2PConnectedThread extends Thread {
         try {
             tmpIn = socket.getInputStream();
         } catch (IOException e) {
-            handler.sendToast( "Error occurred when creating input stream.");
+            handler.sendToastToUI( "Error occurred when creating input stream.");
             e.printStackTrace();
         }
         try {
             tmpOut = socket.getOutputStream();
         } catch (IOException e) {
-            handler.sendToast("Error occurred when creating output stream.");
+            handler.sendToastToUI("Error occurred when creating output stream.");
             e.printStackTrace();
         }
 
@@ -39,15 +41,12 @@ public class P2PConnectedThread extends Thread {
     }
 
     public void run() {
-        byte[] buffer = new byte[1024];
-        int bufferSize;
-
         while (true) {
             try {
-                bufferSize = input.read(buffer);
-                handler.sendBuffer(buffer, bufferSize);
+                P2PMessage message = P2PMessage.readMessage(input);
+                message.handle(this.handler);
             } catch(IOException e) {
-                handler.sendToast("Input stream was disconnected.");
+                handler.sendToastToUI("Input stream was disconnected.");
                 e.printStackTrace();
                 break;
             }
@@ -55,11 +54,13 @@ public class P2PConnectedThread extends Thread {
     }
 
     // Call this from the activity_p2p activity to send data to the remote device.
-    public void write(byte[] bytes) {
+    public void write(P2PMessage message) {
         try {
-            output.write(bytes);
+            byte[] stream = message.toByteArray();
+            System.out.println("Size of to send message: " + stream.length);
+            output.write(message.toByteArray());
         } catch (IOException e) {
-            handler.sendToast("Error occurred when sending data.");
+            handler.sendToastToUI("Error occurred when sending data.");
             e.printStackTrace();
         }
     }
@@ -69,7 +70,7 @@ public class P2PConnectedThread extends Thread {
         try {
             socket.close();
         } catch (IOException e) {
-            handler.sendToast("Could not close the connect socket.");
+            handler.sendToastToUI("Could not close the connect socket.");
             e.printStackTrace();
         }
     }

@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.ParcelUuid;
 import android.os.Parcelable;
+import io.comrad.p2p.messages.P2PMessageHandler;
 
 import java.util.ArrayList;
 import java.util.Arrays;

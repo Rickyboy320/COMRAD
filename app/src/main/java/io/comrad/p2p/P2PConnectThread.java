@@ -2,6 +2,7 @@ package io.comrad.p2p;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import io.comrad.p2p.messages.P2PMessageHandler;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -29,7 +30,7 @@ public class P2PConnectThread extends Thread {
         try {
             socket = targetDevice.createRfcommSocketToServiceRecord(P2PActivity.SERVICE_UUID);
         } catch(IOException e) {
-            handler.sendToast("Could not create Rfcomm Socket.");
+            handler.sendToastToUI("Could not create Rfcomm Socket.");
             e.printStackTrace();
         }
 
@@ -53,7 +54,7 @@ public class P2PConnectThread extends Thread {
     }
 
     private void handleConnection() {
-        this.handler.sendToast("Connected with: " + targetDevice.getAddress() + " : " + targetDevice.getName());
+        this.handler.sendToastToUI("Connected with: " + targetDevice.getAddress() + " : " + targetDevice.getName());
 
         P2PConnectedThread thread = new P2PConnectedThread(this.socket, this.handler);
         this.handler.addPeer(socket.getRemoteDevice().getAddress(), thread);
@@ -65,7 +66,7 @@ public class P2PConnectThread extends Thread {
         try {
             this.socket.close();
         } catch(IOException e) {
-            this.handler.sendToast("Failed to close client socket.");
+            this.handler.sendToastToUI("Failed to close client socket.");
             e.printStackTrace();
         }
     }
