@@ -1,6 +1,7 @@
-package io.comrad;
+package io.comrad.music;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -8,7 +9,6 @@ import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -19,8 +19,10 @@ import android.widget.Toast;
 import android.bluetooth.BluetoothDevice;
 import java.util.ArrayList;
 
+import io.comrad.R;
 
-public class MusicActivity extends AppCompatActivity {
+
+public class MusicActivity extends Activity {
     private static final int MY_PERMISSION_REQUEST = 1;
     ArrayList<Song> arrayList;
     ListView listView;
@@ -52,10 +54,10 @@ public class MusicActivity extends AppCompatActivity {
      * Calls functions to retrieve all music on the device and shows them in a listview.
      */
     public void showMusic() {
-        listView = (ListView) findViewById(R.id.musicView);
+        listView = findViewById(R.id.musicView);
         arrayList = new ArrayList<>();
         getMusic();
-        adapter = new ArrayAdapter<Song>(this, android.R.layout.simple_list_item_1, arrayList);
+        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, arrayList);
         listView.setAdapter((adapter));
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
