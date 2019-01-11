@@ -3,6 +3,7 @@ package io.comrad.music;
 import android.Manifest;
 import android.app.Activity;
 import android.content.ContentResolver;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
@@ -23,16 +24,23 @@ import io.comrad.R;
 
 
 public class MusicActivity extends Activity {
+
+    static final int REQUEST_MUSIC_FILE = 4;
+
     private static final int MY_PERMISSION_REQUEST = 1;
     ArrayList<Song> arrayList;
     ListView listView;
     ArrayAdapter<Song> adapter;
     BluetoothDevice owner;
+    Intent result = new Intent();
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_music);
+
+        Intent intent = getIntent();
+
         // TODO: Set owner.
 
         if(ContextCompat.checkSelfPermission(MusicActivity.this,
@@ -47,6 +55,24 @@ public class MusicActivity extends Activity {
             }
         } else {
             showMusic();
+        }
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // Check which request we're responding to
+        if (requestCode == REQUEST_MUSIC_FILE) {
+            // Make sure the request was successful
+            if (resultCode == RESULT_OK) {
+                Song resultSong = data.getData();
+
+
+                // The user picked a contact.
+                // The Intent's data Uri identifies which contact was selected.
+
+                // Do something with the contact here (bigger example below)
+            }
         }
     }
 
@@ -65,6 +91,9 @@ public class MusicActivity extends Activity {
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 // TODO open music player to play desired song.
                 Log.d("songClick", arrayList.get(i).toString());
+                result.putExtra("song", arrayList.get(i).toString());
+                setResult(Activity.RESULT_OK, result);
+                finish();
             }
         });
 
