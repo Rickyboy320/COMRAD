@@ -8,7 +8,7 @@ public class Node {
     private Collection<Node> peers;
     private String mac;
 
-    public Node(String mac) {
+    Node(String mac) {
         this.peers = new HashSet<>();
         this.mac = mac;
     }

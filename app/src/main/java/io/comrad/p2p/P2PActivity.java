@@ -15,6 +15,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 import io.comrad.R;
+import io.comrad.p2p.messages.P2PMessageHandler;
 
 import java.util.*;
 
@@ -33,8 +34,6 @@ public class P2PActivity extends Activity {
 
     private P2PReceiver receiver;
 
-    public final Map<String, P2PConnectedThread> peers = new HashMap<>();
-
     private final P2PMessageHandler handler = new P2PMessageHandler(this);
 
     @Override
@@ -45,11 +44,12 @@ public class P2PActivity extends Activity {
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST);
 
         enableBluetooth();
-        registerComponents();
     }
 
     private void enableBluetoothServices()
     {
+        this.handler.onBluetoothEnable();
+
         final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         final List<String> peerList = new ArrayList<>();
         RecyclerView peerView = findViewById(R.id.peersList);
@@ -156,12 +156,6 @@ public class P2PActivity extends Activity {
         }
     }
 
-    private void registerComponents()
-    {
-
-    }
-
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if(requestCode == REQUEST_DISCOVER) {
@@ -196,10 +190,7 @@ public class P2PActivity extends Activity {
         super.onDestroy();
 
         unregisterReceiver(receiver);
-
-        for(P2PConnectedThread connectedThread : this.peers.values()) {
-            connectedThread.close();
-        }
+        this.handler.closeAllConnections();
 
         serverThread.close();
     }

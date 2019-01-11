@@ -4,14 +4,17 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class Graph {
+    private Node selfNode;
     private Set<Node> nodes;
 
-    public Graph() {
-        this(new HashSet<Node>());
+    public Graph(String selfMAC) {
+        this(selfMAC, new HashSet<Node>());
     }
 
-    public Graph(Set<Node> nodes) {
+    public Graph(String selfMAC, Set<Node> nodes) {
         this.nodes = nodes;
+        this.selfNode = new Node(selfMAC);
+        this.nodes.add(this.selfNode);
     }
 
     public void merge(Graph graph) {
@@ -33,7 +36,10 @@ public class Graph {
         return null;
     }
 
-    public void addEdge(Node node1, Node node2) {
+    public void addEdge(String mac1, String mac2) {
+        Node node1 = getNode(mac1);
+        Node node2 = getNode(mac2);
+
         this.nodes.add(node1);
         this.nodes.add(node2);
 
@@ -51,13 +57,23 @@ public class Graph {
         return node.getPeers().contains(node1);
     }
 
-    public void addNode(Node node) {
+    private void addNode(Node node) {
         this.nodes.add(node);
         this.nodes.addAll(node.getPeers());
     }
 
-    public void removeNode(Node node) {
+    public void createNode(String mac) {
+        Node node = new Node(mac);
+        this.nodes.add(node);
+    }
+
+    public void removeNode(String mac) {
+        Node node = this.getNode(mac);
         this.nodes.remove(node);
         node.removeAllPeers();
+    }
+
+    public Node getSelfNode() {
+        return this.selfNode;
     }
 }
