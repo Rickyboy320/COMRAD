@@ -40,7 +40,7 @@ public class BluetoothMsg {
         return byteStream.toByteArray();
     }
 
-    public void createByteArayFromAudioFile(String fileURI) throws IOException {
+    public void createByteArrayFromAudioFile(String fileURI) throws IOException {
         try {
             FileOutputStream fileoutputstream = new FileOutputStream(fileURI);
             fileoutputstream.write(payload);
@@ -53,15 +53,21 @@ public class BluetoothMsg {
     public void add_payload(Object message) {
         switch(this.type){
             case routing :
-
                 break;
             case playlist:
                 break;
             case song:
-
-
+                String fileURI = (String) message;
+                try {
+                    createByteArrayFromAudioFile(fileURI);
+                } catch (IOException ex) {
+                    //raise error in UI
+                }
+                break;
+            case connection_msg:
+                break;
+            case routing_callback:
+                break;
         }
     }
-
-
 }
