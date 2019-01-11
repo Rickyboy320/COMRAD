@@ -83,6 +83,7 @@ public class P2PMessageHandler extends Handler {
         return this.peerThreads.containsKey(mac);
     }
 
+
     public void sendMessageToPeers(String message) {
         P2PMessage p2pMessage = new P2PMessage("..", MessageType.update_network_structure, message);
         for(P2PConnectedThread thread : this.peerThreads.values()) {

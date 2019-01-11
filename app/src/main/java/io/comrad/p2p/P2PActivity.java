@@ -11,24 +11,28 @@ import android.os.ParcelUuid;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 import io.comrad.R;
+import io.comrad.music.MusicActivity;
+import io.comrad.music.Song;
 import io.comrad.p2p.messages.P2PMessageHandler;
 
 import java.util.*;
 
 import static android.bluetooth.BluetoothAdapter.*;
+import static android.content.ContentValues.TAG;
 
 public class P2PActivity extends Activity {
-
     public final static String SERVICE_NAME = "COMRAD";
     public final static UUID SERVICE_UUID = UUID.fromString("7337958a-460f-4b0c-942e-5fa111fb2bee");
 
     private final static int REQUEST_ENABLE_BT = 1;
     private final static int REQUEST_DISCOVER = 2;
     private final static int PERMISSION_REQUEST = 3;
+    static final int REQUEST_MUSIC_FILE = 4;
 
     private P2PServerThread serverThread;
 
@@ -125,6 +129,15 @@ public class P2PActivity extends Activity {
             }
         });
 
+        Button chooseMusic = findViewById(R.id.chooseMusic);
+        chooseMusic.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent intent = new Intent(v.getContext(), MusicActivity.class);
+                startActivityForResult(intent, REQUEST_MUSIC_FILE);
+
+            }
+        });
+
         connectToBondedDevices(bluetoothAdapter, handler);
 
         if(bluetoothAdapter.isEnabled()) {
@@ -174,6 +187,19 @@ public class P2PActivity extends Activity {
             } else if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+            }
+        }
+
+        if(requestCode == REQUEST_MUSIC_FILE) {
+            if (resultCode == RESULT_OK) {
+                handler.sendMessageToPeers("Hello world!");
+                Song result = (Song) data.getParcelableExtra("song");
+
+
+
+                Log.d(TAG, result.toString());
+            } else {
+                // ERROR?
             }
         }
     }

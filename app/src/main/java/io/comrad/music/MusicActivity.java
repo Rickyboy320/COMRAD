@@ -31,7 +31,7 @@ public class MusicActivity extends Activity {
     ArrayList<Song> arrayList;
     ListView listView;
     ArrayAdapter<Song> adapter;
-    BluetoothDevice owner;
+    String owner;
     Intent result = new Intent();
     
     @Override
@@ -40,6 +40,7 @@ public class MusicActivity extends Activity {
         setContentView(R.layout.activity_music);
 
         Intent intent = getIntent();
+
 
         // TODO: Set owner.
 
@@ -59,22 +60,6 @@ public class MusicActivity extends Activity {
 
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        // Check which request we're responding to
-        if (requestCode == REQUEST_MUSIC_FILE) {
-            // Make sure the request was successful
-            if (resultCode == RESULT_OK) {
-                //Song resultSong = data.getData();
-
-
-                // The user picked a contact.
-                // The Intent's data Uri identifies which contact was selected.
-
-                // Do something with the contact here (bigger example below)
-            }
-        }
-    }
 
     /*
      * Calls functions to retrieve all music on the device and shows them in a listview.
@@ -91,7 +76,7 @@ public class MusicActivity extends Activity {
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 // TODO open music player to play desired song.
                 Log.d("songClick", arrayList.get(i).toString());
-                result.putExtra("song", arrayList.get(i).toString());
+                result.putExtra("song", arrayList.get(i));
                 setResult(Activity.RESULT_OK, result);
                 finish();
             }
