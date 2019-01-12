@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.ContentResolver;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
@@ -17,6 +18,11 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 import android.bluetooth.BluetoothDevice;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 
 
@@ -26,7 +32,9 @@ public class MusicActivity extends AppCompatActivity {
     ListView listView;
     ArrayAdapter<Song> adapter;
     BluetoothDevice owner;
-    
+    private MediaPlayer mediaPlayer = new MediaPlayer();
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,12 +71,35 @@ public class MusicActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 // TODO open music player to play desired song.
                 Log.d("songClick", arrayList.get(i).toString());
+                playMp3(/* TODO Insert byte stream */);
             }
         });
 
         // TODO Use this code to add songs coming from the network.
         this.addSong(new Song("Heyheya", "Jemoeder", "../java.meme", 5, owner));
 
+    }
+
+    private void playMp3(byte[] mp3SoundByteArray) {
+        try {
+            /* create temp file that will hold byte array */
+            File tempMp3 = File.createTempFile("tmpSong", "mp3", getCacheDir());
+            tempMp3.deleteOnExit();
+            FileOutputStream fos = new FileOutputStream(tempMp3);
+            fos.write(mp3SoundByteArray);
+            fos.close();
+
+            FileInputStream fis = new FileInputStream(tempMp3);
+
+            // resetting mediaplayer instance to evade problems
+            mediaPlayer.reset();
+            mediaPlayer.setDataSource(fis.getFD());
+
+            mediaPlayer.prepare();
+            mediaPlayer.start();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 
     /*
