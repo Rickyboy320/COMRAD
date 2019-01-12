@@ -4,13 +4,14 @@
     android:layout_height="match_parent">
 
     <Button
-        android:id="@+id/discover"
+        android:id="@+id/music"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Discover Devices" />
+        android:text="Start musicing" />
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/peersList"
+    <Button
+        android:id="@+id/p2p"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="wrap_content"
+        android:text="Start bluetoothing" />
 </LinearLayout>
