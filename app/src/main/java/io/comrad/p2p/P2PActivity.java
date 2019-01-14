@@ -14,19 +14,12 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
 import io.comrad.R;
 import io.comrad.p2p.messages.P2PMessageHandler;
 
-import static android.bluetooth.BluetoothAdapter.SCAN_MODE_CONNECTABLE;
-import static android.bluetooth.BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE;
-import static android.bluetooth.BluetoothAdapter.SCAN_MODE_NONE;
+import java.util.*;
+
+import static android.bluetooth.BluetoothAdapter.*;
 
 public class P2PActivity extends Activity {
 
@@ -36,6 +29,7 @@ public class P2PActivity extends Activity {
     private final static int REQUEST_ENABLE_BT = 1;
     private final static int REQUEST_DISCOVER = 2;
     private final static int PERMISSION_REQUEST = 3;
+    static final int REQUEST_MUSIC_FILE = 4;
 
     private P2PServerThread serverThread;
 
@@ -53,8 +47,7 @@ public class P2PActivity extends Activity {
         addComponents();
     }
 
-    private void enableBluetoothServices()
-    {
+    private void enableBluetoothServices() {
         this.handler.onBluetoothEnable();
 
         final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -95,8 +88,7 @@ public class P2PActivity extends Activity {
 
     }
 
-    private void addComponents()
-    {
+    private void addComponents() {
         final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (bluetoothAdapter == null) {
             Toast.makeText(getApplicationContext(), "This device does not support bluetooth.", Toast.LENGTH_LONG).show();
@@ -132,6 +124,15 @@ public class P2PActivity extends Activity {
             }
         });
 
+        Button chooseMusic = findViewById(R.id.chooseMusic);
+        chooseMusic.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent intent = new Intent(v.getContext(), MusicActivity.class);
+                startActivityForResult(intent, REQUEST_MUSIC_FILE);
+
+            }
+        });
+
         Button sendGraph = findViewById(R.id.sendGraph);
         sendGraph.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -154,8 +155,7 @@ public class P2PActivity extends Activity {
         if (pairedDevices.size() > 0) {
             for (BluetoothDevice device : pairedDevices) {
                 System.out.println(device.getAddress() + " : " + Arrays.toString(device.getUuids()));
-                if(this.handler.hasPeer(device.getAddress()) || P2PConnectThread.isConnecting(device.getAddress()))
-                {
+                if(this.handler.hasPeer(device.getAddress()) || P2PConnectThread.isConnecting(device.getAddress())) {
                     continue;
                 }
 
@@ -188,6 +188,19 @@ public class P2PActivity extends Activity {
             } else if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+            }
+        }
+
+        if(requestCode == REQUEST_MUSIC_FILE) {
+            if (resultCode == RESULT_OK) {
+//                handler.sendMessageToPeers("Hello world!");
+                Song result = (Song) data.getParcelableExtra("song");
+                P2PMessage p2pMessage = new P2PMessage("MEUK", update_network_structure, result);
+                handler.sendMessageToPeers(p2pMessage);
+
+//                Log.d(TAG, result.toString());
+            } else {
+                // ERROR?
             }
         }
     }

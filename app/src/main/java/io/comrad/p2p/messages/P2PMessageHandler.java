@@ -1,14 +1,10 @@
 package io.comrad.p2p.messages;
 
+import android.bluetooth.BluetoothAdapter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.provider.Settings;
 import android.widget.Toast;
-
-import java.util.HashMap;
-import java.util.Map;
-
 import io.comrad.p2p.P2PActivity;
 import io.comrad.p2p.P2PConnectedThread;
 import io.comrad.p2p.network.Graph;
@@ -41,14 +37,12 @@ public class P2PMessageHandler extends Handler {
                 byte[] writeBuf = (byte[]) msg.obj;
                 String writeMessage = new String(writeBuf);
                 System.out.println("Writing: " + writeMessage);
-
                 break;
             case P2PMessageHandler.MESSAGE_READ:
                 byte[] readBuf = (byte[]) msg.obj;
                 String readMessage = new String(readBuf, 0, msg.arg1);
                 System.out.println("Reading: " + readMessage);
                 sendToastToUI("Incoming: " + readMessage);
-
                 break;
             case P2PMessageHandler.MESSAGE_TOAST:
                 Toast.makeText(activity.getApplicationContext(), msg.getData().getString(P2PMessageHandler.TOAST), Toast.LENGTH_SHORT).show();
@@ -87,8 +81,7 @@ public class P2PMessageHandler extends Handler {
         return this.peerThreads.containsKey(mac);
     }
 
-    public void sendMessageToPeers(String message) {
-        P2PMessage p2pMessage = new P2PMessage("..", MessageType.update_network_structure, message);
+    public void sendMessageToPeers(P2PMessage p2pMessage) {
         for(P2PConnectedThread thread : this.peerThreads.values()) {
             thread.write(p2pMessage);
         }

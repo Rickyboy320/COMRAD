@@ -1,28 +1,17 @@
 package io.comrad.p2p.messages;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-
-import io.comrad.p2p.network.Graph;
-import io.comrad.p2p.network.GraphUpdate;
+import java.io.*;
 
 public class P2PMessage implements Serializable {
     private String destinationMAC;
     private MessageType type;
     private Serializable payload;
 
-    P2PMessage(String destinationMAC, MessageType type) {
+    public P2PMessage(String destinationMAC, MessageType type) {
         this(destinationMAC, type, null);
     }
 
-    P2PMessage(String destinationMAC, MessageType type, Serializable payload) {
+    public P2PMessage(String destinationMAC, MessageType type, Serializable payload) {
         this.destinationMAC = destinationMAC;
         this.type = type;
         addPayload(payload);
@@ -113,21 +102,19 @@ public class P2PMessage implements Serializable {
         return result;
     }
 
-    public static P2PMessage readMessage(InputStream byteStream) throws IOException {
-        int buffer_size = 65536;
-        byte[] buffer = new byte[buffer_size];
+    public static P2PMessage readMessage(ObjectInputStream byteStream) throws IOException {
+        P2PMessage msg = null;
 
-        int readSize = byteStream.read(buffer);
-        //if(readSize == buffer_size) {
-        //    throw new IllegalStateException("Message was too large to read.. readSize: " + readSize);
-        //}
-
-        Object object = readObject(buffer);
-        if(!(object instanceof P2PMessage))
-        {
-            throw new IllegalArgumentException("Byte stream could not be converted to a message, but instead was: " + object);
+        try {
+            msg = (P2PMessage) byteStream.readObject();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
         }
 
-        return (P2PMessage) object;
+        if(msg == null) {
+            throw new IllegalArgumentException("Byte stream could not be converted to a message, but instead was: null");
+        }
+
+        return msg;
     }
 }

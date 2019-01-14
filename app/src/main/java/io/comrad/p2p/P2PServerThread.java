@@ -6,8 +6,6 @@ import android.bluetooth.BluetoothSocket;
 
 import java.io.IOException;
 
-import io.comrad.p2p.messages.P2PMessageHandler;
-
 public class P2PServerThread extends Thread {
     private final P2PMessageHandler handler;
     private final BluetoothServerSocket serverSocket;

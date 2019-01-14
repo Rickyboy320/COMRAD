@@ -7,8 +7,10 @@ import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -18,8 +20,11 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import io.comrad.R;
-
 import java.util.ArrayList;
 
 
@@ -31,15 +36,17 @@ public class MusicActivity extends Activity {
     ArrayList<Song> arrayList;
     ListView listView;
     ArrayAdapter<Song> adapter;
-    BluetoothDevice owner;
+    String owner;
     Intent result = new Intent();
-    
+    private MediaPlayer mediaPlayer = new MediaPlayer();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_music);
 
         Intent intent = getIntent();
+
 
         // TODO: Set owner.
 
@@ -59,22 +66,6 @@ public class MusicActivity extends Activity {
 
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        // Check which request we're responding to
-        if (requestCode == REQUEST_MUSIC_FILE) {
-            // Make sure the request was successful
-            if (resultCode == RESULT_OK) {
-                //Song resultSong = data.getData();
-
-
-                // The user picked a contact.
-                // The Intent's data Uri identifies which contact was selected.
-
-                // Do something with the contact here (bigger example below)
-            }
-        }
-    }
 
     /*
      * Calls functions to retrieve all music on the device and shows them in a listview.
@@ -89,17 +80,44 @@ public class MusicActivity extends Activity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                // TODO open music player to play desired song.
                 Log.d("songClick", arrayList.get(i).toString());
-                result.putExtra("song", arrayList.get(i).toString());
+                result.putExtra("song", (Parcelable)arrayList.get(i));
                 setResult(Activity.RESULT_OK, result);
                 finish();
+
+                // TODO open music player to play desired song.
+                // playMp3Bytes(BYTE STREAM HERE);
             }
         });
 
         // TODO Use this code to add songs coming from the network.
         this.addSong(new Song("Heyheya", "Jemoeder", "../java.meme", 5, owner));
 
+    }
+
+    /*
+     * Plays a mp3 received from the given byte stream.
+     */
+    private void playMp3Bytes(byte[] mp3SoundByteArray) {
+        try {
+            /* create temp file that will hold byte array */
+            File tempMp3 = File.createTempFile("tmpSong", "mp3", getCacheDir());
+            tempMp3.deleteOnExit();
+            FileOutputStream fos = new FileOutputStream(tempMp3);
+            fos.write(mp3SoundByteArray);
+            fos.close();
+
+            FileInputStream fis = new FileInputStream(tempMp3);
+
+            // resetting mediaplayer instance to evade problems
+            mediaPlayer.reset();
+            mediaPlayer.setDataSource(fis.getFD());
+
+            mediaPlayer.prepare();
+            mediaPlayer.start();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 
     /*
