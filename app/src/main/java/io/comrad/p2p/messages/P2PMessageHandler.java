@@ -1,16 +1,17 @@
 package io.comrad.p2p.messages;
 
-import android.bluetooth.BluetoothAdapter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.Settings;
 import android.widget.Toast;
-import io.comrad.p2p.P2PActivity;
-import io.comrad.p2p.P2PConnectedThread;
-import io.comrad.p2p.network.Graph;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import io.comrad.p2p.P2PActivity;
+import io.comrad.p2p.P2PConnectedThread;
+import io.comrad.p2p.network.Graph;
 
 public class P2PMessageHandler extends Handler {
 
@@ -20,7 +21,7 @@ public class P2PMessageHandler extends Handler {
 
     public static final String TOAST = "Toast";
 
-    private Graph network;
+    public Graph network;
     private final Map<String, P2PConnectedThread> peerThreads = new HashMap<>();
 
     private final P2PActivity activity;
@@ -30,7 +31,7 @@ public class P2PMessageHandler extends Handler {
     }
 
     public void onBluetoothEnable() {
-        this.network = new Graph(BluetoothAdapter.getDefaultAdapter().getAddress());
+        this.network = new Graph(Settings.Secure.getString(this.activity.getApplicationContext().getContentResolver(), "bluetooth_address"));
     }
 
     @Override
@@ -69,13 +70,16 @@ public class P2PMessageHandler extends Handler {
     }
 
     public void addPeer(String mac, P2PConnectedThread thread) {
-        this.network.createNode(mac);
-        this.network.addEdge(this.network.getSelfNode().getMac(), mac);
         this.peerThreads.put(mac, thread);
+
+        System.out.println("Sending network: " + this.network);
+        P2PMessage p2pMessage = new P2PMessage("..", MessageType.handshake_network, this.network);
+        thread.write(p2pMessage);
+
+        this.network.addEdge(this.network.getSelfNode().getMac(), mac);
     }
 
     public void removePeer(String mac) {
-        this.network.removeNode(mac);
         this.peerThreads.remove(mac);
     }
 
@@ -87,6 +91,13 @@ public class P2PMessageHandler extends Handler {
         P2PMessage p2pMessage = new P2PMessage("..", MessageType.update_network_structure, message);
         for(P2PConnectedThread thread : this.peerThreads.values()) {
             thread.write(p2pMessage);
+        }
+    }
+
+    public void sendGraphToPeers() {
+        P2PMessage p2pGraph = new P2PMessage("..", MessageType.update_network_structure, this.network);
+        for(P2PConnectedThread thread : this.peerThreads.values()) {
+            thread.write(p2pGraph);
         }
     }
 

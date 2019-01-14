@@ -27,6 +27,12 @@
         android:layout_height="wrap_content"
         android:text="Send Message" />
 
+    <Button
+        android:id="@+id/sendGraph"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Send Graph" />
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/peersList"
         android:layout_width="match_parent"

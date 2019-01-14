@@ -1,6 +1,17 @@
 package io.comrad.p2p.messages;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+
+import io.comrad.p2p.network.Graph;
+import io.comrad.p2p.network.GraphUpdate;
 
 public class P2PMessage implements Serializable {
     private String destinationMAC;
@@ -49,8 +60,11 @@ public class P2PMessage implements Serializable {
                     this.payload = readAudioFile(fileURI);
                     break;
                 case update_network_structure:
+                case handshake_network:
                     this.payload = payload;
                     break;
+                default:
+                    throw new IllegalStateException("Payload case was not handled");
             }
         } catch(IOException e) {
             e.printStackTrace();
@@ -60,6 +74,14 @@ public class P2PMessage implements Serializable {
     public void handle(P2PMessageHandler handler) {
         System.out.println("Type: " + this.type);
         System.out.println("Message: " + this.payload);
+
+        if (this.type == MessageType.handshake_network) {
+            Graph graph = (Graph) this.payload;
+            GraphUpdate update = handler.network.difference(graph);
+
+            handler.network.apply(update);
+            System.out.println(update);
+        }
     }
 
     private static Serializable readAudioFile(String fileURI) throws IOException {

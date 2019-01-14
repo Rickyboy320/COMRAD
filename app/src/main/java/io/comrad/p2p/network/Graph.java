@@ -1,30 +1,35 @@
+
 package io.comrad.p2p.network;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
-public class Graph {
+public class Graph implements Serializable {
     private Node selfNode;
     private Set<Node> nodes;
+    private Set<Edge> edges;
 
     public Graph(String selfMAC) {
-        this(selfMAC, new HashSet<Node>());
+        this(selfMAC, new HashSet<Node>(), new HashSet<Edge>());
     }
 
-    public Graph(String selfMAC, Set<Node> nodes) {
+    public Graph(String selfMAC, Set<Node> nodes, Set<Edge> edges) {
         this.nodes = nodes;
+        this.edges = edges;
+
         this.selfNode = new Node(selfMAC);
         this.nodes.add(this.selfNode);
     }
 
-    public void merge(Graph graph) {
-        for(Node node : graph.nodes) {
-            this.addNode(node);
-        }
-    }
-
     public boolean hasNode(String mac) {
-        return getNode(mac) != null;
+        for (Node node : nodes) {
+            if (node.getMac().equalsIgnoreCase(mac)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public Node getNode(String mac) {
@@ -33,33 +38,29 @@ public class Graph {
                 return node;
             }
         }
-        return null;
+
+        throw new IllegalArgumentException("Node does not exist: " + mac);
     }
 
     public void addEdge(String mac1, String mac2) {
         Node node1 = getNode(mac1);
         Node node2 = getNode(mac2);
 
-        this.nodes.add(node1);
-        this.nodes.add(node2);
-
-        node1.addPeer(node2);
+        this.edges.add(new Edge(node1, node2));
     }
 
     public boolean hasEdge(String mac, String mac2) {
-        Node node = getNode(mac);
-        Node node1 = getNode(mac2);
+        Node node1 = getNode(mac);
+        Node node2 = getNode(mac2);
 
-        if(node == null || node1 == null) {
-            return false;
-        }
-
-        return node.getPeers().contains(node1);
+        return edges.contains(new Edge(node1, node2));
     }
 
-    private void addNode(Node node) {
-        this.nodes.add(node);
-        this.nodes.addAll(node.getPeers());
+    public boolean removeEdge(String mac, String mac2) {
+        Node node1 = getNode(mac);
+        Node node2 = getNode(mac2);
+
+        return edges.remove(new Edge(node1, node2));
     }
 
     public void createNode(String mac) {
@@ -71,13 +72,21 @@ public class Graph {
         this.nodes.add(node);
     }
 
-    public void removeNode(String mac) {
-        Node node = this.getNode(mac);
-        this.nodes.remove(node);
-        node.removeAllPeers();
-    }
-
     public Node getSelfNode() {
         return this.selfNode;
+    }
+
+    public void apply(GraphUpdate update) {
+        this.nodes.addAll(update.getAddedNodes());
+        this.edges.addAll(update.getAddedEdges());
+    }
+
+    public GraphUpdate difference(Graph graph) {
+        Set<Node> nodes = new HashSet<>(this.nodes);
+        Set<Edge> edges = new HashSet<>(this.edges);
+
+        nodes.removeAll(graph.nodes);
+        edges.removeAll(graph.edges);
+        return new GraphUpdate(nodes, edges);
     }
 }

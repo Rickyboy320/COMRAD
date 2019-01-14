@@ -14,12 +14,19 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
 import io.comrad.R;
 import io.comrad.p2p.messages.P2PMessageHandler;
 
-import java.util.*;
-
-import static android.bluetooth.BluetoothAdapter.*;
+import static android.bluetooth.BluetoothAdapter.SCAN_MODE_CONNECTABLE;
+import static android.bluetooth.BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE;
+import static android.bluetooth.BluetoothAdapter.SCAN_MODE_NONE;
 
 public class P2PActivity extends Activity {
 
@@ -43,7 +50,7 @@ public class P2PActivity extends Activity {
 
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST);
 
-        enableBluetooth();
+        addComponents();
     }
 
     private void enableBluetoothServices()
@@ -88,7 +95,7 @@ public class P2PActivity extends Activity {
 
     }
 
-    private void enableBluetooth()
+    private void addComponents()
     {
         final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (bluetoothAdapter == null) {
@@ -122,6 +129,13 @@ public class P2PActivity extends Activity {
         sendMessage.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 handler.sendMessageToPeers("Hello world!");
+            }
+        });
+
+        Button sendGraph = findViewById(R.id.sendGraph);
+        sendGraph.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                handler.sendGraphToPeers();
             }
         });
 

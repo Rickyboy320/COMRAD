@@ -1,11 +1,8 @@
 package io.comrad.p2p.network;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
+import java.io.Serializable;
 
-public class Node {
-    private Collection<Node> peers = new HashSet<>();
+public class Node implements Serializable {
     private String mac;
 
     Node(String mac) {
@@ -16,26 +13,6 @@ public class Node {
         return this.mac;
     }
 
-    public Collection<Node> getPeers() {
-        return Collections.unmodifiableCollection(this.peers);
-    }
-
-    void removePeer(Node peer) {
-        this.peers.remove(peer);
-        peer.peers.remove(this);
-    }
-
-    void addPeer(Node peer) {
-        this.peers.add(peer);
-        peer.peers.add(this);
-    }
-
-    void removeAllPeers() {
-        for(Node peer : this.getPeers()) {
-            this.removePeer(peer);
-        }
-    }
-
     @Override
     public boolean equals(Object object) {
         if(object instanceof Node) {
@@ -43,5 +20,15 @@ public class Node {
         }
 
         return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return this.mac.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return this.mac;
     }
 }
