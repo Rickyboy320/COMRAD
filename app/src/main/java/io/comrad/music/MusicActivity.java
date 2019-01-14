@@ -85,7 +85,7 @@ public class MusicActivity extends Activity {
                 finish();
 
                 // TODO open music player to play desired song.
-                // playMp3(BYTE STREAM HERE);
+                // playMp3Bytes(BYTE STREAM HERE);
             }
         });
 
@@ -97,7 +97,7 @@ public class MusicActivity extends Activity {
     /*
      * Plays a mp3 received from the given byte stream.
      */
-    private void playMp3(byte[] mp3SoundByteArray) {
+    private void playMp3Bytes(byte[] mp3SoundByteArray) {
         try {
             /* create temp file that will hold byte array */
             File tempMp3 = File.createTempFile("tmpSong", "mp3", getCacheDir());
