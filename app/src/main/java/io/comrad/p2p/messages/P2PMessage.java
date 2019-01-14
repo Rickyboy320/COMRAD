@@ -1,6 +1,10 @@
 package io.comrad.p2p.messages;
 
+import android.util.Log;
+
 import java.io.*;
+
+import static android.content.ContentValues.TAG;
 
 public class P2PMessage implements Serializable {
     private String destinationMAC;
@@ -76,20 +80,20 @@ public class P2PMessage implements Serializable {
         return data;
     }
 
-//    private static Object readObject(byte[] payload) throws IOException {
-//        ByteArrayInputStream byteStream = new ByteArrayInputStream(payload);
-//        Object result = null;
-//        try {
-//            ObjectInputStream objStream = new ObjectInputStream(byteStream);
-//            result = objStream.readObject();
-//        } catch(ClassNotFoundException e) {
-//            e.printStackTrace();
-//        } finally {
-//            byteStream.close();
-//        }
-//
-//        return result;
-//    }
+    private static Object readObject(byte[] payload) throws IOException {
+        ByteArrayInputStream byteStream = new ByteArrayInputStream(payload);
+        Object result = null;
+        try {
+            ObjectInputStream objStream = new ObjectInputStream(byteStream);
+            result = objStream.readObject();
+        } catch(ClassNotFoundException e) {
+            e.printStackTrace();
+        } finally {
+            byteStream.close();
+        }
+
+        return result;
+    }
 
     public static P2PMessage readMessage(ObjectInputStream byteStream) throws IOException {
         P2PMessage msg = null;

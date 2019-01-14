@@ -2,6 +2,8 @@ package io.comrad.p2p;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.util.Log;
+
 import io.comrad.p2p.messages.P2PMessage;
 import io.comrad.p2p.messages.P2PMessageHandler;
 
@@ -10,6 +12,8 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+
+import static android.content.ContentValues.TAG;
 
 public class P2PConnectedThread extends Thread {
 
@@ -41,8 +45,9 @@ public class P2PConnectedThread extends Thread {
         }
 
         try {
-            input = new ObjectInputStream(tmpIn);
             output = new ObjectOutputStream(tmpOut);
+            output.flush();
+            input = new ObjectInputStream(tmpIn);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -66,7 +71,7 @@ public class P2PConnectedThread extends Thread {
         try {
             byte[] stream = message.toByteArray();
             System.out.println("Size of to send message: " + stream.length);
-            output.write(message.toByteArray());
+            output.writeObject(message);
         } catch (IOException e) {
             handler.sendToastToUI("Error occurred when sending data.");
             e.printStackTrace();

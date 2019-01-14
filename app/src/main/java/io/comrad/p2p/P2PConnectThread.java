@@ -2,11 +2,15 @@ package io.comrad.p2p;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.util.Log;
+
 import io.comrad.p2p.messages.P2PMessageHandler;
 
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+
+import static android.content.ContentValues.TAG;
 
 public class P2PConnectThread extends Thread {
 

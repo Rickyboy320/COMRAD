@@ -194,7 +194,6 @@ public class P2PActivity extends Activity {
 //                handler.sendMessageToPeers("Hello world!");
                 Song result = (Song) data.getParcelableExtra("song");
                 P2PMessage p2pMessage = new P2PMessage("MEUK", update_network_structure, result);
-                p2pMessage.addPayload(new byte[55536]);
                 handler.sendMessageToPeers(p2pMessage);
 
 //                Log.d(TAG, result.toString());
