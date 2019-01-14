@@ -4,7 +4,10 @@ import android.util.Log;
 
 import java.io.*;
 
+import io.comrad.music.Song;
+
 import static android.content.ContentValues.TAG;
+import static io.comrad.p2p.messages.MessageType.song;
 
 public class P2PMessage implements Serializable {
     private String destinationMAC;
@@ -64,6 +67,10 @@ public class P2PMessage implements Serializable {
     public void handle(P2PMessageHandler handler) {
         System.out.println("Type: " + this.type);
         System.out.println("Message: " + this.payload);
+
+        if (this.type == song) {
+            handler.playMusic(this.payload);
+        }
     }
 
     private static Serializable readAudioFile(String fileURI) throws IOException {

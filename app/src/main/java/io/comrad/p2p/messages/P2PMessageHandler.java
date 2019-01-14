@@ -104,4 +104,8 @@ public class P2PMessageHandler extends Handler {
         }
     }
 
+
+    public void playMusic(byte[] musicBytes) {
+
+    }
 }

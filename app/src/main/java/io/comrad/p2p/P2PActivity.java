@@ -21,6 +21,12 @@ import io.comrad.music.Song;
 import io.comrad.p2p.messages.P2PMessage;
 import io.comrad.p2p.messages.P2PMessageHandler;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 import static android.bluetooth.BluetoothAdapter.*;
@@ -168,6 +174,19 @@ public class P2PActivity extends Activity {
         }
     }
 
+
+    public static byte[] convertStreamToByteArray(InputStream is) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte[] buff = new byte[10240];
+        int i = Integer.MAX_VALUE;
+        while ((i = is.read(buff, 0, buff.length)) > 0) {
+            baos.write(buff, 0, i);
+        }
+
+        return baos.toByteArray(); // be sure to close InputStream in calling function
+    }
+
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if(requestCode == REQUEST_DISCOVER) {
@@ -191,12 +210,28 @@ public class P2PActivity extends Activity {
 
         if(requestCode == REQUEST_MUSIC_FILE) {
             if (resultCode == RESULT_OK) {
-//                handler.sendMessageToPeers("Hello world!");
-                Song result = (Song) data.getParcelableExtra("song");
-                P2PMessage p2pMessage = new P2PMessage("MEUK", update_network_structure, result);
-                handler.sendMessageToPeers(p2pMessage);
+                Song songResult = (Song) data.getParcelableExtra("song");
+                File songFile = new File(songResult.getSongLocation());
+                InputStream inputStream = null;
 
-//                Log.d(TAG, result.toString());
+                try {
+                    inputStream = new FileInputStream(songFile);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                    this.handler.sendToastToUI("Could find file.");
+                    return;
+                }
+
+                byte[] byteStream = null;
+
+                try {
+                    byteStream = convertStreamToByteArray(inputStream);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                P2PMessage p2pMessage = new P2PMessage("MEUK", song, byteStream);
+                handler.sendMessageToPeers(p2pMessage);
             } else {
                 // ERROR?
             }
