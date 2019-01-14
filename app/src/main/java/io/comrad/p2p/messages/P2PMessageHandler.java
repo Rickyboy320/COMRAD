@@ -1,10 +1,13 @@
 package io.comrad.p2p.messages;
 
-import android.bluetooth.BluetoothAdapter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.widget.Toast;
+
+import java.util.HashMap;
+import java.util.Map;
+
 import io.comrad.p2p.P2PActivity;
 import io.comrad.p2p.P2PConnectedThread;
 import io.comrad.p2p.network.Graph;
@@ -27,7 +30,8 @@ public class P2PMessageHandler extends Handler {
     }
 
     public void onBluetoothEnable() {
-        this.network = new Graph(Settings.Secure.getString(this.activity.getApplicationContext().getContentResolver(), "bluetooth_address"));
+        System.out.println(P2PActivity.getBluetoothMac(this.activity.getApplicationContext()));
+        this.network = new Graph(P2PActivity.getBluetoothMac(this.activity.getApplicationContext()));
     }
 
     @Override
@@ -70,7 +74,10 @@ public class P2PMessageHandler extends Handler {
         P2PMessage p2pMessage = new P2PMessage("..", MessageType.handshake_network, this.network);
         thread.write(p2pMessage);
 
+        this.network.createNode(mac);
         this.network.addEdge(this.network.getSelfNode().getMac(), mac);
+
+        System.out.println("Resulting graph: " + this.network);
     }
 
     public void removePeer(String mac) {

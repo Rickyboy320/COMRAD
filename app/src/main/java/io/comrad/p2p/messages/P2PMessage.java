@@ -1,6 +1,18 @@
 package io.comrad.p2p.messages;
 
-import java.io.*;
+import android.bluetooth.BluetoothDevice;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+
+import io.comrad.p2p.network.Graph;
+import io.comrad.p2p.network.GraphUpdate;
 
 public class P2PMessage implements Serializable {
     private String destinationMAC;
@@ -60,13 +72,14 @@ public class P2PMessage implements Serializable {
         }
     }
 
-    public void handle(P2PMessageHandler handler) {
+    public void handle(P2PMessageHandler handler, BluetoothDevice sender) {
+        System.out.println("Source Mac: " + sender.getAddress());
         System.out.println("Type: " + this.type);
         System.out.println("Message: " + this.payload);
 
         if (this.type == MessageType.handshake_network) {
             Graph graph = (Graph) this.payload;
-            GraphUpdate update = handler.network.difference(graph);
+            GraphUpdate update = graph.difference(handler.network);
 
             handler.network.apply(update);
             System.out.println(update);

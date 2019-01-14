@@ -30,4 +30,14 @@ public class Edge implements Serializable {
 
         return false;
     }
+
+    @Override
+    public int hashCode() {
+        return this.node1.hashCode() + this.node2.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return this.node1 + " ----- " + this.node2;
+    }
 }

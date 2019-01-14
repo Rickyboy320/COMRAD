@@ -4,8 +4,11 @@ import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.ParcelUuid;
 import android.support.v4.app.ActivityCompat;
@@ -14,12 +17,23 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
 import io.comrad.R;
+import io.comrad.music.MusicActivity;
+import io.comrad.music.Song;
+import io.comrad.p2p.messages.MessageType;
+import io.comrad.p2p.messages.P2PMessage;
 import io.comrad.p2p.messages.P2PMessageHandler;
 
-import java.util.*;
-
-import static android.bluetooth.BluetoothAdapter.*;
+import static android.bluetooth.BluetoothAdapter.SCAN_MODE_CONNECTABLE;
+import static android.bluetooth.BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE;
+import static android.bluetooth.BluetoothAdapter.SCAN_MODE_NONE;
 
 public class P2PActivity extends Activity {
 
@@ -86,6 +100,7 @@ public class P2PActivity extends Activity {
         this.serverThread = new P2PServerThread(BluetoothAdapter.getDefaultAdapter(), this.handler);
         this.serverThread.start();
 
+        connectToBondedDevices(bluetoothAdapter, handler);
     }
 
     private void addComponents() {
@@ -120,7 +135,7 @@ public class P2PActivity extends Activity {
         Button sendMessage = findViewById(R.id.sendMessage);
         sendMessage.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                handler.sendMessageToPeers("Hello world!");
+                handler.sendMessageToPeers(new P2PMessage(".", MessageType.update_network_structure, "Hello world!"));
             }
         });
 
@@ -139,8 +154,6 @@ public class P2PActivity extends Activity {
                 handler.sendGraphToPeers();
             }
         });
-
-        connectToBondedDevices(bluetoothAdapter, handler);
 
         if(bluetoothAdapter.isEnabled()) {
             enableBluetoothServices();
@@ -195,7 +208,7 @@ public class P2PActivity extends Activity {
             if (resultCode == RESULT_OK) {
 //                handler.sendMessageToPeers("Hello world!");
                 Song result = (Song) data.getParcelableExtra("song");
-                P2PMessage p2pMessage = new P2PMessage("MEUK", update_network_structure, result);
+                P2PMessage p2pMessage = new P2PMessage("MEUK", MessageType.update_network_structure, result);
                 handler.sendMessageToPeers(p2pMessage);
 
 //                Log.d(TAG, result.toString());
@@ -220,5 +233,20 @@ public class P2PActivity extends Activity {
         this.handler.closeAllConnections();
 
         serverThread.close();
+    }
+
+    public static String getBluetoothMac(final Context context) {
+
+        String result = null;
+        if (context.checkCallingOrSelfPermission(Manifest.permission.BLUETOOTH)
+                == PackageManager.PERMISSION_GRANTED) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                result = android.provider.Settings.Secure.getString(context.getContentResolver(), "bluetooth_address");
+            } else {
+                BluetoothAdapter bta = BluetoothAdapter.getDefaultAdapter();
+                result = bta != null ? bta.getAddress() : "";
+            }
+        }
+        return result;
     }
 }

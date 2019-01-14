@@ -6,6 +6,8 @@ import android.bluetooth.BluetoothSocket;
 
 import java.io.IOException;
 
+import io.comrad.p2p.messages.P2PMessageHandler;
+
 public class P2PServerThread extends Thread {
     private final P2PMessageHandler handler;
     private final BluetoothServerSocket serverSocket;
@@ -44,6 +46,11 @@ public class P2PServerThread extends Thread {
 
     public void handleConnection(BluetoothSocket socket)
     {
+        if(this.handler.hasPeer(socket.getRemoteDevice().getAddress()))
+        {
+            this.close();
+        }
+
         this.handler.sendToastToUI("Connected with: " + socket.getRemoteDevice().getAddress() + " : " + socket.getRemoteDevice().getName());
 
         P2PConnectedThread thread = new P2PConnectedThread(socket, this.handler);

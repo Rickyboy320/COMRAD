@@ -1,6 +1,5 @@
 package io.comrad.music;
 
-import android.bluetooth.BluetoothDevice;
 import android.os.Parcel;
 import android.os.Parcelable;
 

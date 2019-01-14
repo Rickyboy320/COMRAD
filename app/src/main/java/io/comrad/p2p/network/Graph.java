@@ -15,6 +15,10 @@ public class Graph implements Serializable {
     }
 
     public Graph(String selfMAC, Set<Node> nodes, Set<Edge> edges) {
+        if(selfMAC == null) {
+            throw new IllegalArgumentException("Mac was null");
+        }
+
         this.nodes = nodes;
         this.edges = edges;
 
@@ -23,23 +27,15 @@ public class Graph implements Serializable {
     }
 
     public boolean hasNode(String mac) {
-        for (Node node : nodes) {
-            if (node.getMac().equalsIgnoreCase(mac)) {
-                return true;
-            }
-        }
-
-        return false;
+        return this.nodes.contains(new Node(mac));
     }
 
     public Node getNode(String mac) {
-        for(Node node : nodes) {
-            if(node.getMac().equalsIgnoreCase(mac)) {
-                return node;
-            }
+        if (!hasNode(mac)) {
+            throw new IllegalArgumentException("Node does not exist: " + mac);
         }
 
-        throw new IllegalArgumentException("Node does not exist: " + mac);
+        return new Node(mac);
     }
 
     public void addEdge(String mac1, String mac2) {
@@ -81,12 +77,19 @@ public class Graph implements Serializable {
         this.edges.addAll(update.getAddedEdges());
     }
 
-    public GraphUpdate difference(Graph graph) {
+   public GraphUpdate difference(Graph graph) {
+        System.out.println("Calculating difference. Current: " + this.nodes + ", " + this.edges + ". Comparing: " + graph.nodes + ", " + graph.edges);
+
         Set<Node> nodes = new HashSet<>(this.nodes);
         Set<Edge> edges = new HashSet<>(this.edges);
 
         nodes.removeAll(graph.nodes);
         edges.removeAll(graph.edges);
         return new GraphUpdate(nodes, edges);
+    }
+
+    @Override
+    public String toString() {
+        return "Nodes: " + this.nodes + ", Edges: " + this.edges;
     }
 }
