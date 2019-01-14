@@ -7,6 +7,8 @@ import io.comrad.p2p.messages.P2PMessageHandler;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 
 public class P2PConnectedThread extends Thread {
@@ -14,14 +16,16 @@ public class P2PConnectedThread extends Thread {
     private final P2PMessageHandler handler;
 
     private final BluetoothSocket socket;
-    private final InputStream input;
-    private final OutputStream output;
+    private ObjectInputStream input;
+    private ObjectOutputStream output;
 
     public P2PConnectedThread(BluetoothSocket socket, P2PMessageHandler handler) {
         this.handler = handler;
         this.socket = socket;
         InputStream tmpIn = null;
         OutputStream tmpOut = null;
+        input = null;
+        output = null;
 
         try {
             tmpIn = socket.getInputStream();
@@ -36,8 +40,12 @@ public class P2PConnectedThread extends Thread {
             e.printStackTrace();
         }
 
-        input = tmpIn;
-        output = tmpOut;
+        try {
+            input = new ObjectInputStream(tmpIn);
+            output = new ObjectOutputStream(tmpOut);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void run() {

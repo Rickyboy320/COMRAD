@@ -7,11 +7,11 @@ public class P2PMessage implements Serializable {
     private MessageType type;
     private Serializable payload;
 
-    P2PMessage(String destinationMAC, MessageType type) {
+    public P2PMessage(String destinationMAC, MessageType type) {
         this(destinationMAC, type, null);
     }
 
-    P2PMessage(String destinationMAC, MessageType type, Serializable payload) {
+    public P2PMessage(String destinationMAC, MessageType type, Serializable payload) {
         this.destinationMAC = destinationMAC;
         this.type = type;
         addPayload(payload);
@@ -76,36 +76,34 @@ public class P2PMessage implements Serializable {
         return data;
     }
 
-    private static Object readObject(byte[] payload) throws IOException {
-        ByteArrayInputStream byteStream = new ByteArrayInputStream(payload);
-        Object result = null;
+//    private static Object readObject(byte[] payload) throws IOException {
+//        ByteArrayInputStream byteStream = new ByteArrayInputStream(payload);
+//        Object result = null;
+//        try {
+//            ObjectInputStream objStream = new ObjectInputStream(byteStream);
+//            result = objStream.readObject();
+//        } catch(ClassNotFoundException e) {
+//            e.printStackTrace();
+//        } finally {
+//            byteStream.close();
+//        }
+//
+//        return result;
+//    }
+
+    public static P2PMessage readMessage(ObjectInputStream byteStream) throws IOException {
+        P2PMessage msg = null;
+
         try {
-            ObjectInputStream objStream = new ObjectInputStream(byteStream);
-            result = objStream.readObject();
-        } catch(ClassNotFoundException e) {
+            msg = (P2PMessage) byteStream.readObject();
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
-        } finally {
-            byteStream.close();
         }
 
-        return result;
-    }
-
-    public static P2PMessage readMessage(InputStream byteStream) throws IOException {
-        int buffer_size = 65536;
-        byte[] buffer = new byte[buffer_size];
-
-        int readSize = byteStream.read(buffer);
-        //if(readSize == buffer_size) {
-        //    throw new IllegalStateException("Message was too large to read.. readSize: " + readSize);
-        //}
-
-        Object object = readObject(buffer);
-        if(!(object instanceof P2PMessage))
-        {
-            throw new IllegalArgumentException("Byte stream could not be converted to a message, but instead was: " + object);
+        if(msg == null) {
+            throw new IllegalArgumentException("Byte stream could not be converted to a message, but instead was: null");
         }
 
-        return (P2PMessage) object;
+        return msg;
     }
 }

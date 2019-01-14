@@ -18,12 +18,15 @@ import android.widget.Toast;
 import io.comrad.R;
 import io.comrad.music.MusicActivity;
 import io.comrad.music.Song;
+import io.comrad.p2p.messages.P2PMessage;
 import io.comrad.p2p.messages.P2PMessageHandler;
 
 import java.util.*;
 
 import static android.bluetooth.BluetoothAdapter.*;
 import static android.content.ContentValues.TAG;
+import static io.comrad.p2p.messages.MessageType.song;
+import static io.comrad.p2p.messages.MessageType.update_network_structure;
 
 public class P2PActivity extends Activity {
     public final static String SERVICE_NAME = "COMRAD";
@@ -46,12 +49,10 @@ public class P2PActivity extends Activity {
         setContentView(R.layout.activity_p2p);
 
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST);
-
         enableBluetooth();
     }
 
-    private void enableBluetoothServices()
-    {
+    private void enableBluetoothServices() {
         this.handler.onBluetoothEnable();
 
         final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -92,8 +93,7 @@ public class P2PActivity extends Activity {
 
     }
 
-    private void enableBluetooth()
-    {
+    private void enableBluetooth() {
         final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (bluetoothAdapter == null) {
             Toast.makeText(getApplicationContext(), "This device does not support bluetooth.", Toast.LENGTH_LONG).show();
@@ -153,8 +153,7 @@ public class P2PActivity extends Activity {
         if (pairedDevices.size() > 0) {
             for (BluetoothDevice device : pairedDevices) {
                 System.out.println(device.getAddress() + " : " + Arrays.toString(device.getUuids()));
-                if(this.handler.hasPeer(device.getAddress()) || P2PConnectThread.isConnecting(device.getAddress()))
-                {
+                if(this.handler.hasPeer(device.getAddress()) || P2PConnectThread.isConnecting(device.getAddress())) {
                     continue;
                 }
 
@@ -192,12 +191,13 @@ public class P2PActivity extends Activity {
 
         if(requestCode == REQUEST_MUSIC_FILE) {
             if (resultCode == RESULT_OK) {
-                handler.sendMessageToPeers("Hello world!");
+//                handler.sendMessageToPeers("Hello world!");
                 Song result = (Song) data.getParcelableExtra("song");
+                P2PMessage p2pMessage = new P2PMessage("MEUK", update_network_structure, result);
+                p2pMessage.addPayload(new byte[55536]);
+                handler.sendMessageToPeers(p2pMessage);
 
-
-
-                Log.d(TAG, result.toString());
+//                Log.d(TAG, result.toString());
             } else {
                 // ERROR?
             }

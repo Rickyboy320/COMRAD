@@ -40,14 +40,12 @@ public class P2PMessageHandler extends Handler {
                 byte[] writeBuf = (byte[]) msg.obj;
                 String writeMessage = new String(writeBuf);
                 System.out.println("Writing: " + writeMessage);
-
                 break;
             case P2PMessageHandler.MESSAGE_READ:
                 byte[] readBuf = (byte[]) msg.obj;
                 String readMessage = new String(readBuf, 0, msg.arg1);
                 System.out.println("Reading: " + readMessage);
                 sendToastToUI("Incoming: " + readMessage);
-
                 break;
             case P2PMessageHandler.MESSAGE_TOAST:
                 Toast.makeText(activity.getApplicationContext(), msg.getData().getString(P2PMessageHandler.TOAST), Toast.LENGTH_SHORT).show();
@@ -63,10 +61,10 @@ public class P2PMessageHandler extends Handler {
         this.sendMessage(toast);
     }
 
-    public void sendBufferToUI(byte[] buffer, int bufferSize) {
-        Message readMsg = this.obtainMessage(P2PMessageHandler.MESSAGE_READ, bufferSize, -1, buffer);
-        readMsg.sendToTarget();
-    }
+//    public void sendBufferToUI(byte[] buffer, int bufferSize) {
+//        Message readMsg = this.obtainMessage(P2PMessageHandler.MESSAGE_READ, bufferSize, -1, buffer);
+//        readMsg.sendToTarget();
+//    }
 
     public void addPeer(String mac, P2PConnectedThread thread) {
         this.network.createNode(mac);
@@ -86,6 +84,12 @@ public class P2PMessageHandler extends Handler {
 
     public void sendMessageToPeers(String message) {
         P2PMessage p2pMessage = new P2PMessage("..", MessageType.update_network_structure, message);
+        for(P2PConnectedThread thread : this.peerThreads.values()) {
+            thread.write(p2pMessage);
+        }
+    }
+
+    public void sendMessageToPeers(P2PMessage p2pMessage) {
         for(P2PConnectedThread thread : this.peerThreads.values()) {
             thread.write(p2pMessage);
         }

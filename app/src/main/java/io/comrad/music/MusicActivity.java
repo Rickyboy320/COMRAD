@@ -10,6 +10,7 @@ import android.database.Cursor;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -80,7 +81,7 @@ public class MusicActivity extends Activity {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 Log.d("songClick", arrayList.get(i).toString());
-                result.putExtra("song", arrayList.get(i));
+                result.putExtra("song", (Parcelable)arrayList.get(i));
                 setResult(Activity.RESULT_OK, result);
                 finish();
 
