@@ -37,4 +37,11 @@
         android:id="@+id/peersList"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
+    <fragment
+        android:id="@+id/PlayMusic"
+        android:name="io.comrad.music.PlayMusic"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"/>
 </LinearLayout>

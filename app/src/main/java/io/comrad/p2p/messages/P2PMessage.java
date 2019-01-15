@@ -69,7 +69,7 @@ public class P2PMessage implements Serializable {
         System.out.println("Message: " + this.payload);
 
         if (this.type == song) {
-            handler.playMusic(this.payload);
+            handler.playMusic((byte[]) this.payload);
         }
     }
 
