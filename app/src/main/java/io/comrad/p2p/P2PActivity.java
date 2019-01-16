@@ -2,13 +2,18 @@ package io.comrad.p2p;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.FragmentManager;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.ParcelUuid;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -17,6 +22,7 @@ import android.widget.Button;
 import android.widget.Toast;
 import io.comrad.R;
 import io.comrad.music.MusicActivity;
+import io.comrad.music.PlayMusic;
 import io.comrad.music.Song;
 import io.comrad.p2p.messages.P2PMessage;
 import io.comrad.p2p.messages.P2PMessageHandler;
@@ -34,7 +40,7 @@ import static android.content.ContentValues.TAG;
 import static io.comrad.p2p.messages.MessageType.song;
 import static io.comrad.p2p.messages.MessageType.update_network_structure;
 
-public class P2PActivity extends Activity {
+public class P2PActivity extends FragmentActivity implements PlayMusic.OnFragmentInteractionListener {
     public final static String SERVICE_NAME = "COMRAD";
     public final static UUID SERVICE_UUID = UUID.fromString("7337958a-460f-4b0c-942e-5fa111fb2bee");
 
@@ -146,7 +152,7 @@ public class P2PActivity extends Activity {
 
         connectToBondedDevices(bluetoothAdapter, handler);
 
-        if(bluetoothAdapter.isEnabled()) {
+        if (bluetoothAdapter.isEnabled()) {
             enableBluetoothServices();
         }
     }
@@ -159,7 +165,7 @@ public class P2PActivity extends Activity {
         if (pairedDevices.size() > 0) {
             for (BluetoothDevice device : pairedDevices) {
                 System.out.println(device.getAddress() + " : " + Arrays.toString(device.getUuids()));
-                if(this.handler.hasPeer(device.getAddress()) || P2PConnectThread.isConnecting(device.getAddress())) {
+                if (this.handler.hasPeer(device.getAddress()) || P2PConnectThread.isConnecting(device.getAddress())) {
                     continue;
                 }
 
@@ -189,17 +195,17 @@ public class P2PActivity extends Activity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(requestCode == REQUEST_DISCOVER) {
-            if(resultCode == SCAN_MODE_NONE) {
+        if (requestCode == REQUEST_DISCOVER) {
+            if (resultCode == SCAN_MODE_NONE) {
                 Toast.makeText(getApplicationContext(), "This device is not connectable.", Toast.LENGTH_LONG).show();
-            } else if(resultCode == SCAN_MODE_CONNECTABLE) {
+            } else if (resultCode == SCAN_MODE_CONNECTABLE) {
                 Toast.makeText(getApplicationContext(), "This device is not discoverable, but can be connected.", Toast.LENGTH_LONG).show();
-            } else if(resultCode == SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
+            } else if (resultCode == SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
                 Toast.makeText(getApplicationContext(), "This device is now discoverable!", Toast.LENGTH_LONG).show();
             }
         }
 
-        if(requestCode == REQUEST_ENABLE_BT) {
+        if (requestCode == REQUEST_ENABLE_BT) {
             if (resultCode == RESULT_OK) {
                 enableBluetoothServices();
             } else if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
@@ -208,7 +214,7 @@ public class P2PActivity extends Activity {
             }
         }
 
-        if(requestCode == REQUEST_MUSIC_FILE) {
+        if (requestCode == REQUEST_MUSIC_FILE) {
             if (resultCode == RESULT_OK) {
                 Song songResult = (Song) data.getParcelableExtra("song");
                 File songFile = new File(songResult.getSongLocation());
@@ -238,9 +244,14 @@ public class P2PActivity extends Activity {
         }
     }
 
+    public void play() {
+        Log.d(TAG, "Play");
+    }
+
+
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        if(requestCode == PERMISSION_REQUEST) {
+        if (requestCode == PERMISSION_REQUEST) {
             //TODO
         }
     }
@@ -253,5 +264,45 @@ public class P2PActivity extends Activity {
         this.handler.closeAllConnections();
 
         serverThread.close();
+    }
+
+    @Override
+    public void sendSongToFragment(boolean play, Song song) {
+        // The user selected the headline of an article from the HeadlinesFragment
+        // Do something here to display that article
+
+        PlayMusic playmusic = (PlayMusic)
+                getSupportFragmentManager().findFragmentById(R.id.PlayMusic);
+
+        if (playmusic != null) {
+            // If article frag is available, we're in two-pane layout...
+
+            // Call a method in the ArticleFragment to update its content
+            //        playmusic.updateArticleView(position);
+        } else {
+            // Otherwise, we're in the one-pane layout and must swap frags...
+
+            // Create fragment and give it an argument for the selected article
+            //        Fragment fragmentGet = new FragmentGet();
+            //        Bundle bundle = new Bundle();
+            //        bundle.putParcelable("Student", model);
+            //        fragmentGet.setArguments(bundle);
+
+            PlayMusic newFragment = new PlayMusic();
+            Bundle bundle = new Bundle();
+            bundle.putParcelable("Song", song);
+            newFragment.setArguments(bundle);
+
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+
+            // Replace whatever is in the fragment_container view with this fragment,
+            // and add the transaction to the back stack so the user can navigate back
+
+            //        transaction.replace(R.id., newFragment);
+            transaction.addToBackStack(null);
+
+            // Commit the transaction
+            transaction.commit();
+        }
     }
 }

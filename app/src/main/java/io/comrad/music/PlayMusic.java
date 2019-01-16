@@ -3,14 +3,18 @@ package io.comrad.music;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
+import static android.content.ContentValues.TAG;
 
 import io.comrad.R;
+import io.comrad.p2p.P2PActivity;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -21,12 +25,8 @@ import io.comrad.R;
  * create an instance of this fragment.
  */
 public class PlayMusic extends Fragment implements View.OnClickListener {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
 
-    // TODO: Rename and change types of parameters
+//    private static final String TAG = null;
     private Song current;
 
     private OnFragmentInteractionListener mListener;
@@ -48,17 +48,18 @@ public class PlayMusic extends Fragment implements View.OnClickListener {
     public static PlayMusic newInstance(String param1, String param2) {
         PlayMusic fragment = new PlayMusic();
         Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
         fragment.setArguments(args);
         return fragment;
     }
 
     @Override
     public void onClick(View v) {
+        Log.d(TAG,"on CLick");
         switch (v.getId()) {
             case R.id.play:
-                Toast.makeText(getContext(), "Button One", Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "Play on click");
+//                Toast.makeText(getContext(), "Button One", Toast.LENGTH_SHORT).show();
+                ((P2PActivity)getActivity()).play();
                 break;
 //            case R.id.button_2:
 //                Toast.makeText(getContext(), "Button Two", Toast.LENGTH_SHORT).show();
@@ -75,19 +76,25 @@ public class PlayMusic extends Fragment implements View.OnClickListener {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View PlayMusic = inflater.inflate(R.layout.fragment_play_music, container, false);
-        Button buttonOne = PlayMusic.findViewById(R.id.play);
-        buttonOne.setOnClickListener(this);
+        View playmusic = inflater.inflate(R.layout.fragment_play_music, container, false);
+//        Button buttonOne = playmusic.findViewById(R.id.play);
+        final Button button = playmusic.findViewById(R.id.play);
+        button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Log.d(TAG, "HEY");
+                // Code here executes on main thread after user presses button
+            }
+        });
         // Inflate the layout for this fragment
-        return PlayMusic
+        return playmusic;
     }
 
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
         if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
+            mListener.sendSongToFragment(false, current);
         }
     }
 
@@ -120,6 +127,6 @@ public class PlayMusic extends Fragment implements View.OnClickListener {
      */
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
+        void sendSongToFragment(boolean play, Song song);
     }
 }

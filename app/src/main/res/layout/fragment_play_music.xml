@@ -13,7 +13,7 @@
         android:id="@+id/songTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="<Artist> Song" />
+        android:text="Artist Song" />
 
     <Button
         android:id="@+id/play"

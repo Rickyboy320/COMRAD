@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -7,41 +7,63 @@
         android:id="@+id/discover"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/stopDiscovery"
         android:text="Discover Devices" />
 
     <Button
-            android:text="Start Server"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/server"/>
+        android:id="@+id/server"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/chooseMusic"
+        android:text="Start Server" />
 
     <Button
-            android:text="Stop Discovering"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/stopDiscovery"/>
+        android:id="@+id/stopDiscovery"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:text="Stop Discovering" />
 
     <Button
         android:id="@+id/sendMessage"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/discover"
         android:text="Send Message" />
 
     <Button
         android:id="@+id/chooseMusic"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/sendMessage"
         android:text="Choose Music" />
-
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/peersList"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
 
     <fragment
         android:id="@+id/PlayMusic"
         android:name="io.comrad.music.PlayMusic"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"/>
-</LinearLayout>
+        android:layout_alignParentBottom="true"
+    />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/peersList"
+        android:layout_width="match_parent"
+        android:layout_height="274dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="0dp"
+        android:layout_marginLeft="0dp"
+        android:layout_marginTop="237dp" />
+</RelativeLayout>
