@@ -1,19 +1,15 @@
 package io.comrad.p2p;
 
 import android.Manifest;
-import android.app.Activity;
-import android.app.FragmentManager;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.ParcelUuid;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -40,7 +36,7 @@ import static android.content.ContentValues.TAG;
 import static io.comrad.p2p.messages.MessageType.song;
 import static io.comrad.p2p.messages.MessageType.update_network_structure;
 
-public class P2PActivity extends FragmentActivity implements PlayMusic.OnFragmentInteractionListener {
+public class P2PActivity extends AppCompatActivity implements PlayMusic.OnFragmentInteractionListener {
     public final static String SERVICE_NAME = "COMRAD";
     public final static UUID SERVICE_UUID = UUID.fromString("7337958a-460f-4b0c-942e-5fa111fb2bee");
 
@@ -271,8 +267,7 @@ public class P2PActivity extends FragmentActivity implements PlayMusic.OnFragmen
         // The user selected the headline of an article from the HeadlinesFragment
         // Do something here to display that article
 
-        PlayMusic playmusic = (PlayMusic)
-                getSupportFragmentManager().findFragmentById(R.id.PlayMusic);
+        PlayMusic playmusic = (PlayMusic) getSupportFragmentManager().findFragmentById(R.id.PlayMusic);
 
         if (playmusic != null) {
             // If article frag is available, we're in two-pane layout...

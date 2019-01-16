@@ -1,16 +1,16 @@
 package io.comrad.music;
 
+import android.app.Activity;
+import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.Toast;
 import static android.content.ContentValues.TAG;
 
 import io.comrad.R;
@@ -100,6 +100,17 @@ public class PlayMusic extends Fragment implements View.OnClickListener {
 
     @Override
     public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof OnFragmentInteractionListener) {
+            mListener = (OnFragmentInteractionListener) context;
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement OnFragmentInteractionListener");
+        }
+    }
+
+    @Override
+    public void onAttach(Activity context) {
         super.onAttach(context);
         if (context instanceof OnFragmentInteractionListener) {
             mListener = (OnFragmentInteractionListener) context;

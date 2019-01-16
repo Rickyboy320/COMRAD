@@ -1,12 +1,6 @@
 package io.comrad.p2p.messages;
 
-import android.util.Log;
-
 import java.io.*;
-
-import io.comrad.music.Song;
-
-import static android.content.ContentValues.TAG;
 import static io.comrad.p2p.messages.MessageType.song;
 
 public class P2PMessage implements Serializable {
