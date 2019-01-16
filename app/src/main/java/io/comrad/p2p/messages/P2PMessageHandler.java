@@ -4,13 +4,13 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.widget.Toast;
-
-import java.util.HashMap;
-import java.util.Map;
-
 import io.comrad.p2p.P2PActivity;
 import io.comrad.p2p.P2PConnectedThread;
 import io.comrad.p2p.network.Graph;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 public class P2PMessageHandler extends Handler {
 
@@ -20,8 +20,12 @@ public class P2PMessageHandler extends Handler {
 
     public static final String TOAST = "Toast";
 
+    private static int COUNTER = 0;
+
     public Graph network;
+
     private final Map<String, P2PConnectedThread> peerThreads = new HashMap<>();
+    public final Map<String, Set<Integer>> counters = new HashMap<>();
 
     private final P2PActivity activity;
 
@@ -71,7 +75,7 @@ public class P2PMessageHandler extends Handler {
         this.peerThreads.put(mac, thread);
 
         System.out.println("Sending network: " + this.network);
-        P2PMessage p2pMessage = new P2PMessage("..", MessageType.handshake_network, this.network);
+        P2PMessage p2pMessage = new P2PMessage(null, MessageType.handshake_network, this.network);
         thread.write(p2pMessage);
 
         this.network.createNode(mac);
@@ -95,7 +99,7 @@ public class P2PMessageHandler extends Handler {
     }
 
     public void sendGraphToPeers() {
-        P2PMessage p2pGraph = new P2PMessage("..", MessageType.update_network_structure, this.network);
+        P2PMessage p2pGraph = new P2PMessage(this.getBroadcastAddress(), MessageType.update_network_structure, this.network);
         for(P2PConnectedThread thread : this.peerThreads.values()) {
             thread.write(p2pGraph);
         }
@@ -107,4 +111,17 @@ public class P2PMessageHandler extends Handler {
         }
     }
 
+    public void broadcastExcluding(P2PMessage message, String address) {
+        for(P2PConnectedThread thread : this.peerThreads.values()) {
+            if(!thread.getRemoteDevice().getAddress().equalsIgnoreCase(address))
+            {
+                thread.write(message);
+            }
+        }
+    }
+
+    public synchronized String getBroadcastAddress() {
+        COUNTER++;
+        return "b:" + this.network.getSelfNode().getMac() + ":" + COUNTER;
+    }
 }

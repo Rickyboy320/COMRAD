@@ -95,6 +95,7 @@ public class P2PReceiver extends BroadcastReceiver
         }
 
         if(this.unknownDevices.isEmpty()) {
+            previousDevice = null;
             return;
         }
 

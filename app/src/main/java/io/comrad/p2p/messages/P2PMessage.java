@@ -1,18 +1,12 @@
 package io.comrad.p2p.messages;
 
 import android.bluetooth.BluetoothDevice;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-
 import io.comrad.p2p.network.Graph;
 import io.comrad.p2p.network.GraphUpdate;
+
+import java.io.*;
+import java.util.HashSet;
+import java.util.Set;
 
 public class P2PMessage implements Serializable {
     private String destinationMAC;
@@ -83,6 +77,34 @@ public class P2PMessage implements Serializable {
 
             handler.network.apply(update);
             System.out.println(update);
+
+            // Send update to all but source.
+            P2PMessage message = new P2PMessage(handler.getBroadcastAddress(), MessageType.update_network_structure, update);
+            handler.broadcastExcluding(message, sender.getAddress());
+        }
+
+        /* If starts with b:, it's a broadcast. */
+        if(this.destinationMAC != null && this.destinationMAC.startsWith("b:")) {
+            handler.sendToastToUI("We received a broadcast from " + sender.getAddress());
+
+            System.out.println("Incoming broadcast: " + this.destinationMAC);
+            String mac = this.destinationMAC.substring(2, 19);
+            System.out.println(mac);
+
+            int count = Integer.parseInt(this.destinationMAC.substring(20));
+            System.out.println(count);
+
+            synchronized (handler.counters) {
+                Set<Integer> knownCounts = handler.counters.get(mac);
+                if (knownCounts == null) {
+                    knownCounts = new HashSet<>();
+                    handler.counters.put(mac, knownCounts);
+                }
+                if (!knownCounts.contains(count)) {
+                    knownCounts.add(count);
+                    handler.broadcastExcluding(this, sender.getAddress());
+                }
+            }
         }
     }
 
