@@ -77,10 +77,6 @@ public class P2PMessageHandler extends Handler {
         System.out.println("Sending network: " + this.network);
         P2PMessage p2pMessage = new P2PMessage(null, MessageType.handshake_network, this.network);
         thread.write(p2pMessage);
-
-        this.network.createNode(mac);
-        this.network.addEdge(this.network.getSelfNode().getMac(), mac);
-        this.network.updateDijkstra();
     }
 
     public void removePeer(String mac) {

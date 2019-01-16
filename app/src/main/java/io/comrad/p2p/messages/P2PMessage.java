@@ -74,6 +74,9 @@ public class P2PMessage implements Serializable {
 
         if (this.type == MessageType.handshake_network) {
             Graph graph = (Graph) this.payload;
+            handler.network.createNode(sender.getAddress());
+            handler.network.addEdge(handler.network.getSelfNode().getMac(), sender.getAddress());
+
             GraphUpdate update = graph.difference(handler.network);
 
             handler.network.apply(update);
