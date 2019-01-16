@@ -21,6 +21,10 @@ public class Edge implements Serializable {
         return this.node1.equals(node) || this.node2.equals(node);
     }
 
+    public Node getOther(Node node) {
+        return this.node1.equals(node) ? node1 : node2;
+    }
+
     @Override
     public boolean equals(Object object) {
         if(object instanceof Edge) {
@@ -39,5 +43,13 @@ public class Edge implements Serializable {
     @Override
     public String toString() {
         return this.node1 + " ----- " + this.node2;
+    }
+
+    public Node getNode1() {
+        return this.node1;
+    }
+
+    public Node getNode2() {
+        return this.node2;
     }
 }

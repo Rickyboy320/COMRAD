@@ -128,7 +128,7 @@ public class P2PActivity extends Activity {
         Button sendMessage = findViewById(R.id.sendMessage);
         sendMessage.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                handler.sendMessageToPeers(new P2PMessage(handler.getBroadcastAddress(), MessageType.update_network_structure, "Hello world!"));
+                handler.sendMessageToPeers(new P2PMessage(handler.getBroadcastAddress(), MessageType.broadcast_message, "Hello world!"));
             }
         });
 
@@ -141,10 +141,10 @@ public class P2PActivity extends Activity {
             }
         });
 
-        Button sendGraph = findViewById(R.id.sendGraph);
-        sendGraph.setOnClickListener(new View.OnClickListener() {
+        Button showGraph = findViewById(R.id.showGraph);
+        showGraph.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                handler.sendGraphToPeers();
+                System.out.println(handler.network);
             }
         });
 
@@ -201,7 +201,7 @@ public class P2PActivity extends Activity {
             if (resultCode == RESULT_OK) {
 //                handler.sendMessageToPeers("Hello world!");
                 Song result = (Song) data.getParcelableExtra("song");
-                P2PMessage p2pMessage = new P2PMessage(handler.getBroadcastAddress(), MessageType.update_network_structure, result);
+                P2PMessage p2pMessage = new P2PMessage(handler.getBroadcastAddress(), MessageType.song, result);
                 handler.sendMessageToPeers(p2pMessage);
 
 //                Log.d(TAG, result.toString());

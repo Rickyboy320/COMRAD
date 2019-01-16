@@ -10,6 +10,8 @@ public class Graph implements Serializable {
     private Set<Node> nodes;
     private Set<Edge> edges;
 
+    private transient Dijkstra dijkstra;
+
     public Graph(String selfMAC) {
         this(selfMAC, new HashSet<Node>(), new HashSet<Edge>());
     }
@@ -59,6 +61,19 @@ public class Graph implements Serializable {
         return edges.remove(new Edge(node1, node2));
     }
 
+    public Set<Node> getPeers(Node node) {
+        Set<Node> result = new HashSet<>();
+        for(Edge edge : this.edges)
+        {
+            if(edge.hasNode(node))
+            {
+                result.add(edge.getOther(node));
+            }
+        }
+
+        return result;
+    }
+
     public void createNode(String mac) {
         if(this.hasNode(mac)) {
             return;
@@ -75,9 +90,45 @@ public class Graph implements Serializable {
     public void apply(GraphUpdate update) {
         this.nodes.addAll(update.getAddedNodes());
         this.edges.addAll(update.getAddedEdges());
+        this.edges.removeAll(update.getRemovedEdges());
+
+        // TODO: this could possibly go wrong with concurrency...
+        this.dijkstra = new Dijkstra(this);
+
+        System.out.println("Resulting graph: " + this);
+        System.out.println("Dijkstra paths: " + this.dijkstra.getPaths());
+
+        this.nodes.retainAll(dijkstra.getPaths().keySet());
+        this.nodes.add(selfNode);
+
+        Set<Edge> removeEdges = new HashSet<>();
+        for(Edge edge : this.edges) {
+            if(nodes.contains(edge.getNode1()) && nodes.contains(edge.getNode2())) {
+                continue;
+            }
+
+            removeEdges.add(edge);
+        }
+
+        this.edges.removeAll(removeEdges);
     }
 
-   public GraphUpdate difference(Graph graph) {
+    private Dijkstra.Path getPath(Node target) {
+        return this.dijkstra.getPaths().get(target);
+    }
+
+    public Node getNext(String macTarget) {
+        Node target = getNode(macTarget);
+        Dijkstra.Path path = getPath(target);
+        if(path == null)
+        {
+            return null;
+        }
+
+        return path.getNextNode(this.selfNode);
+    }
+
+    public GraphUpdate difference(Graph graph) {
         System.out.println("Calculating difference. Current: " + this.nodes + ", " + this.edges + ". Comparing: " + graph.nodes + ", " + graph.edges);
 
         Set<Node> nodes = new HashSet<>(this.nodes);
@@ -85,7 +136,7 @@ public class Graph implements Serializable {
 
         nodes.removeAll(graph.nodes);
         edges.removeAll(graph.edges);
-        return new GraphUpdate(nodes, edges);
+        return new GraphUpdate(nodes, edges, new HashSet<Edge>());
     }
 
     @Override

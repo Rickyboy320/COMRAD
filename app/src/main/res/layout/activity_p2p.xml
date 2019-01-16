@@ -35,10 +35,10 @@
         android:text="Choose Music" />
 
     <Button
-        android:id="@+id/sendGraph"
+        android:id="@+id/showGraph"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Send Graph" />
+        android:text="Show Graph" />
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/peersList"

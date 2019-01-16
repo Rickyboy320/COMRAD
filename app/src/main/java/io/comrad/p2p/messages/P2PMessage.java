@@ -56,6 +56,7 @@ public class P2PMessage implements Serializable {
                     break;
                 case update_network_structure:
                 case handshake_network:
+                case broadcast_message:
                     this.payload = payload;
                     break;
                 default:
@@ -81,6 +82,9 @@ public class P2PMessage implements Serializable {
             // Send update to all but source.
             P2PMessage message = new P2PMessage(handler.getBroadcastAddress(), MessageType.update_network_structure, update);
             handler.broadcastExcluding(message, sender.getAddress());
+        } else if(this.type == MessageType.update_network_structure) {
+            GraphUpdate update = (GraphUpdate) this.payload;
+            handler.network.apply(update);
         }
 
         /* If starts with b:, it's a broadcast. */

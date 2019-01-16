@@ -80,8 +80,6 @@ public class P2PMessageHandler extends Handler {
 
         this.network.createNode(mac);
         this.network.addEdge(this.network.getSelfNode().getMac(), mac);
-
-        System.out.println("Resulting graph: " + this.network);
     }
 
     public void removePeer(String mac) {
@@ -95,13 +93,6 @@ public class P2PMessageHandler extends Handler {
     public void sendMessageToPeers(P2PMessage p2pMessage) {
         for(P2PConnectedThread thread : this.peerThreads.values()) {
             thread.write(p2pMessage);
-        }
-    }
-
-    public void sendGraphToPeers() {
-        P2PMessage p2pGraph = new P2PMessage(this.getBroadcastAddress(), MessageType.update_network_structure, this.network);
-        for(P2PConnectedThread thread : this.peerThreads.values()) {
-            thread.write(p2pGraph);
         }
     }
 
