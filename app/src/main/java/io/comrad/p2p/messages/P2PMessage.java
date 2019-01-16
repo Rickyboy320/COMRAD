@@ -83,11 +83,16 @@ public class P2PMessage implements Serializable {
             System.out.println(update);
 
             // Send update to all but source.
-            P2PMessage message = new P2PMessage(handler.getBroadcastAddress(), MessageType.update_network_structure, update);
+//            P2PMessage message = new P2PMessage(handler.getBroadcastAddress(), MessageType.update_network_structure, update);
+            P2PMessage message = new P2PMessage(handler.getBroadcastAddress(), MessageType.update_network_structure, handler.network);
             handler.broadcastExcluding(message, sender.getAddress());
         } else if(this.type == MessageType.update_network_structure) {
-            GraphUpdate update = (GraphUpdate) this.payload;
+//            GraphUpdate update = (GraphUpdate) this.payload;
+//            handler.network.apply(update);
+            Graph graph = (Graph) this.payload;
+            GraphUpdate update = handler.network.difference(graph);
             handler.network.apply(update);
+            System.out.println("Updated network to: " + handler.network);
         }
 
         /* If starts with b:, it's a broadcast. */
