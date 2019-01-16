@@ -91,7 +91,10 @@ public class Graph implements Serializable {
         this.nodes.addAll(update.getAddedNodes());
         this.edges.addAll(update.getAddedEdges());
         this.edges.removeAll(update.getRemovedEdges());
+        this.updateDijkstra();
+    }
 
+    public void updateDijkstra() {
         // TODO: this could possibly go wrong with concurrency...
         this.dijkstra = new Dijkstra(this);
 

@@ -80,6 +80,7 @@ public class P2PMessageHandler extends Handler {
 
         this.network.createNode(mac);
         this.network.addEdge(this.network.getSelfNode().getMac(), mac);
+        this.network.updateDijkstra();
     }
 
     public void removePeer(String mac) {
