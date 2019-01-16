@@ -22,7 +22,7 @@ public class Edge implements Serializable {
     }
 
     public Node getOther(Node node) {
-        return this.node1.equals(node) ? node1 : node2;
+        return this.node1.equals(node) ? node2 : node1;
     }
 
     @Override
