@@ -1,14 +1,9 @@
 package io.comrad.music;
 
-import android.app.Activity;
-import android.content.ContextWrapper;
-import android.support.v4.content.ContextCompat;
 import android.media.MediaPlayer;
-import android.support.v4.app.Fragment;
-import android.content.Context;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,12 +14,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
-
-import static android.content.ContentValues.TAG;
 
 import io.comrad.R;
-import io.comrad.p2p.P2PActivity;
+
+import static android.content.ContentValues.TAG;
 
 
 public class PlayMusic extends Fragment  {
@@ -34,7 +27,7 @@ public class PlayMusic extends Fragment  {
     private MediaPlayer mediaPlayer = new MediaPlayer();
 
     public PlayMusic() {
-        this.current = new Song("No Song playing", "", "", 0, "");
+        this.current = new Song("No Song playing", "", "", 0);
     }
 
     private void PlayCurrentSong() {

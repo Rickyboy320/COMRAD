@@ -5,10 +5,12 @@ import android.os.Handler;
 import android.os.Message;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import io.comrad.music.Song;
 import io.comrad.p2p.P2PActivity;
 import io.comrad.p2p.P2PConnectedThread;
 import io.comrad.p2p.network.Graph;
@@ -39,9 +41,9 @@ public class P2PMessageHandler extends Handler {
         this.activity = activity;
     }
 
-    public void onBluetoothEnable() {
+    public void onBluetoothEnable(ArrayList<Song> ownSongs) {
         System.out.println(P2PActivity.getBluetoothMac(this.activity.getApplicationContext()));
-        this.network = new Graph(P2PActivity.getBluetoothMac(this.activity.getApplicationContext()));
+        this.network = new Graph(P2PActivity.getBluetoothMac(this.activity.getApplicationContext()), ownSongs);
     }
 
     @Override

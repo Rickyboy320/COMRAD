@@ -2,6 +2,7 @@ package io.comrad.music;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+
 import java.io.Serializable;
 
 public class Song implements Parcelable, Serializable {
@@ -10,15 +11,12 @@ public class Song implements Parcelable, Serializable {
     private String songLocation;
     private int songSize;
     // MAC Address of the owner
-    private String owner;
 
-    public Song(String songTitle, String songArtist, String songLocation, int songSize,
-                String owner) {
+    public Song(String songTitle, String songArtist, String songLocation, int songSize) {
         this.songTitle = songTitle;
         this.songArtist = songArtist;
         this.songLocation = songLocation;
         this.songSize = songSize;
-        this.owner = owner;
     }
 
     private Song(Parcel in) {
@@ -26,7 +24,6 @@ public class Song implements Parcelable, Serializable {
         this.songArtist = in.readString();
         this.songLocation = in.readString();
         this.songSize = in.readInt();
-        this.owner = in.readString();
     }
 
     @Override
@@ -40,7 +37,6 @@ public class Song implements Parcelable, Serializable {
         out.writeString(this.songArtist);
         out.writeString(this.songLocation);
         out.writeInt(this.songSize);
-        out.writeString(this.owner);
     }
 
     public static final Parcelable.Creator<Song> CREATOR = new Parcelable.Creator<Song>() {
@@ -73,9 +69,5 @@ public class Song implements Parcelable, Serializable {
 
     public int getSongSize() {
         return this.songSize;
-    }
-
-    public String getOwner() {
-        return this.owner;
     }
 }

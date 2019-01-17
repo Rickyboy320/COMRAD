@@ -6,12 +6,10 @@ import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.provider.MediaStore;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
@@ -20,13 +18,11 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Set;
 
 import io.comrad.R;
+import io.comrad.p2p.network.Node;
 
 
 public class MusicActivity extends Activity {
@@ -34,7 +30,7 @@ public class MusicActivity extends Activity {
     static final int REQUEST_MUSIC_FILE = 4;
 
     private static final int MY_PERMISSION_REQUEST = 1;
-    ArrayList<Song> arrayList;
+    ArrayList<Song> arrayList = new ArrayList<>();
     ListView listView;
     ArrayAdapter<Song> adapter;
     String owner;
@@ -46,24 +42,24 @@ public class MusicActivity extends Activity {
         setContentView(R.layout.activity_music);
 
         Intent intent = getIntent();
+        Set<Node> nodes = (Set<Node>) intent.getSerializableExtra("Nodes");
 
 
-        // TODO: Set owner.
 
-        if(ContextCompat.checkSelfPermission(MusicActivity.this,
-                Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            if(ActivityCompat.shouldShowRequestPermissionRationale(MusicActivity.this,
-                    Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                ActivityCompat.requestPermissions(MusicActivity.this,
-                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
-            } else {
-                ActivityCompat.requestPermissions(MusicActivity.this,
-                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
-            }
-        } else {
-            showMusic();
-        }
 
+//        if(ContextCompat.checkSelfPermission(MusicActivity.this,
+//                Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+//            if(ActivityCompat.shouldShowRequestPermissionRationale(MusicActivity.this,
+//                    Manifest.permission.READ_EXTERNAL_STORAGE)) {
+//                ActivityCompat.requestPermissions(MusicActivity.this,
+//                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
+//            } else {
+//                ActivityCompat.requestPermissions(MusicActivity.this,
+//                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
+//            }
+//        } else {
+//            showMusic();
+//        }
     }
 
 
@@ -72,7 +68,6 @@ public class MusicActivity extends Activity {
      */
     public void showMusic() {
         listView = findViewById(R.id.musicView);
-        arrayList = new ArrayList<>();
         getMusic();
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, arrayList);
         listView.setAdapter((adapter));
@@ -91,8 +86,7 @@ public class MusicActivity extends Activity {
         });
 
         // TODO Use this code to add songs coming from the network.
-        this.addSong(new Song("Heyheya", "Jemoeder", "../java.meme", 5, owner));
-
+//        this.addSong(new Song("Heyheya", "Jemoeder", "../java.meme", 5));
     }
 
 
@@ -134,7 +128,7 @@ public class MusicActivity extends Activity {
                 currentArtist = songCursor.getString(songArtist);
                 currentLocation = songCursor.getString(songLocation);
                 currentSize = songCursor.getInt(songSize);
-                arrayList.add(new Song(currentTitle, currentArtist, currentLocation, currentSize, owner));
+                arrayList.add(new Song(currentTitle, currentArtist, currentLocation, currentSize));
             } while (songCursor.moveToNext());
         }
     }

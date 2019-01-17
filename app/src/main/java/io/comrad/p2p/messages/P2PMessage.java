@@ -1,7 +1,5 @@
 package io.comrad.p2p.messages;
 
-import java.io.*;
-import static io.comrad.p2p.messages.MessageType.song;
 import android.bluetooth.BluetoothDevice;
 
 import java.io.ByteArrayInputStream;
@@ -17,6 +15,8 @@ import java.util.Set;
 
 import io.comrad.p2p.network.Graph;
 import io.comrad.p2p.network.GraphUpdate;
+
+import static io.comrad.p2p.messages.MessageType.song;
 
 public class P2PMessage implements Serializable {
     private String destinationMAC;
@@ -148,7 +148,9 @@ public class P2PMessage implements Serializable {
         } else if (this.type == MessageType.send_message) {
             if (this.getDestinationMAC().equalsIgnoreCase(handler.network.getSelfNode().getMac())) {
                 handler.sendToastToUI("We received a message from " + this.sourceMac);
-                handler.sendToastToUI((String) this.payload);
+                handler.sendSongToActivity((byte[]) this.payload);
+
+
             } else {
                 handler.forwardMessage(this);
             }

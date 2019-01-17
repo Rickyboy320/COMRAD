@@ -2,8 +2,11 @@
 package io.comrad.p2p.network;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+
+import io.comrad.music.Song;
 
 public class Graph implements Serializable {
     private Node selfNode;
@@ -12,11 +15,11 @@ public class Graph implements Serializable {
 
     private transient Dijkstra dijkstra;
 
-    public Graph(String selfMAC) {
-        this(selfMAC, new HashSet<Node>(), new HashSet<Edge>());
+    public Graph(String selfMAC, ArrayList<Song> ownSongs) {
+        this(selfMAC, new HashSet<Node>(), new HashSet<Edge>(), ownSongs);
     }
 
-    public Graph(String selfMAC, Set<Node> nodes, Set<Edge> edges) {
+    public Graph(String selfMAC, Set<Node> nodes, Set<Edge> edges, ArrayList<Song> ownSongs) {
         if(selfMAC == null) {
             throw new IllegalArgumentException("Mac was null");
         }
@@ -24,7 +27,7 @@ public class Graph implements Serializable {
         this.nodes = nodes;
         this.edges = edges;
 
-        this.selfNode = new Node(selfMAC);
+        this.selfNode = new Node(selfMAC, ownSongs);
         this.nodes.add(this.selfNode);
     }
 
@@ -38,6 +41,10 @@ public class Graph implements Serializable {
         }
 
         return new Node(mac);
+    }
+
+    public Set<Node> getNodes() {
+        return this.nodes;
     }
 
     public void addEdge(String mac1, String mac2) {
