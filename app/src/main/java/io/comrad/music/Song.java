@@ -2,7 +2,6 @@ package io.comrad.music;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-
 import java.io.Serializable;
 
 public class Song implements Parcelable, Serializable {

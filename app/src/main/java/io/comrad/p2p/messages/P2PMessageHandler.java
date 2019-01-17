@@ -20,8 +20,11 @@ public class P2PMessageHandler extends Handler {
     public static final int MESSAGE_TOAST = 1;
     public static final int MESSAGE_READ = 2;
     public static final int MESSAGE_WRITE = 3;
+    public static final int MESSAGE_SONG = 4;
+
 
     public static final String TOAST = "Toast";
+    public static final String SONG = "Song";
 
     private static int COUNTER = 0;
 
@@ -58,6 +61,9 @@ public class P2PMessageHandler extends Handler {
             case P2PMessageHandler.MESSAGE_TOAST:
                 Toast.makeText(activity.getApplicationContext(), msg.getData().getString(P2PMessageHandler.TOAST), Toast.LENGTH_SHORT).show();
                 break;
+            case P2PMessageHandler.MESSAGE_SONG:
+                activity.sendByteArrayToPlayMusic(msg.getData().getByteArray(P2PMessageHandler.SONG));
+
         }
     }
 
@@ -67,6 +73,14 @@ public class P2PMessageHandler extends Handler {
         bundle.putString(P2PMessageHandler.TOAST, message);
         toast.setData(bundle);
         this.sendMessage(toast);
+    }
+
+    public void sendSongToActivity(byte[] songBytes) {
+        Message song = this.obtainMessage(P2PMessageHandler.MESSAGE_SONG);
+        Bundle bundle = new Bundle();
+        bundle.putByteArray("Song", songBytes);
+        song.setData(bundle);
+        this.sendMessage(song);
     }
 
     public void addPeer(String mac, P2PConnectedThread thread) {

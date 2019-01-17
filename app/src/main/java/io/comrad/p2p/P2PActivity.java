@@ -1,7 +1,6 @@
 package io.comrad.p2p;
 
 import android.Manifest;
-import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
@@ -12,6 +11,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.ParcelUuid;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
@@ -26,17 +27,29 @@ import java.util.UUID;
 
 import io.comrad.R;
 import io.comrad.music.MusicActivity;
+import io.comrad.music.PlayMusic;
 import io.comrad.music.Song;
 import io.comrad.p2p.messages.MessageType;
 import io.comrad.p2p.messages.P2PMessage;
 import io.comrad.p2p.messages.P2PMessageHandler;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
+
+import static android.bluetooth.BluetoothAdapter.*;
+import static android.content.ContentValues.TAG;
+import static io.comrad.p2p.messages.MessageType.song;
+import static io.comrad.p2p.messages.MessageType.update_network_structure;
 
 import static android.bluetooth.BluetoothAdapter.SCAN_MODE_CONNECTABLE;
 import static android.bluetooth.BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE;
 import static android.bluetooth.BluetoothAdapter.SCAN_MODE_NONE;
 
-public class P2PActivity extends Activity {
-
+public class P2PActivity extends FragmentActivity  {
     public final static String SERVICE_NAME = "COMRAD";
     public final static UUID SERVICE_UUID = UUID.fromString("7337958a-460f-4b0c-942e-5fa111fb2bee");
 
@@ -59,6 +72,11 @@ public class P2PActivity extends Activity {
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST);
 
         addComponents();
+    }
+
+    public void sendByteArrayToPlayMusic(byte[] songBytes) {
+        PlayMusic fragment = (PlayMusic) getSupportFragmentManager().findFragmentById(R.id.PlayMusic);
+        fragment.addSongBytes(songBytes);
     }
 
     private void enableBluetoothServices() {
@@ -165,7 +183,7 @@ public class P2PActivity extends Activity {
             }
         });
 
-        if(bluetoothAdapter.isEnabled()) {
+        if (bluetoothAdapter.isEnabled()) {
             enableBluetoothServices();
         }
     }
@@ -178,7 +196,7 @@ public class P2PActivity extends Activity {
         if (pairedDevices.size() > 0) {
             for (BluetoothDevice device : pairedDevices) {
                 System.out.println(device.getAddress() + " : " + Arrays.toString(device.getUuids()));
-                if(this.handler.hasPeer(device.getAddress()) || P2PConnectThread.isConnecting(device.getAddress())) {
+                if (this.handler.hasPeer(device.getAddress()) || P2PConnectThread.isConnecting(device.getAddress())) {
                     continue;
                 }
 
@@ -193,19 +211,32 @@ public class P2PActivity extends Activity {
         }
     }
 
+
+    public static byte[] convertStreamToByteArray(InputStream is) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte[] buff = new byte[10240];
+        int i = Integer.MAX_VALUE;
+        while ((i = is.read(buff, 0, buff.length)) > 0) {
+            baos.write(buff, 0, i);
+        }
+
+        return baos.toByteArray(); // be sure to close InputStream in calling function
+    }
+
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(requestCode == REQUEST_DISCOVER) {
-            if(resultCode == SCAN_MODE_NONE) {
+        if (requestCode == REQUEST_DISCOVER) {
+            if (resultCode == SCAN_MODE_NONE) {
                 Toast.makeText(getApplicationContext(), "This device is not connectable.", Toast.LENGTH_LONG).show();
-            } else if(resultCode == SCAN_MODE_CONNECTABLE) {
+            } else if (resultCode == SCAN_MODE_CONNECTABLE) {
                 Toast.makeText(getApplicationContext(), "This device is not discoverable, but can be connected.", Toast.LENGTH_LONG).show();
-            } else if(resultCode == SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
+            } else if (resultCode == SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
                 Toast.makeText(getApplicationContext(), "This device is now discoverable!", Toast.LENGTH_LONG).show();
             }
         }
 
-        if(requestCode == REQUEST_ENABLE_BT) {
+        if (requestCode == REQUEST_ENABLE_BT) {
             if (resultCode == RESULT_OK) {
                 enableBluetoothServices();
             } else if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
@@ -214,14 +245,32 @@ public class P2PActivity extends Activity {
             }
         }
 
-        if(requestCode == REQUEST_MUSIC_FILE) {
+        if (requestCode == REQUEST_MUSIC_FILE) {
             if (resultCode == RESULT_OK) {
-//                handler.sendMessageToPeers("Hello world!");
-                Song result = (Song) data.getParcelableExtra("song");
-                P2PMessage p2pMessage = new P2PMessage(null, handler.getBroadcastAddress(), MessageType.song, result);
-                handler.sendMessageToPeers(p2pMessage);
+                Song songResult = (Song) data.getParcelableExtra("song");
+                File songFile = new File(songResult.getSongLocation());
+                InputStream inputStream = null;
 
-//                Log.d(TAG, result.toString());
+                try {
+                    inputStream = new FileInputStream(songFile);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                    this.handler.sendToastToUI("Could find file.");
+                    return;
+                }
+
+                byte[] byteStream = null;
+
+
+
+                try {
+                    byteStream = convertStreamToByteArray(inputStream);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                //P2PMessage p2pMessage = new P2PMessage(handler.network.getSelfNode().getMac(), target, MessageType.song, byteStream);
+                //handler.sendMessageToPeers(p2pMessage);
             } else {
                 // ERROR?
             }
@@ -230,7 +279,7 @@ public class P2PActivity extends Activity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        if(requestCode == PERMISSION_REQUEST) {
+        if (requestCode == PERMISSION_REQUEST) {
             //TODO
         }
     }
@@ -246,7 +295,6 @@ public class P2PActivity extends Activity {
     }
 
     public static String getBluetoothMac(final Context context) {
-
         String result = null;
         if (context.checkCallingOrSelfPermission(Manifest.permission.BLUETOOTH)
                 == PackageManager.PERMISSION_GRANTED) {

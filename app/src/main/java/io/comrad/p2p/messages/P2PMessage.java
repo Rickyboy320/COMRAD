@@ -1,5 +1,7 @@
 package io.comrad.p2p.messages;
 
+import java.io.*;
+import static io.comrad.p2p.messages.MessageType.song;
 import android.bluetooth.BluetoothDevice;
 
 import java.io.ByteArrayInputStream;
@@ -62,8 +64,9 @@ public class P2PMessage implements Serializable {
                 case playlist:
                     break;
                 case song:
-                    String fileURI = (String) payload;
-                    this.payload = readAudioFile(fileURI);
+//                    String fileURI = (String) payload;
+//                    this.payload = readAudioFile(fileURI);
+                    this.payload = payload;
                     break;
                 case send_message:
                 case update_network_structure:
@@ -74,7 +77,7 @@ public class P2PMessage implements Serializable {
                 default:
                     throw new IllegalStateException("Payload case was not handled");
             }
-        } catch(IOException e) {
+        } catch(Exception e) {
             e.printStackTrace();
         }
     }
@@ -118,7 +121,9 @@ public class P2PMessage implements Serializable {
         System.out.println("Type: " + this.type);
         System.out.println("Message: " + this.payload);
 
-        if (this.type == MessageType.handshake_network) {
+        if (this.type == song) {
+            handler.sendSongToActivity((byte[]) this.payload);
+        } else if (this.type == MessageType.handshake_network) {
             Graph graph = (Graph) this.payload;
             handler.network.createNode(sender.getAddress());
             handler.network.addEdge(handler.network.getSelfNode().getMac(), sender.getAddress());
