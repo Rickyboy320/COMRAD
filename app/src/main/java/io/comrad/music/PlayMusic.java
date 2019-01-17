@@ -1,6 +1,9 @@
 package io.comrad.music;
 
 import android.app.Activity;
+import android.content.ContextWrapper;
+import android.support.v4.content.ContextCompat;
+import android.media.MediaPlayer;
 import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.net.Uri;
@@ -11,31 +14,36 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Arrays;
+
 import static android.content.ContentValues.TAG;
 
 import io.comrad.R;
 import io.comrad.p2p.P2PActivity;
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link PlayMusic.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link PlayMusic#newInstance} factory method to
- * create an instance of this fragment.
- */
-public class PlayMusic extends Fragment implements View.OnClickListener {
 
-//    private static final String TAG = null;
+public class PlayMusic extends Fragment  {
+
     private Song current;
-
-    private OnFragmentInteractionListener mListener;
+    private byte[] currentBytes;
+    private MediaPlayer mediaPlayer = new MediaPlayer();
 
     public PlayMusic() {
         this.current = new Song("No Song playing", "", "", 0, "");
-        // Required empty public constructor
     }
 
+    private void PlayCurrentSong() {
+        if (currentBytes != null) {
+            playMp3Bytes(currentBytes);
+        } else {
+            // No song chosen
+        }
+    }
     /**
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
@@ -53,91 +61,51 @@ public class PlayMusic extends Fragment implements View.OnClickListener {
     }
 
     @Override
-    public void onClick(View v) {
-        Log.d(TAG,"on CLick");
-        switch (v.getId()) {
-            case R.id.play:
-                Log.d(TAG, "Play on click");
-//                Toast.makeText(getContext(), "Button One", Toast.LENGTH_SHORT).show();
-                ((P2PActivity)getActivity()).play();
-                break;
-//            case R.id.button_2:
-//                Toast.makeText(getContext(), "Button Two", Toast.LENGTH_SHORT).show();
-//                break;
-        }
-    }
-
-    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        if (getArguments() != null) {
-//            mParam1 = getArguments().getString(ARG_PARAM1);
-//        }
     }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View playmusic = inflater.inflate(R.layout.fragment_play_music, container, false);
-//        Button buttonOne = playmusic.findViewById(R.id.play);
         final Button button = playmusic.findViewById(R.id.play);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Log.d(TAG, "HEY");
-                // Code here executes on main thread after user presses button
+                PlayCurrentSong();
             }
         });
-        // Inflate the layout for this fragment
         return playmusic;
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.sendSongToFragment(false, current);
-        }
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
-
-    @Override
-    public void onAttach(Activity context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
-    }
-
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
+    /*
+     * Plays a mp3 received from the given byte stream.
      */
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void sendSongToFragment(boolean play, Song song);
+    private void playMp3Bytes(byte[] mp3SoundByteArray) {
+        try {
+            /* create temp file that will hold byte array */
+            File tempMp3 = File.createTempFile("tmpSong", "mp3", getActivity().getCacheDir());
+            tempMp3.deleteOnExit();
+            FileOutputStream fos = new FileOutputStream(tempMp3);
+            fos.write(mp3SoundByteArray);
+            fos.close();
+
+            FileInputStream fis = new FileInputStream(tempMp3);
+
+            // resetting mediaplayer instance to evade problems
+            mediaPlayer.reset();
+            mediaPlayer.setDataSource(fis.getFD());
+
+            mediaPlayer.prepare();
+            mediaPlayer.start();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public void addSongBytes(byte[] songBytes) {
+        currentBytes = songBytes;
+        PlayCurrentSong();
     }
 }

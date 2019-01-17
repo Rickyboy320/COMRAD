@@ -46,14 +46,15 @@ public class P2PMessage implements Serializable {
                 case playlist:
                     break;
                 case song:
-                    String fileURI = (String) payload;
-                    this.payload = readAudioFile(fileURI);
+//                    String fileURI = (String) payload;
+//                    this.payload = readAudioFile(fileURI);
+                    this.payload = payload;
                     break;
                 case update_network_structure:
                     this.payload = payload;
                     break;
             }
-        } catch(IOException e) {
+        } catch(Exception e) {
             e.printStackTrace();
         }
     }
@@ -63,7 +64,7 @@ public class P2PMessage implements Serializable {
         System.out.println("Message: " + this.payload);
 
         if (this.type == song) {
-            handler.playMusic((byte[]) this.payload);
+            handler.sendSongToActivity((byte[]) this.payload);
         }
     }
 

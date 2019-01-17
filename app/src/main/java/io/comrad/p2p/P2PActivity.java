@@ -9,7 +9,7 @@ import android.os.Bundle;
 import android.os.ParcelUuid;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -35,8 +35,8 @@ import static android.bluetooth.BluetoothAdapter.*;
 import static android.content.ContentValues.TAG;
 import static io.comrad.p2p.messages.MessageType.song;
 import static io.comrad.p2p.messages.MessageType.update_network_structure;
-
-public class P2PActivity extends AppCompatActivity implements PlayMusic.OnFragmentInteractionListener {
+//implements PlayMusic.OnFragmentInteractionListener
+public class P2PActivity extends FragmentActivity  {
     public final static String SERVICE_NAME = "COMRAD";
     public final static UUID SERVICE_UUID = UUID.fromString("7337958a-460f-4b0c-942e-5fa111fb2bee");
 
@@ -58,6 +58,11 @@ public class P2PActivity extends AppCompatActivity implements PlayMusic.OnFragme
 
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST);
         enableBluetooth();
+    }
+
+    public void sendByteArrayToPlayMusic(byte[] songBytes) {
+        PlayMusic fragment = (PlayMusic) getSupportFragmentManager().findFragmentById(R.id.PlayMusic);
+        fragment.addSongBytes(songBytes);
     }
 
     private void enableBluetoothServices() {
@@ -240,11 +245,6 @@ public class P2PActivity extends AppCompatActivity implements PlayMusic.OnFragme
         }
     }
 
-    public void play() {
-        Log.d(TAG, "Play");
-    }
-
-
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         if (requestCode == PERMISSION_REQUEST) {
@@ -262,42 +262,42 @@ public class P2PActivity extends AppCompatActivity implements PlayMusic.OnFragme
         serverThread.close();
     }
 
-    @Override
-    public void sendSongToFragment(boolean play, Song song) {
-        // The user selected the headline of an article from the HeadlinesFragment
-        // Do something here to display that article
-
-        PlayMusic playmusic = (PlayMusic) getSupportFragmentManager().findFragmentById(R.id.PlayMusic);
-
-        if (playmusic != null) {
-            // If article frag is available, we're in two-pane layout...
-
-            // Call a method in the ArticleFragment to update its content
-            //        playmusic.updateArticleView(position);
-        } else {
-            // Otherwise, we're in the one-pane layout and must swap frags...
-
-            // Create fragment and give it an argument for the selected article
-            //        Fragment fragmentGet = new FragmentGet();
-            //        Bundle bundle = new Bundle();
-            //        bundle.putParcelable("Student", model);
-            //        fragmentGet.setArguments(bundle);
-
-            PlayMusic newFragment = new PlayMusic();
-            Bundle bundle = new Bundle();
-            bundle.putParcelable("Song", song);
-            newFragment.setArguments(bundle);
-
-            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-
-            // Replace whatever is in the fragment_container view with this fragment,
-            // and add the transaction to the back stack so the user can navigate back
-
-            //        transaction.replace(R.id., newFragment);
-            transaction.addToBackStack(null);
-
-            // Commit the transaction
-            transaction.commit();
-        }
-    }
+//    @Override
+//    public void sendSongToFragment(boolean play, Song song) {
+//        // The user selected the headline of an article from the HeadlinesFragment
+//        // Do something here to display that article
+//
+//        PlayMusic playmusic = (PlayMusic) getSupportFragmentManager().findFragmentById(R.id.PlayMusic);
+//
+//        if (playmusic != null) {
+//            // If article frag is available, we're in two-pane layout...
+//
+//            // Call a method in the ArticleFragment to update its content
+//            //        playmusic.updateArticleView(position);
+//        } else {
+//            // Otherwise, we're in the one-pane layout and must swap frags...
+//
+//            // Create fragment and give it an argument for the selected article
+//            //        Fragment fragmentGet = new FragmentGet();
+//            //        Bundle bundle = new Bundle();
+//            //        bundle.putParcelable("Student", model);
+//            //        fragmentGet.setArguments(bundle);
+//
+//            PlayMusic newFragment = new PlayMusic();
+//            Bundle bundle = new Bundle();
+//            bundle.putParcelable("Song", song);
+//            newFragment.setArguments(bundle);
+//
+//            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+//
+//            // Replace whatever is in the fragment_container view with this fragment,
+//            // and add the transaction to the back stack so the user can navigate back
+//
+//            //        transaction.replace(R.id., newFragment);
+//            transaction.addToBackStack(null);
+//
+//            // Commit the transaction
+//            transaction.commit();
+//        }
+//    }
 }

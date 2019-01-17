@@ -38,7 +38,6 @@ public class MusicActivity extends Activity {
     ArrayAdapter<Song> adapter;
     String owner;
     Intent result = new Intent();
-    private MediaPlayer mediaPlayer = new MediaPlayer();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,30 +94,6 @@ public class MusicActivity extends Activity {
 
     }
 
-    /*
-     * Plays a mp3 received from the given byte stream.
-     */
-    private void playMp3Bytes(byte[] mp3SoundByteArray) {
-        try {
-            /* create temp file that will hold byte array */
-            File tempMp3 = File.createTempFile("tmpSong", "mp3", getCacheDir());
-            tempMp3.deleteOnExit();
-            FileOutputStream fos = new FileOutputStream(tempMp3);
-            fos.write(mp3SoundByteArray);
-            fos.close();
-
-            FileInputStream fis = new FileInputStream(tempMp3);
-
-            // resetting mediaplayer instance to evade problems
-            mediaPlayer.reset();
-            mediaPlayer.setDataSource(fis.getFD());
-
-            mediaPlayer.prepare();
-            mediaPlayer.start();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
 
     /*
      * Adds a song to the adapter for viewing in the listview.s
