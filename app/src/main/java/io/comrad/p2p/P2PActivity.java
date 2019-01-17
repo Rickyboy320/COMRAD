@@ -3,8 +3,11 @@ package io.comrad.p2p;
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.ParcelUuid;
 import android.support.v4.app.ActivityCompat;
@@ -12,17 +15,23 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
 import io.comrad.R;
 import io.comrad.music.MusicActivity;
 import io.comrad.music.PlayMusic;
 import io.comrad.music.Song;
+import io.comrad.p2p.messages.MessageType;
 import io.comrad.p2p.messages.P2PMessage;
 import io.comrad.p2p.messages.P2PMessageHandler;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -35,7 +44,11 @@ import static android.bluetooth.BluetoothAdapter.*;
 import static android.content.ContentValues.TAG;
 import static io.comrad.p2p.messages.MessageType.song;
 import static io.comrad.p2p.messages.MessageType.update_network_structure;
-//implements PlayMusic.OnFragmentInteractionListener
+
+import static android.bluetooth.BluetoothAdapter.SCAN_MODE_CONNECTABLE;
+import static android.bluetooth.BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE;
+import static android.bluetooth.BluetoothAdapter.SCAN_MODE_NONE;
+
 public class P2PActivity extends FragmentActivity  {
     public final static String SERVICE_NAME = "COMRAD";
     public final static UUID SERVICE_UUID = UUID.fromString("7337958a-460f-4b0c-942e-5fa111fb2bee");
@@ -57,7 +70,8 @@ public class P2PActivity extends FragmentActivity  {
         setContentView(R.layout.activity_p2p);
 
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST);
-        enableBluetooth();
+
+        addComponents();
     }
 
     public void sendByteArrayToPlayMusic(byte[] songBytes) {
@@ -104,9 +118,10 @@ public class P2PActivity extends FragmentActivity  {
         this.serverThread = new P2PServerThread(BluetoothAdapter.getDefaultAdapter(), this.handler);
         this.serverThread.start();
 
+        connectToBondedDevices(bluetoothAdapter, handler);
     }
 
-    private void enableBluetooth() {
+    private void addComponents() {
         final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (bluetoothAdapter == null) {
             Toast.makeText(getApplicationContext(), "This device does not support bluetooth.", Toast.LENGTH_LONG).show();
@@ -138,7 +153,7 @@ public class P2PActivity extends FragmentActivity  {
         Button sendMessage = findViewById(R.id.sendMessage);
         sendMessage.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                handler.sendMessageToPeers("Hello world!");
+                handler.sendMessageToPeers(new P2PMessage(handler.network.getSelfNode().getMac(), handler.getBroadcastAddress(), MessageType.broadcast_message, "Hello world!"));
             }
         });
 
@@ -151,7 +166,22 @@ public class P2PActivity extends FragmentActivity  {
             }
         });
 
-        connectToBondedDevices(bluetoothAdapter, handler);
+        Button showGraph = findViewById(R.id.showGraph);
+        showGraph.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                System.out.println(handler.network);
+            }
+        });
+
+        Button send5mini = findViewById(R.id.send5smini);
+        send5mini.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if (!(handler.network.getSelfNode().getMac() == "6C:2F:2C:82:67:11")) {
+                    P2PMessage message = new P2PMessage(handler.network.getSelfNode().getMac(), "6C:2F:2C:82:67:11", MessageType.send_message, "I am a song :D");
+                    handler.forwardMessage(message);
+                }
+            }
+        });
 
         if (bluetoothAdapter.isEnabled()) {
             enableBluetoothServices();
@@ -231,14 +261,16 @@ public class P2PActivity extends FragmentActivity  {
 
                 byte[] byteStream = null;
 
+
+
                 try {
                     byteStream = convertStreamToByteArray(inputStream);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
 
-                P2PMessage p2pMessage = new P2PMessage("MEUK", song, byteStream);
-                handler.sendMessageToPeers(p2pMessage);
+                //P2PMessage p2pMessage = new P2PMessage(handler.network.getSelfNode().getMac(), target, MessageType.song, byteStream);
+                //handler.sendMessageToPeers(p2pMessage);
             } else {
                 // ERROR?
             }
@@ -262,42 +294,17 @@ public class P2PActivity extends FragmentActivity  {
         serverThread.close();
     }
 
-//    @Override
-//    public void sendSongToFragment(boolean play, Song song) {
-//        // The user selected the headline of an article from the HeadlinesFragment
-//        // Do something here to display that article
-//
-//        PlayMusic playmusic = (PlayMusic) getSupportFragmentManager().findFragmentById(R.id.PlayMusic);
-//
-//        if (playmusic != null) {
-//            // If article frag is available, we're in two-pane layout...
-//
-//            // Call a method in the ArticleFragment to update its content
-//            //        playmusic.updateArticleView(position);
-//        } else {
-//            // Otherwise, we're in the one-pane layout and must swap frags...
-//
-//            // Create fragment and give it an argument for the selected article
-//            //        Fragment fragmentGet = new FragmentGet();
-//            //        Bundle bundle = new Bundle();
-//            //        bundle.putParcelable("Student", model);
-//            //        fragmentGet.setArguments(bundle);
-//
-//            PlayMusic newFragment = new PlayMusic();
-//            Bundle bundle = new Bundle();
-//            bundle.putParcelable("Song", song);
-//            newFragment.setArguments(bundle);
-//
-//            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-//
-//            // Replace whatever is in the fragment_container view with this fragment,
-//            // and add the transaction to the back stack so the user can navigate back
-//
-//            //        transaction.replace(R.id., newFragment);
-//            transaction.addToBackStack(null);
-//
-//            // Commit the transaction
-//            transaction.commit();
-//        }
-//    }
+    public static String getBluetoothMac(final Context context) {
+        String result = null;
+        if (context.checkCallingOrSelfPermission(Manifest.permission.BLUETOOTH)
+                == PackageManager.PERMISSION_GRANTED) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                result = android.provider.Settings.Secure.getString(context.getContentResolver(), "bluetooth_address");
+            } else {
+                BluetoothAdapter bta = BluetoothAdapter.getDefaultAdapter();
+                result = bta != null ? bta.getAddress() : "";
+            }
+        }
+        return result;
+    }
 }

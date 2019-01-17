@@ -7,9 +7,12 @@
         android:id="@+id/discover"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/stopDiscovery"
         android:layout_alignParentStart="true"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/stopDiscovery"
+        android:layout_marginStart="0dp"
+        android:layout_marginLeft="0dp"
+        android:layout_marginTop="1dp"
         android:text="Discover Devices" />
 
     <Button
@@ -39,6 +42,7 @@
         android:layout_below="@+id/discover"
         android:text="Send Message" />
 
+
     <Button
         android:id="@+id/chooseMusic"
         android:layout_width="match_parent"
@@ -48,13 +52,21 @@
         android:layout_below="@+id/sendMessage"
         android:text="Choose Music" />
 
-    <fragment
-        android:id="@+id/PlayMusic"
-        android:name="io.comrad.music.PlayMusic"
+
+    <Button
+        android:id="@+id/showGraph"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-    />
+        android:text="Show Graph"
+        android:layout_below="@+id/send5smini"/>
+
+    <Button
+        android:id="@+id/send5smini"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/server"
+        android:text="Send to 5 mini" />
+
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/peersList"
@@ -65,5 +77,15 @@
         android:layout_alignParentTop="true"
         android:layout_marginStart="0dp"
         android:layout_marginLeft="0dp"
-        android:layout_marginTop="237dp" />
+        android:layout_marginTop="300dp" />
+
+
+    <fragment
+        android:id="@+id/PlayMusic"
+        android:name="io.comrad.music.PlayMusic"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+    />
+
 </RelativeLayout>

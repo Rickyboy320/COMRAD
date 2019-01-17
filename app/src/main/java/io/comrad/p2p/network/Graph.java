@@ -1,65 +1,77 @@
+
 package io.comrad.p2p.network;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
-public class Graph {
+public class Graph implements Serializable {
     private Node selfNode;
     private Set<Node> nodes;
+    private Set<Edge> edges;
+
+    private transient Dijkstra dijkstra;
 
     public Graph(String selfMAC) {
-        this(selfMAC, new HashSet<Node>());
+        this(selfMAC, new HashSet<Node>(), new HashSet<Edge>());
     }
 
-    public Graph(String selfMAC, Set<Node> nodes) {
+    public Graph(String selfMAC, Set<Node> nodes, Set<Edge> edges) {
+        if(selfMAC == null) {
+            throw new IllegalArgumentException("Mac was null");
+        }
+
         this.nodes = nodes;
+        this.edges = edges;
+
         this.selfNode = new Node(selfMAC);
         this.nodes.add(this.selfNode);
     }
 
-    public void merge(Graph graph) {
-        for(Node node : graph.nodes) {
-            this.addNode(node);
-        }
-    }
-
     public boolean hasNode(String mac) {
-        return getNode(mac) != null;
+        return this.nodes.contains(new Node(mac));
     }
 
     public Node getNode(String mac) {
-        for(Node node : nodes) {
-            if(node.getMac().equalsIgnoreCase(mac)) {
-                return node;
-            }
+        if (!hasNode(mac)) {
+            throw new IllegalArgumentException("Node does not exist: " + mac);
         }
-        return null;
+
+        return new Node(mac);
     }
 
     public void addEdge(String mac1, String mac2) {
         Node node1 = getNode(mac1);
         Node node2 = getNode(mac2);
 
-        this.nodes.add(node1);
-        this.nodes.add(node2);
-
-        node1.addPeer(node2);
+        this.edges.add(new Edge(node1, node2));
     }
 
     public boolean hasEdge(String mac, String mac2) {
-        Node node = getNode(mac);
-        Node node1 = getNode(mac2);
+        Node node1 = getNode(mac);
+        Node node2 = getNode(mac2);
 
-        if(node == null || node1 == null) {
-            return false;
-        }
-
-        return node.getPeers().contains(node1);
+        return edges.contains(new Edge(node1, node2));
     }
 
-    private void addNode(Node node) {
-        this.nodes.add(node);
-        this.nodes.addAll(node.getPeers());
+    public boolean removeEdge(String mac, String mac2) {
+        Node node1 = getNode(mac);
+        Node node2 = getNode(mac2);
+
+        return edges.remove(new Edge(node1, node2));
+    }
+
+    public Set<Node> getPeers(Node node) {
+        Set<Node> result = new HashSet<>();
+        for(Edge edge : this.edges)
+        {
+            if(edge.hasNode(node))
+            {
+                result.add(edge.getOther(node));
+            }
+        }
+
+        return result;
     }
 
     public void createNode(String mac) {
@@ -71,13 +83,67 @@ public class Graph {
         this.nodes.add(node);
     }
 
-    public void removeNode(String mac) {
-        Node node = this.getNode(mac);
-        this.nodes.remove(node);
-        node.removeAllPeers();
-    }
-
     public Node getSelfNode() {
         return this.selfNode;
+    }
+
+    public void apply(GraphUpdate update) {
+        this.nodes.addAll(update.getAddedNodes());
+        this.edges.addAll(update.getAddedEdges());
+        this.edges.removeAll(update.getRemovedEdges());
+        this.updateDijkstra();
+    }
+
+    public void updateDijkstra() {
+        // TODO: this could possibly go wrong with concurrency...
+        this.dijkstra = new Dijkstra(this);
+
+        System.out.println("Resulting graph: " + this);
+        System.out.println("Dijkstra paths: " + this.dijkstra.getPaths());
+
+        this.nodes.retainAll(dijkstra.getPaths().keySet());
+        this.nodes.add(selfNode);
+
+        Set<Edge> removeEdges = new HashSet<>();
+        for(Edge edge : this.edges) {
+            if(nodes.contains(edge.getNode1()) && nodes.contains(edge.getNode2())) {
+                continue;
+            }
+
+            removeEdges.add(edge);
+        }
+
+        this.edges.removeAll(removeEdges);
+    }
+
+    private Dijkstra.Path getPath(Node target) {
+        return this.dijkstra.getPaths().get(target);
+    }
+
+    public Node getNext(String macTarget) {
+        Node target = getNode(macTarget);
+        Dijkstra.Path path = getPath(target);
+        if(path == null)
+        {
+            return null;
+        }
+
+        return path.getNextNode(this.selfNode);
+    }
+
+    public GraphUpdate difference(Graph graph) {
+        System.out.println("Calculating difference. Current: " + this.nodes + ", " + this.edges + ". Comparing: " + graph.nodes + ", " + graph.edges);
+
+        Set<Node> nodes = new HashSet<>(graph.nodes);
+        Set<Edge> edges = new HashSet<>(graph.edges);
+
+        nodes.removeAll(this.nodes);
+        edges.removeAll(this.edges);
+        return new GraphUpdate(nodes, edges, new HashSet<Edge>());
+    }
+
+    @Override
+    public String toString() {
+        return "Nodes: " + this.nodes + ", Edges: " + this.edges;
     }
 }

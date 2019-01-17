@@ -2,15 +2,12 @@ package io.comrad.p2p;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
-import android.util.Log;
-
-import io.comrad.p2p.messages.P2PMessageHandler;
 
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
-import static android.content.ContentValues.TAG;
+import io.comrad.p2p.messages.P2PMessageHandler;
 
 public class P2PConnectThread extends Thread {
 
@@ -50,6 +47,7 @@ public class P2PConnectThread extends Thread {
             } catch(IOException e1) {
                 e1.printStackTrace();
             }
+            System.err.println("Failed to connect with: " + this.socket.getRemoteDevice().getAddress());
             e.printStackTrace();
             return;
         }
@@ -58,12 +56,19 @@ public class P2PConnectThread extends Thread {
     }
 
     private void handleConnection() {
+        if(this.handler.hasPeer(socket.getRemoteDevice().getAddress()))
+        {
+            this.close();
+            return;
+        }
+
         this.handler.sendToastToUI("Connected with: " + targetDevice.getAddress() + " : " + targetDevice.getName());
 
         P2PConnectedThread thread = new P2PConnectedThread(this.socket, this.handler);
-        this.handler.addPeer(socket.getRemoteDevice().getAddress(), thread);
         connecting.remove(socket.getRemoteDevice().getAddress());
         thread.start();
+
+        this.handler.addPeer(socket.getRemoteDevice().getAddress(), thread);
     }
 
     public void close() {
