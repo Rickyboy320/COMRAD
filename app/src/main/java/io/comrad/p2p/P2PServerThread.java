@@ -49,6 +49,7 @@ public class P2PServerThread extends Thread {
         if(this.handler.hasPeer(socket.getRemoteDevice().getAddress()))
         {
             this.close();
+            return;
         }
 
         this.handler.sendToastToUI("Connected with: " + socket.getRemoteDevice().getAddress() + " : " + socket.getRemoteDevice().getName());

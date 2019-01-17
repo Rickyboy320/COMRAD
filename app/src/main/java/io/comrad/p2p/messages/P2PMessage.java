@@ -1,12 +1,20 @@
 package io.comrad.p2p.messages;
 
 import android.bluetooth.BluetoothDevice;
-import io.comrad.p2p.network.Graph;
-import io.comrad.p2p.network.GraphUpdate;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
+
+import io.comrad.p2p.network.Graph;
+import io.comrad.p2p.network.GraphUpdate;
 
 public class P2PMessage implements Serializable {
     private String destinationMAC;
@@ -68,33 +76,6 @@ public class P2PMessage implements Serializable {
     }
 
     public void handle(P2PMessageHandler handler, BluetoothDevice sender) {
-        System.out.println("Source Mac: " + sender.getAddress());
-        System.out.println("Type: " + this.type);
-        System.out.println("Message: " + this.payload);
-
-        if (this.type == MessageType.handshake_network) {
-            Graph graph = (Graph) this.payload;
-            handler.network.createNode(sender.getAddress());
-            handler.network.addEdge(handler.network.getSelfNode().getMac(), sender.getAddress());
-
-            GraphUpdate update = graph.difference(handler.network);
-
-            handler.network.apply(update);
-            System.out.println(update);
-
-            // Send update to all but source.
-//            P2PMessage message = new P2PMessage(handler.getBroadcastAddress(), MessageType.update_network_structure, update);
-            P2PMessage message = new P2PMessage(handler.getBroadcastAddress(), MessageType.update_network_structure, handler.network);
-            handler.broadcastExcluding(message, sender.getAddress());
-        } else if(this.type == MessageType.update_network_structure) {
-//            GraphUpdate update = (GraphUpdate) this.payload;
-//            handler.network.apply(update);
-            Graph graph = (Graph) this.payload;
-            GraphUpdate update = handler.network.difference(graph);
-            handler.network.apply(update);
-            System.out.println("Updated network to: " + handler.network);
-        }
-
         /* If starts with b:, it's a broadcast. */
         if(this.destinationMAC != null && this.destinationMAC.startsWith("b:")) {
             handler.sendToastToUI("We received a broadcast from " + sender.getAddress());
@@ -102,6 +83,12 @@ public class P2PMessage implements Serializable {
             System.out.println("Incoming broadcast: " + this.destinationMAC);
             String mac = this.destinationMAC.substring(2, 19);
             System.out.println(mac);
+
+            if(mac.equalsIgnoreCase(handler.network.getSelfNode().getMac()))
+            {
+                System.out.println("Source Mac was our own, skipping...");
+                return;
+            }
 
             int count = Integer.parseInt(this.destinationMAC.substring(20));
             System.out.println(count);
@@ -112,11 +99,42 @@ public class P2PMessage implements Serializable {
                     knownCounts = new HashSet<>();
                     handler.counters.put(mac, knownCounts);
                 }
-                if (!knownCounts.contains(count)) {
-                    knownCounts.add(count);
-                    handler.broadcastExcluding(this, sender.getAddress());
+                if (knownCounts.contains(count)) {
+                    System.out.println(count);
+                    return;
                 }
+                knownCounts.add(count);
+                handler.broadcastExcluding(this, sender.getAddress());
             }
+        }
+
+        System.out.println("Source Mac: " + sender.getAddress());
+        System.out.println("Desitnation mac: " + this.getDestinationMAC());
+        System.out.println("Type: " + this.type);
+        System.out.println("Message: " + this.payload);
+
+        if (this.type == MessageType.handshake_network) {
+            Graph graph = (Graph) this.payload;
+            handler.network.createNode(sender.getAddress());
+            handler.network.addEdge(handler.network.getSelfNode().getMac(), sender.getAddress());
+
+            GraphUpdate update = handler.network.difference(graph);
+            update.addNode(sender.getAddress());
+            update.addEdge(handler.network.getSelfNode().getMac(), sender.getAddress());
+
+            System.out.println("Update: " + update);
+
+            handler.network.apply(update);
+
+            System.out.println("Network: " + handler.network);
+            System.out.println("------------------------");
+            // Send update to all but source.
+            P2PMessage message = new P2PMessage(handler.getBroadcastAddress(), MessageType.update_network_structure, update);
+            handler.broadcastExcluding(message, sender.getAddress());
+        } else if(this.type == MessageType.update_network_structure) {
+            GraphUpdate update = (GraphUpdate) this.payload;
+            handler.network.apply(update);
+            System.out.println("Updated network to: " + handler.network);
         }
     }
 
@@ -157,6 +175,7 @@ public class P2PMessage implements Serializable {
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
+        //TODO: IOException
 
         if(msg == null) {
             throw new IllegalArgumentException("Byte stream could not be converted to a message, but instead was: null");

@@ -134,11 +134,11 @@ public class Graph implements Serializable {
     public GraphUpdate difference(Graph graph) {
         System.out.println("Calculating difference. Current: " + this.nodes + ", " + this.edges + ". Comparing: " + graph.nodes + ", " + graph.edges);
 
-        Set<Node> nodes = new HashSet<>(this.nodes);
-        Set<Edge> edges = new HashSet<>(this.edges);
+        Set<Node> nodes = new HashSet<>(graph.nodes);
+        Set<Edge> edges = new HashSet<>(graph.edges);
 
-        nodes.removeAll(graph.nodes);
-        edges.removeAll(graph.edges);
+        nodes.removeAll(this.nodes);
+        edges.removeAll(this.edges);
         return new GraphUpdate(nodes, edges, new HashSet<Edge>());
     }
 
