@@ -4,13 +4,16 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.widget.Toast;
-import io.comrad.p2p.P2PActivity;
-import io.comrad.p2p.P2PConnectedThread;
-import io.comrad.p2p.network.Graph;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+
+import io.comrad.p2p.P2PActivity;
+import io.comrad.p2p.P2PConnectedThread;
+import io.comrad.p2p.network.Graph;
+import io.comrad.p2p.network.GraphUpdate;
+import io.comrad.p2p.network.Node;
 
 public class P2PMessageHandler extends Handler {
 
@@ -66,21 +69,23 @@ public class P2PMessageHandler extends Handler {
         this.sendMessage(toast);
     }
 
-    public void sendBufferToUI(byte[] buffer, int bufferSize) {
-        Message readMsg = this.obtainMessage(P2PMessageHandler.MESSAGE_READ, bufferSize, -1, buffer);
-        readMsg.sendToTarget();
-    }
-
     public void addPeer(String mac, P2PConnectedThread thread) {
         this.peerThreads.put(mac, thread);
 
         System.out.println("Sending network: " + this.network);
-        P2PMessage p2pMessage = new P2PMessage(null, MessageType.handshake_network, this.network);
+        P2PMessage p2pMessage = new P2PMessage(null, null, MessageType.handshake_network, this.network);
         thread.write(p2pMessage);
     }
 
     public void removePeer(String mac) {
         this.peerThreads.remove(mac);
+
+        GraphUpdate graphUpdate = new GraphUpdate();
+        graphUpdate.removeEdge(this.network.getSelfNode().getMac(), mac);
+        P2PMessage message = new P2PMessage(network.getSelfNode().getMac(), this.getBroadcastAddress(), MessageType.update_network_structure, graphUpdate);
+        this.broadcast(message);
+
+        this.network.apply(graphUpdate);
     }
 
     public boolean hasPeer(String mac) {
@@ -93,9 +98,26 @@ public class P2PMessageHandler extends Handler {
         }
     }
 
+    public void forwardMessage(P2PMessage p2pMessage) {
+        Node closestMac = this.network.getNext(p2pMessage.getDestinationMAC());
+
+        if (closestMac == null) {
+            System.out.println("Next node was null");
+        } else {
+            this.peerThreads.get(closestMac.getMac()).write(p2pMessage);
+        }
+
+    }
+
     public void closeAllConnections() {
         for(P2PConnectedThread thread : this.peerThreads.values()) {
             thread.close();
+        }
+    }
+
+    public void broadcast(P2PMessage message) {
+        for(P2PConnectedThread thread : this.peerThreads.values()) {
+            thread.write(message);
         }
     }
 
@@ -110,6 +132,6 @@ public class P2PMessageHandler extends Handler {
 
     public synchronized String getBroadcastAddress() {
         COUNTER++;
-        return "b:" + this.network.getSelfNode().getMac() + ":" + COUNTER;
+        return "b:" + COUNTER;
     }
 }

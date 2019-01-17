@@ -40,6 +40,12 @@
         android:layout_height="wrap_content"
         android:text="Show Graph" />
 
+    <Button
+        android:id="@+id/send5smini"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Send to 5 mini" />
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/peersList"
         android:layout_width="match_parent"

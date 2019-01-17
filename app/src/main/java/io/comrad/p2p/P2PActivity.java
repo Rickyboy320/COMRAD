@@ -17,6 +17,13 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
 import io.comrad.R;
 import io.comrad.music.MusicActivity;
 import io.comrad.music.Song;
@@ -24,9 +31,9 @@ import io.comrad.p2p.messages.MessageType;
 import io.comrad.p2p.messages.P2PMessage;
 import io.comrad.p2p.messages.P2PMessageHandler;
 
-import java.util.*;
-
-import static android.bluetooth.BluetoothAdapter.*;
+import static android.bluetooth.BluetoothAdapter.SCAN_MODE_CONNECTABLE;
+import static android.bluetooth.BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE;
+import static android.bluetooth.BluetoothAdapter.SCAN_MODE_NONE;
 
 public class P2PActivity extends Activity {
 
@@ -128,7 +135,7 @@ public class P2PActivity extends Activity {
         Button sendMessage = findViewById(R.id.sendMessage);
         sendMessage.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                handler.sendMessageToPeers(new P2PMessage(handler.getBroadcastAddress(), MessageType.broadcast_message, "Hello world!"));
+                handler.sendMessageToPeers(new P2PMessage(handler.network.getSelfNode().getMac(), handler.getBroadcastAddress(), MessageType.broadcast_message, "Hello world!"));
             }
         });
 
@@ -145,6 +152,16 @@ public class P2PActivity extends Activity {
         showGraph.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 System.out.println(handler.network);
+            }
+        });
+
+        Button send5mini = findViewById(R.id.send5smini);
+        send5mini.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if (!(handler.network.getSelfNode().getMac() == "6C:2F:2C:82:67:11")) {
+                    P2PMessage message = new P2PMessage(handler.network.getSelfNode().getMac(), "6C:2F:2C:82:67:11", MessageType.send_message, "I am a song :D");
+                    handler.forwardMessage(message);
+                }
             }
         });
 
@@ -201,7 +218,7 @@ public class P2PActivity extends Activity {
             if (resultCode == RESULT_OK) {
 //                handler.sendMessageToPeers("Hello world!");
                 Song result = (Song) data.getParcelableExtra("song");
-                P2PMessage p2pMessage = new P2PMessage(handler.getBroadcastAddress(), MessageType.song, result);
+                P2PMessage p2pMessage = new P2PMessage(null, handler.getBroadcastAddress(), MessageType.song, result);
                 handler.sendMessageToPeers(p2pMessage);
 
 //                Log.d(TAG, result.toString());

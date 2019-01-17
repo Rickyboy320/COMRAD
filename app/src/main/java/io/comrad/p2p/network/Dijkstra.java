@@ -41,8 +41,8 @@ public class Dijkstra {
             settled.add(currentNode);
         }
 
-        for(Path path : this.paths.values()) {
-            path.invert();
+        for (Node node : paths.keySet()){
+            paths.get(node).addNode(node);
         }
     }
 

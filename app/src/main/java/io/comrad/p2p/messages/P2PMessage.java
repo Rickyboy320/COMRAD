@@ -20,15 +20,18 @@ public class P2PMessage implements Serializable {
     private String destinationMAC;
     private MessageType type;
     private Serializable payload;
+    private String sourceMac;
 
-    public P2PMessage(String destinationMAC, MessageType type) {
-        this(destinationMAC, type, null);
-    }
-
-    public P2PMessage(String destinationMAC, MessageType type, Serializable payload) {
+    public P2PMessage(String sourceMac, String destinationMAC, MessageType type, Serializable payload) {
+        this.sourceMac = sourceMac;
         this.destinationMAC = destinationMAC;
         this.type = type;
         addPayload(payload);
+    }
+
+    public String getSourceMac()
+    {
+        return this.sourceMac;
     }
 
     public String getDestinationMAC() {
@@ -62,6 +65,7 @@ public class P2PMessage implements Serializable {
                     String fileURI = (String) payload;
                     this.payload = readAudioFile(fileURI);
                     break;
+                case send_message:
                 case update_network_structure:
                 case handshake_network:
                 case broadcast_message:
@@ -81,7 +85,7 @@ public class P2PMessage implements Serializable {
             handler.sendToastToUI("We received a broadcast from " + sender.getAddress());
 
             System.out.println("Incoming broadcast: " + this.destinationMAC);
-            String mac = this.destinationMAC.substring(2, 19);
+            String mac = this.sourceMac;
             System.out.println(mac);
 
             if(mac.equalsIgnoreCase(handler.network.getSelfNode().getMac()))
@@ -90,7 +94,7 @@ public class P2PMessage implements Serializable {
                 return;
             }
 
-            int count = Integer.parseInt(this.destinationMAC.substring(20));
+            int count = Integer.parseInt(this.destinationMAC.substring(2));
             System.out.println(count);
 
             synchronized (handler.counters) {
@@ -108,7 +112,8 @@ public class P2PMessage implements Serializable {
             }
         }
 
-        System.out.println("Source Mac: " + sender.getAddress());
+        System.out.println("Source Mac: " + this.sourceMac);
+        System.out.println("Gotten from-Mac: " + sender.getAddress());
         System.out.println("Desitnation mac: " + this.getDestinationMAC());
         System.out.println("Type: " + this.type);
         System.out.println("Message: " + this.payload);
@@ -129,12 +134,19 @@ public class P2PMessage implements Serializable {
             System.out.println("Network: " + handler.network);
             System.out.println("------------------------");
             // Send update to all but source.
-            P2PMessage message = new P2PMessage(handler.getBroadcastAddress(), MessageType.update_network_structure, update);
+            P2PMessage message = new P2PMessage(handler.network.getSelfNode().getMac(), handler.getBroadcastAddress(), MessageType.update_network_structure, update);
             handler.broadcastExcluding(message, sender.getAddress());
         } else if(this.type == MessageType.update_network_structure) {
             GraphUpdate update = (GraphUpdate) this.payload;
             handler.network.apply(update);
             System.out.println("Updated network to: " + handler.network);
+        } else if (this.type == MessageType.send_message) {
+            if (this.getDestinationMAC().equalsIgnoreCase(handler.network.getSelfNode().getMac())) {
+                handler.sendToastToUI("We received a message from " + this.sourceMac);
+                handler.sendToastToUI((String) this.payload);
+            } else {
+                handler.forwardMessage(this);
+            }
         }
     }
 

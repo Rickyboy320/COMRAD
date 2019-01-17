@@ -59,7 +59,7 @@ public class P2PConnectedThread extends Thread {
                 handler.sendToastToUI("Input stream was disconnected.");
                 e.printStackTrace();
                 this.close();
-                new P2PConnectThread(socket.getRemoteDevice(), handler).start();
+//                new P2PConnectThread(socket.getRemoteDevice(), handler).start();
                 break;
             }
         }
@@ -84,7 +84,10 @@ public class P2PConnectedThread extends Thread {
         } catch (IOException e) {
             handler.sendToastToUI("Could not close the connect socket.");
             e.printStackTrace();
+            return;
         }
+
+        handler.removePeer(this.socket.getRemoteDevice().getAddress());
     }
 
     public BluetoothDevice getRemoteDevice() {
