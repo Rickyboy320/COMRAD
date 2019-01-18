@@ -87,7 +87,7 @@ public class P2PConnectedThread extends Thread {
             return;
         }
 
-        handler.removePeer(this.socket.getRemoteDevice().getAddress());
+        handler.getNetwork().removePeer(this.socket.getRemoteDevice().getAddress());
     }
 
     public BluetoothDevice getRemoteDevice() {

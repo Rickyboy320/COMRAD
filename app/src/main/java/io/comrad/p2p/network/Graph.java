@@ -2,8 +2,8 @@
 package io.comrad.p2p.network;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import io.comrad.music.Song;
@@ -15,11 +15,11 @@ public class Graph implements Serializable {
 
     private transient Dijkstra dijkstra;
 
-    public Graph(String selfMAC, ArrayList<Song> ownSongs) {
+    public Graph(String selfMAC, List<Song> ownSongs) {
         this(selfMAC, new HashSet<Node>(), new HashSet<Edge>(), ownSongs);
     }
 
-    public Graph(String selfMAC, Set<Node> nodes, Set<Edge> edges, ArrayList<Song> ownSongs) {
+    public Graph(String selfMAC, Set<Node> nodes, Set<Edge> edges, List<Song> ownSongs) {
         if(selfMAC == null) {
             throw new IllegalArgumentException("Mac was null");
         }
@@ -36,11 +36,14 @@ public class Graph implements Serializable {
     }
 
     public Node getNode(String mac) {
-        if (!hasNode(mac)) {
-            throw new IllegalArgumentException("Node does not exist: " + mac);
+        for(Node node : this.nodes) {
+            if(node.getMac().equalsIgnoreCase(mac))
+            {
+                return node;
+            }
         }
 
-        return new Node(mac);
+        throw new IllegalArgumentException("Node does not exist: " + mac);
     }
 
     public Set<Node> getNodes() {
@@ -81,17 +84,26 @@ public class Graph implements Serializable {
         return result;
     }
 
-    public void createNode(String mac) {
-        if(this.hasNode(mac)) {
+    public Node getSelfNode() {
+        return this.selfNode;
+    }
+
+    public void setSelfNode(String destinationMAC) {
+        this.nodes.remove(this.selfNode);
+        this.selfNode = new Node(destinationMAC, this.selfNode.getPlaylist());
+        this.nodes.add(this.selfNode);
+    }
+
+    public void replace(String replacent, String replacer) {
+        if(!this.hasNode(replacent))
+        {
             return;
         }
 
-        Node node = new Node(mac);
-        this.nodes.add(node);
-    }
-
-    public Node getSelfNode() {
-        return this.selfNode;
+        Node node = this.getNode(replacent);
+        this.nodes.remove(node);
+        this.nodes.add(new Node(replacer, node.getPlaylist()));
+        System.out.println("Replaced unknown MAC with: " + replacer);
     }
 
     public void apply(GraphUpdate update) {

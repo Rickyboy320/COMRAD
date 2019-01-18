@@ -19,10 +19,8 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.Set;
 
 import io.comrad.R;
-import io.comrad.p2p.network.Node;
 
 
 public class MusicActivity extends Activity {
@@ -34,7 +32,6 @@ public class MusicActivity extends Activity {
     ListView listView;
     ArrayAdapter<Song> adapter;
     String owner;
-    Intent result = new Intent();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +72,7 @@ public class MusicActivity extends Activity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                Intent result = new Intent();
                 Log.d("songClick", playList.get(i).toString());
                 result.putExtra("song", (Parcelable)playList.get(i));
                 setResult(Activity.RESULT_OK, result);

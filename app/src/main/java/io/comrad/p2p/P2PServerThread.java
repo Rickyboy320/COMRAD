@@ -46,7 +46,7 @@ public class P2PServerThread extends Thread {
 
     public void handleConnection(BluetoothSocket socket)
     {
-        if(this.handler.hasPeer(socket.getRemoteDevice().getAddress()))
+        if(this.handler.getNetwork().hasPeer(socket.getRemoteDevice().getAddress()))
         {
             this.close();
             return;
@@ -56,7 +56,7 @@ public class P2PServerThread extends Thread {
 
         P2PConnectedThread thread = new P2PConnectedThread(socket, this.handler);
         thread.start();
-        this.handler.addPeer(socket.getRemoteDevice().getAddress(), thread);
+        this.handler.getNetwork().addPeer(socket.getRemoteDevice().getAddress(), thread);
     }
 
     // Closes the connect socket and causes the thread to finish.

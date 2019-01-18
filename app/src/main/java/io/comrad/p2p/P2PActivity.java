@@ -19,7 +19,6 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -44,6 +43,7 @@ import io.comrad.music.Song;
 import io.comrad.p2p.messages.MessageType;
 import io.comrad.p2p.messages.P2PMessage;
 import io.comrad.p2p.messages.P2PMessageHandler;
+import io.comrad.p2p.network.Graph;
 import io.comrad.p2p.network.Node;
 
 import static android.bluetooth.BluetoothAdapter.SCAN_MODE_CONNECTABLE;
@@ -208,7 +208,7 @@ public class P2PActivity extends FragmentActivity  {
         Button sendMessage = findViewById(R.id.sendMessage);
         sendMessage.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                handler.sendMessageToPeers(new P2PMessage(handler.network.getSelfNode().getMac(), handler.getBroadcastAddress(), MessageType.broadcast_message, "Hello world!"));
+                handler.getNetwork().sendMessageToPeers(new P2PMessage(handler.getNetwork().getSelfMac(), handler.getNetwork().getBroadcastAddress(), MessageType.broadcast_message, "Hello world!"));
             }
         });
 
@@ -217,11 +217,16 @@ public class P2PActivity extends FragmentActivity  {
             public void onClick(View v) {
                 Intent intent = new Intent(v.getContext(), MusicActivity.class);
                 ArrayList<Song> arrayList = new ArrayList<>();
-                for (Node node : handler.network.getNodes()) {
-                    if (node.getPlaylist() != null) {
-                        arrayList.addAll(node.getPlaylist());
+
+                Set<Node> nodes = handler.getNetwork().getGraph().getNodes();
+                synchronized (nodes) {
+                    for (Node node : nodes) {
+                        if (node.getPlaylist() != null) {
+                            arrayList.addAll(node.getPlaylist());
+                        }
                     }
                 }
+
                 System.out.println("<<<<" + arrayList.toString());
                 intent.putExtra("Nodes", (Serializable) arrayList);
                 startActivityForResult(intent, REQUEST_MUSIC_FILE);
@@ -231,16 +236,18 @@ public class P2PActivity extends FragmentActivity  {
         Button showGraph = findViewById(R.id.showGraph);
         showGraph.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                System.out.println(handler.network);
+                synchronized (handler.getNetwork().getGraph()) {
+                    System.out.println(handler.getNetwork().getGraph());
+                }
             }
         });
 
         Button send5mini = findViewById(R.id.send5smini);
         send5mini.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                if (!(handler.network.getSelfNode().getMac() == "6C:2F:2C:82:67:11")) {
-                    P2PMessage message = new P2PMessage(handler.network.getSelfNode().getMac(), "6C:2F:2C:82:67:11", MessageType.send_message, "I am a song :D");
-                    handler.forwardMessage(message);
+                if (!(handler.getNetwork().getSelfMac().equalsIgnoreCase("6C:2F:2C:82:67:11"))) {
+                    P2PMessage message = new P2PMessage(handler.getNetwork().getSelfMac(), "6C:2F:2C:82:67:11", MessageType.send_message, "I am a song :D");
+                    handler.getNetwork().forwardMessage(message);
                 }
             }
         });
@@ -258,7 +265,7 @@ public class P2PActivity extends FragmentActivity  {
         if (pairedDevices.size() > 0) {
             for (BluetoothDevice device : pairedDevices) {
                 System.out.println(device.getAddress() + " : " + Arrays.toString(device.getUuids()));
-                if (this.handler.hasPeer(device.getAddress()) || P2PConnectThread.isConnecting(device.getAddress())) {
+                if (this.handler.getNetwork().hasPeer(device.getAddress()) || P2PConnectThread.isConnecting(device.getAddress())) {
                     continue;
                 }
 
@@ -309,19 +316,24 @@ public class P2PActivity extends FragmentActivity  {
 
         if (requestCode == REQUEST_MUSIC_FILE) {
             if (resultCode == RESULT_OK) {
-                Song songResult = (Song) data.getParcelableExtra("song");
-                byte[] byteStream = getByteArrayFromSong(songResult);
+                Song songResult = data.getParcelableExtra("song");
+                Graph graph = this.handler.getNetwork().getGraph();
+                synchronized (graph) {
+                    for (Node node : graph.getNodes()) {
+                        if (node.equals(graph.getSelfNode())) {
+                            System.out.println("It's OUR music!!!!!");
+                            continue;
+                        }
 
-                if (!(handler.network.getSelfNode().getMac() == "6C:2F:2C:82:67:11")) {
-
-                    P2PMessage message = new P2PMessage(handler.network.getSelfNode().getMac(), "6C:2F:2C:82:67:11", MessageType.send_message, byteStream);
-                    handler.forwardMessage(message);
+                        if (node.getPlaylist().contains(songResult)) {
+                            this.handler.getNetwork().forwardMessage(new P2PMessage(this.handler.getNetwork().getSelfMac(), node.getMac(), MessageType.request_song, songResult));
+                            return;
+                        }
+                    }
                 }
-
-                //P2PMessage p2pMessage = new P2PMessage(handler.network.getSelfNode().getMac(), target, MessageType.song, byteStream);
-                //handler.sendMessageToPeers(p2pMessage);
+                System.out.println("JEBROER " + songResult + " could not be sent becasue we don't know the origin");
             } else {
-                // ERROR?
+                // TODO: ERROR?
             }
         }
     }
@@ -361,22 +373,22 @@ public class P2PActivity extends FragmentActivity  {
         super.onDestroy();
 
         unregisterReceiver(receiver);
-        this.handler.closeAllConnections();
+        this.handler.getNetwork().closeAllConnections();
 
         serverThread.close();
     }
 
     public static String getBluetoothMac(final Context context) {
         String result = null;
-        if (context.checkCallingOrSelfPermission(Manifest.permission.BLUETOOTH)
-                == PackageManager.PERMISSION_GRANTED) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                result = android.provider.Settings.Secure.getString(context.getContentResolver(), "bluetooth_address");
-            } else {
-                BluetoothAdapter bta = BluetoothAdapter.getDefaultAdapter();
-                result = bta != null ? bta.getAddress() : "";
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            result = android.provider.Settings.Secure.getString(context.getContentResolver(), "bluetooth_address");
         }
+
+        if(result == null) {
+            BluetoothAdapter bta = BluetoothAdapter.getDefaultAdapter();
+            result = bta != null ? bta.getAddress() : "02:00:00:00:00:00";
+        }
+
         return result;
     }
 }

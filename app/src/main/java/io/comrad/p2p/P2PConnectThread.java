@@ -56,7 +56,7 @@ public class P2PConnectThread extends Thread {
     }
 
     private void handleConnection() {
-        if(this.handler.hasPeer(socket.getRemoteDevice().getAddress()))
+        if(this.handler.getNetwork().hasPeer(socket.getRemoteDevice().getAddress()))
         {
             this.close();
             return;
@@ -68,7 +68,7 @@ public class P2PConnectThread extends Thread {
         connecting.remove(socket.getRemoteDevice().getAddress());
         thread.start();
 
-        this.handler.addPeer(socket.getRemoteDevice().getAddress(), thread);
+        this.handler.getNetwork().addPeer(socket.getRemoteDevice().getAddress(), thread);
     }
 
     public void close() {
