@@ -13,6 +13,7 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
+import io.comrad.music.Song;
 import io.comrad.p2p.network.Graph;
 import io.comrad.p2p.network.GraphUpdate;
 
@@ -68,6 +69,8 @@ public class P2PMessage implements Serializable {
 //                    this.payload = readAudioFile(fileURI);
                     this.payload = payload;
                     break;
+                case request_song:
+                case send_song:
                 case send_message:
                 case update_network_structure:
                 case handshake_network:
@@ -151,6 +154,24 @@ public class P2PMessage implements Serializable {
                 handler.sendSongToActivity((byte[]) this.payload);
 
 
+            } else {
+                handler.forwardMessage(this);
+            }
+        } else if (this.type == MessageType.request_song) {
+            if (this.getDestinationMAC().equalsIgnoreCase(handler.network.getSelfNode().getMac())) {
+                handler.sendToastToUI("We received a request from " + this.sourceMac);
+
+                P2PMessage message = new P2PMessage(handler.network.getSelfNode().getMac(), this.sourceMac, MessageType.send_song, handler.getByteArrayFromSong((Song) this.payload));
+                handler.forwardMessage(message);
+
+
+            } else {
+                handler.forwardMessage(this);
+            }
+        } else if (this.type == MessageType.send_song) {
+            if (this.getDestinationMAC().equalsIgnoreCase(handler.network.getSelfNode().getMac())) {
+                handler.sendToastToUI("We received a song from " + this.sourceMac);
+                handler.sendSongToActivity((byte[]) this.payload);
             } else {
                 handler.forwardMessage(this);
             }

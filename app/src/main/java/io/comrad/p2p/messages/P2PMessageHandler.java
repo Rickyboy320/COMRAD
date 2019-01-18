@@ -104,6 +104,10 @@ public class P2PMessageHandler extends Handler {
         this.network.apply(graphUpdate);
     }
 
+    public ArrayList<Song> getOwnPlayList() {
+        return activity.getOwnPlayList();
+    }
+
     public boolean hasPeer(String mac) {
         return this.peerThreads.containsKey(mac);
     }
@@ -135,6 +139,10 @@ public class P2PMessageHandler extends Handler {
         for(P2PConnectedThread thread : this.peerThreads.values()) {
             thread.write(message);
         }
+    }
+
+    public byte[] getByteArrayFromSong(Song song) {
+        return activity.getByteArrayFromSong(song);
     }
 
     public void broadcastExcluding(P2PMessage message, String address) {

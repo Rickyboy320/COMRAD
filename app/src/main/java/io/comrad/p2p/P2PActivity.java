@@ -171,6 +171,10 @@ public class P2PActivity extends FragmentActivity  {
         }
     }
 
+    public ArrayList<Song> getOwnPlayList() {
+        return ownSongs;
+    }
+
     private void addComponents() {
         final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (bluetoothAdapter == null) {
@@ -304,26 +308,7 @@ public class P2PActivity extends FragmentActivity  {
         if (requestCode == REQUEST_MUSIC_FILE) {
             if (resultCode == RESULT_OK) {
                 Song songResult = (Song) data.getParcelableExtra("song");
-                File songFile = new File(songResult.getSongLocation());
-                InputStream inputStream = null;
-
-                try {
-                    inputStream = new FileInputStream(songFile);
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                    this.handler.sendToastToUI("Could find file.");
-                    return;
-                }
-
-                byte[] byteStream = null;
-
-
-
-                try {
-                    byteStream = convertStreamToByteArray(inputStream);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                byte[] byteStream = getByteArrayFromSong(songResult);
 
                 if (!(handler.network.getSelfNode().getMac() == "6C:2F:2C:82:67:11")) {
 
@@ -337,6 +322,29 @@ public class P2PActivity extends FragmentActivity  {
                 // ERROR?
             }
         }
+    }
+
+    public byte[] getByteArrayFromSong(Song song) {
+        File songFile = new File(song.getSongLocation());
+        InputStream inputStream = null;
+
+        try {
+            inputStream = new FileInputStream(songFile);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            this.handler.sendToastToUI("Could find file.");
+            return null;
+        }
+
+        byte[] byteStream = null;
+
+        try {
+            return convertStreamToByteArray(inputStream);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     @Override
