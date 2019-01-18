@@ -30,7 +30,7 @@ public class MusicActivity extends Activity {
     static final int REQUEST_MUSIC_FILE = 4;
 
     private static final int MY_PERMISSION_REQUEST = 1;
-    ArrayList<Song> arrayList = new ArrayList<>();
+    ArrayList<Song> playList;
     ListView listView;
     ArrayAdapter<Song> adapter;
     String owner;
@@ -42,11 +42,11 @@ public class MusicActivity extends Activity {
         setContentView(R.layout.activity_music);
 
         Intent intent = getIntent();
-        Set<Node> nodes = (Set<Node>) intent.getSerializableExtra("Nodes");
+        playList = (ArrayList<Song>) intent.getSerializableExtra("Nodes");
 
+        System.out.println("<<<<<" + playList);
 
-
-
+        showMusic();
 //        if(ContextCompat.checkSelfPermission(MusicActivity.this,
 //                Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
 //            if(ActivityCompat.shouldShowRequestPermissionRationale(MusicActivity.this,
@@ -68,15 +68,15 @@ public class MusicActivity extends Activity {
      */
     public void showMusic() {
         listView = findViewById(R.id.musicView);
-        getMusic();
-        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, arrayList);
+//        getMusic();
+        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, playList);
         listView.setAdapter((adapter));
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                Log.d("songClick", arrayList.get(i).toString());
-                result.putExtra("song", (Parcelable)arrayList.get(i));
+                Log.d("songClick", playList.get(i).toString());
+                result.putExtra("song", (Parcelable)playList.get(i));
                 setResult(Activity.RESULT_OK, result);
                 finish();
 
@@ -128,7 +128,7 @@ public class MusicActivity extends Activity {
                 currentArtist = songCursor.getString(songArtist);
                 currentLocation = songCursor.getString(songLocation);
                 currentSize = songCursor.getInt(songSize);
-                arrayList.add(new Song(currentTitle, currentArtist, currentLocation, currentSize));
+                playList.add(new Song(currentTitle, currentArtist, currentLocation, currentSize));
             } while (songCursor.moveToNext());
         }
     }
