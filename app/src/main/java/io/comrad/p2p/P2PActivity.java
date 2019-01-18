@@ -19,6 +19,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -221,6 +222,7 @@ public class P2PActivity extends FragmentActivity  {
                         arrayList.addAll(node.getPlaylist());
                     }
                 }
+                System.out.println("<<<<" + arrayList.toString());
                 intent.putExtra("Nodes", (Serializable) arrayList);
                 startActivityForResult(intent, REQUEST_MUSIC_FILE);
             }
