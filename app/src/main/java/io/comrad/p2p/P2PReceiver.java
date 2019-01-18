@@ -7,12 +7,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.ParcelUuid;
 import android.os.Parcelable;
-import io.comrad.p2p.messages.P2PMessageHandler;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+
+import io.comrad.p2p.messages.P2PMessageHandler;
 
 public class P2PReceiver extends BroadcastReceiver
 {
@@ -35,7 +36,7 @@ public class P2PReceiver extends BroadcastReceiver
         if (BluetoothDevice.ACTION_FOUND.equals(action)) {
             BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 
-            if(handler.hasPeer(device.getAddress()) || P2PConnectThread.isConnecting(device.getAddress()))
+            if(handler.getNetwork().hasPeer(device.getAddress()) || P2PConnectThread.isConnecting(device.getAddress()))
             {
                 return;
             }
@@ -62,7 +63,7 @@ public class P2PReceiver extends BroadcastReceiver
 
             fetchNextDevice(device);
 
-            if(handler.hasPeer(device.getAddress()) || P2PConnectThread.isConnecting(device.getAddress())) {
+            if(handler.getNetwork().hasPeer(device.getAddress()) || P2PConnectThread.isConnecting(device.getAddress())) {
                 return;
             }
 

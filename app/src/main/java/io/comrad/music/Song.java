@@ -70,4 +70,14 @@ public class Song implements Parcelable, Serializable {
     public int getSongSize() {
         return this.songSize;
     }
+
+    @Override
+    public boolean equals(Object object) {
+        if (object instanceof Song) {
+            Song song = (Song) object;
+            return this.songTitle.equals(song.songTitle) && this.songArtist.equals(song.songArtist) && this.songLocation.equals(song.songLocation) && this.songSize == song.songSize;
+        }
+
+        return false;
+    }
 }

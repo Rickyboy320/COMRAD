@@ -90,8 +90,13 @@ public class PlayMusic extends Fragment  {
             mediaPlayer.reset();
             mediaPlayer.setDataSource(fis.getFD());
 
-            mediaPlayer.prepare();
-            mediaPlayer.start();
+            mediaPlayer.prepareAsync();
+            mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                @Override
+                public void onPrepared(MediaPlayer mediaPlayer) {
+                    mediaPlayer.start();
+                }
+            });
         } catch (IOException ex) {
             ex.printStackTrace();
         }

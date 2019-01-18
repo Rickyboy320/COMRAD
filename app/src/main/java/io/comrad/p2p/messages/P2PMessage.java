@@ -13,6 +13,7 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
+import io.comrad.music.Song;
 import io.comrad.p2p.network.Graph;
 import io.comrad.p2p.network.GraphUpdate;
 
@@ -68,6 +69,8 @@ public class P2PMessage implements Serializable {
 //                    this.payload = readAudioFile(fileURI);
                     this.payload = payload;
                     break;
+                case request_song:
+                case send_song:
                 case send_message:
                 case update_network_structure:
                 case handshake_network:
@@ -91,7 +94,7 @@ public class P2PMessage implements Serializable {
             String mac = this.sourceMac;
             System.out.println(mac);
 
-            if(mac.equalsIgnoreCase(handler.network.getSelfNode().getMac()))
+            if(mac.equalsIgnoreCase(handler.getNetwork().getSelfMac()))
             {
                 System.out.println("Source Mac was our own, skipping...");
                 return;
@@ -100,19 +103,17 @@ public class P2PMessage implements Serializable {
             int count = Integer.parseInt(this.destinationMAC.substring(2));
             System.out.println(count);
 
-            synchronized (handler.counters) {
-                Set<Integer> knownCounts = handler.counters.get(mac);
-                if (knownCounts == null) {
-                    knownCounts = new HashSet<>();
-                    handler.counters.put(mac, knownCounts);
-                }
-                if (knownCounts.contains(count)) {
-                    System.out.println(count);
-                    return;
-                }
-                knownCounts.add(count);
-                handler.broadcastExcluding(this, sender.getAddress());
+            Set<Integer> knownCounts = handler.getNetwork().counters.get(mac);
+            if (knownCounts == null) {
+                knownCounts = new HashSet<>();
+                handler.getNetwork().counters.put(mac, knownCounts);
             }
+            if (knownCounts.contains(count)) {
+                System.out.println(count);
+                return;
+            }
+            knownCounts.add(count);
+            handler.getNetwork().broadcastExcluding(this, sender.getAddress());
         }
 
         System.out.println("Source Mac: " + this.sourceMac);
@@ -125,34 +126,58 @@ public class P2PMessage implements Serializable {
             handler.sendSongToActivity((byte[]) this.payload);
         } else if (this.type == MessageType.handshake_network) {
             Graph graph = (Graph) this.payload;
-            handler.network.createNode(sender.getAddress());
-            handler.network.addEdge(handler.network.getSelfNode().getMac(), sender.getAddress());
+            graph.replace("02:00:00:00:00:00", this.sourceMac);
 
-            GraphUpdate update = handler.network.difference(graph);
-            update.addNode(sender.getAddress());
-            update.addEdge(handler.network.getSelfNode().getMac(), sender.getAddress());
+            synchronized (handler.getNetwork().getGraph()) {
+                if(handler.getNetwork().getSelfMac().equalsIgnoreCase("02:00:00:00:00:00"))
+                {
+                    handler.getNetwork().getGraph().setSelfNode(this.getDestinationMAC());
+                    System.out.println("Received MAC from sender: " + handler.getNetwork().getSelfMac());
+                }
 
-            System.out.println("Update: " + update);
+                GraphUpdate update = handler.getNetwork().getGraph().difference(graph);
+                update.addEdge(handler.getNetwork().getSelfMac(), sender.getAddress());
 
-            handler.network.apply(update);
-
-            System.out.println("Network: " + handler.network);
-            System.out.println("------------------------");
-            // Send update to all but source.
-            P2PMessage message = new P2PMessage(handler.network.getSelfNode().getMac(), handler.getBroadcastAddress(), MessageType.update_network_structure, update);
-            handler.broadcastExcluding(message, sender.getAddress());
+                System.out.println("Update: " + update);
+                handler.getNetwork().getGraph().apply(update);
+                System.out.println("Network: " + handler.getNetwork());
+                System.out.println("------------------------");
+                // Send update to all but source.
+                P2PMessage message = new P2PMessage(handler.getNetwork().getSelfMac(), handler.getNetwork().getBroadcastAddress(), MessageType.update_network_structure, update);
+                handler.getNetwork().broadcastExcluding(message, sender.getAddress());
+            }
         } else if(this.type == MessageType.update_network_structure) {
             GraphUpdate update = (GraphUpdate) this.payload;
-            handler.network.apply(update);
-            System.out.println("Updated network to: " + handler.network);
+            synchronized (handler.getNetwork().getGraph()) {
+                handler.getNetwork().getGraph().apply(update);
+                System.out.println("Updated network to: " + handler.getNetwork().getGraph());
+            }
         } else if (this.type == MessageType.send_message) {
-            if (this.getDestinationMAC().equalsIgnoreCase(handler.network.getSelfNode().getMac())) {
+            if (this.getDestinationMAC().equalsIgnoreCase(handler.getNetwork().getSelfMac())) {
                 handler.sendToastToUI("We received a message from " + this.sourceMac);
                 handler.sendSongToActivity((byte[]) this.payload);
 
 
             } else {
-                handler.forwardMessage(this);
+                handler.getNetwork().forwardMessage(this);
+            }
+        } else if (this.type == MessageType.request_song) {
+            if (this.getDestinationMAC().equalsIgnoreCase(handler.getNetwork().getSelfMac())) {
+                handler.sendToastToUI("We received a request from " + this.sourceMac);
+
+                P2PMessage message = new P2PMessage(handler.getNetwork().getSelfMac(), this.sourceMac, MessageType.send_song, handler.getNetwork().getByteArrayFromSong((Song) this.payload));
+                handler.getNetwork().forwardMessage(message);
+
+
+            } else {
+                handler.getNetwork().forwardMessage(this);
+            }
+        } else if (this.type == MessageType.send_song) {
+            if (this.getDestinationMAC().equalsIgnoreCase(handler.getNetwork().getSelfMac())) {
+                handler.sendToastToUI("We received a song from " + this.sourceMac);
+                handler.sendSongToActivity((byte[]) this.payload);
+            } else {
+                handler.getNetwork().forwardMessage(this);
             }
         }
     }
