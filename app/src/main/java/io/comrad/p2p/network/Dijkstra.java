@@ -106,5 +106,9 @@ public class Dijkstra {
         public String toString() {
             return this.path.toString();
         }
+
+        public int length() {
+            return this.path.size();
+        }
     }
 }

@@ -150,6 +150,24 @@ public class Graph implements Serializable {
         return path.getNextNode(this.selfNode);
     }
 
+    public Node getNearestSong(Song song) {
+        int smallestPath = Integer.MAX_VALUE;
+        Node nearestNode = null;
+        if(this.selfNode.getPlaylist().contains(song)) {
+            return this.selfNode;
+        }
+
+        for(Node node : dijkstra.getPaths().keySet()) {
+            int pathLength = dijkstra.getPaths().get(node).length();
+            if(node.getPlaylist().contains(song) && pathLength < smallestPath) {
+                smallestPath = pathLength;
+                nearestNode = node;
+            }
+        }
+
+        return nearestNode;
+    }
+
     public GraphUpdate difference(Graph graph) {
         System.out.println("Calculating difference. Current: " + this.nodes + ", " + this.edges + ". Comparing: " + graph.nodes + ", " + graph.edges);
 

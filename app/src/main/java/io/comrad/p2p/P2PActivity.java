@@ -316,22 +316,22 @@ public class P2PActivity extends FragmentActivity  {
 
         if (requestCode == REQUEST_MUSIC_FILE) {
             if (resultCode == RESULT_OK) {
-                Song songResult = data.getParcelableExtra("song");
+                Song song = data.getParcelableExtra("song");
                 Graph graph = this.handler.getNetwork().getGraph();
                 synchronized (graph) {
-                    for (Node node : graph.getNodes()) {
-                        if (node.equals(graph.getSelfNode())) {
-                            System.out.println("It's OUR music!!!!!");
-                            continue;
+                    Node node = graph.getNearestSong(song);
+                    if(node != null) {
+                        System.out.println("Node with closest '" + song + "': " + node);
+                        if(node.equals(this.handler.getNetwork().getGraph().getSelfNode()))
+                        {
+                            this.sendByteArrayToPlayMusic(this.getByteArrayFromSong(song));
+                        } else {
+                            this.handler.getNetwork().forwardMessage(new P2PMessage(this.handler.getNetwork().getSelfMac(), node.getMac(), MessageType.request_song, song));
                         }
-
-                        if (node.getPlaylist().contains(songResult)) {
-                            this.handler.getNetwork().forwardMessage(new P2PMessage(this.handler.getNetwork().getSelfMac(), node.getMac(), MessageType.request_song, songResult));
-                            return;
-                        }
+                    } else {
+                        System.out.println(song + " could not be sent because we don't know the origin");
                     }
                 }
-                System.out.println("JEBROER " + songResult + " could not be sent becasue we don't know the origin");
             } else {
                 // TODO: ERROR?
             }
