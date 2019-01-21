@@ -1,1 +1,1 @@
-include ':app'
+include ':app', ':AdHoc-Monitor:adhocmonitor'

@@ -3,15 +3,13 @@ package io.comrad.p2p;
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.ContentResolver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
+import android.content.*;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.os.ParcelUuid;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
@@ -19,6 +17,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -45,6 +44,8 @@ import io.comrad.p2p.messages.P2PMessage;
 import io.comrad.p2p.messages.P2PMessageHandler;
 import io.comrad.p2p.network.Graph;
 import io.comrad.p2p.network.Node;
+import nl.erlkdev.adhocmonitor.AdhocMonitorBinder;
+import nl.erlkdev.adhocmonitor.AdhocMonitorService;
 
 import static android.bluetooth.BluetoothAdapter.SCAN_MODE_CONNECTABLE;
 import static android.bluetooth.BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE;
@@ -56,9 +57,9 @@ public class P2PActivity extends FragmentActivity  {
 
     private final static int REQUEST_ENABLE_BT = 1;
     private final static int REQUEST_DISCOVER = 2;
-    private final static int PERMISSION_REQUEST = 3;
+    private final static int LOCATION_PERMISSION = 3;
     static final int REQUEST_MUSIC_FILE = 4;
-    private static final int MY_PERMISSION_REQUEST = 5;
+    private static final int MUSIC_PERMISSION = 5;
 
     private P2PServerThread serverThread;
 
@@ -74,24 +75,36 @@ public class P2PActivity extends FragmentActivity  {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_p2p);
 
-        if(ContextCompat.checkSelfPermission(this,
-                Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            if(ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
-            } else {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
-            }
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MUSIC_PERMISSION);
         } else {
             getMusic();
         }
 
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST);
-
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, LOCATION_PERMISSION);
 
         addComponents();
+
+        Intent mAdhocMonitorIntent = new Intent(this, AdhocMonitorService.class);
+        startService(mAdhocMonitorIntent);
+
+        /* Bind monitor service. */
+        bindService(mAdhocMonitorIntent, new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName className, IBinder service) {
+                Log.d("MonitorService", "Adhoc Monitor service is connected");
+                AdhocMonitorBinder adhocMonitorBinder = (AdhocMonitorBinder) service;
+                AdhocMonitorService mMonitor = adhocMonitorBinder.getService();
+
+                /* Starts the monitor. */
+                mMonitor.startMonitor("192.168.1.1", "192.168.1.4");
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName arg0) {
+                Log.d("MonitorService", "Adhoc Monitor service is disconnected");
+            }
+        }, BIND_AUTO_CREATE);
     }
 
     public void sendByteArrayToPlayMusic(byte[] songBytes) {
@@ -363,8 +376,12 @@ public class P2PActivity extends FragmentActivity  {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        if (requestCode == PERMISSION_REQUEST) {
-            //TODO
+        if(requestCode == MUSIC_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                getMusic();
+            } else {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MUSIC_PERMISSION);
+            }
         }
     }
 
