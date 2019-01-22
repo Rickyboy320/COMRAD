@@ -6,9 +6,12 @@ import android.os.Message;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Set;
 
 import io.comrad.music.Song;
 import io.comrad.p2p.P2PActivity;
+import io.comrad.p2p.network.Graph;
+import io.comrad.p2p.network.Node;
 import io.comrad.p2p.network.P2PNetworkHandler;
 
 public class P2PMessageHandler extends Handler {
@@ -17,9 +20,11 @@ public class P2PMessageHandler extends Handler {
     public static final int MESSAGE_READ = 2;
     public static final int MESSAGE_WRITE = 3;
     public static final int MESSAGE_SONG = 4;
+    public static final int UPDATE_GRAPH = 5;
 
     public static final String TOAST = "Toast";
     public static final String SONG = "Song";
+    public static final String GRAPH = "Graph";
 
     private final P2PActivity activity;
     private P2PNetworkHandler networkHandler;
@@ -29,7 +34,7 @@ public class P2PMessageHandler extends Handler {
     }
 
     public void onBluetoothEnable(ArrayList<Song> ownSongs) {
-        this.networkHandler = new P2PNetworkHandler(this.activity, ownSongs);
+        this.networkHandler = new P2PNetworkHandler(this.activity, ownSongs, this);
     }
 
     @Override
@@ -51,6 +56,8 @@ public class P2PMessageHandler extends Handler {
                 break;
             case P2PMessageHandler.MESSAGE_SONG:
                 activity.sendByteArrayToPlayMusic(msg.getData().getByteArray(P2PMessageHandler.SONG));
+            case P2PMessageHandler.UPDATE_GRAPH:
+                activity.refreshPlaylist((Graph) msg.getData().getSerializable(P2PMessageHandler.GRAPH));
         }
     }
 
@@ -60,6 +67,14 @@ public class P2PMessageHandler extends Handler {
         bundle.putString(P2PMessageHandler.TOAST, message);
         toast.setData(bundle);
         this.sendMessage(toast);
+    }
+
+    public void sendPlayListToActivity(Graph nodes) {
+        Message graph = this.obtainMessage(P2PMessageHandler.UPDATE_GRAPH);
+        Bundle bundle = new Bundle();
+        bundle.putSerializable("Graph", nodes);
+        graph.setData(bundle);
+        this.sendMessage(graph);
     }
 
     public void sendSongToActivity(byte[] songBytes) {

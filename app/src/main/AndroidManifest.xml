@@ -15,7 +15,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".p2p.P2PActivity" />
-        <activity android:name=".music.MusicActivity" />
+        <activity android:name=".music.MusicListFragment" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

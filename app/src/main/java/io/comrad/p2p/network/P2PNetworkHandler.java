@@ -11,6 +11,7 @@ import io.comrad.p2p.P2PActivity;
 import io.comrad.p2p.P2PConnectedThread;
 import io.comrad.p2p.messages.MessageType;
 import io.comrad.p2p.messages.P2PMessage;
+import io.comrad.p2p.messages.P2PMessageHandler;
 
 public class P2PNetworkHandler {
     private static int COUNTER = 0;
@@ -21,9 +22,9 @@ public class P2PNetworkHandler {
     private final Map<String, P2PConnectedThread> peerThreads = new ConcurrentHashMap<>();
     public final Map<String, Set<Integer>> counters = new ConcurrentHashMap<>();
 
-    public P2PNetworkHandler(P2PActivity activity, List<Song> ownSongs) {
+    public P2PNetworkHandler(P2PActivity activity, List<Song> ownSongs, P2PMessageHandler handler) {
         this.activity = activity;
-        this.network = new Graph(P2PActivity.getBluetoothMac(activity.getApplicationContext()), ownSongs);
+        this.network = new Graph(P2PActivity.getBluetoothMac(activity.getApplicationContext()), ownSongs, handler);
     }
 
     public void addPeer(String mac, P2PConnectedThread thread) {

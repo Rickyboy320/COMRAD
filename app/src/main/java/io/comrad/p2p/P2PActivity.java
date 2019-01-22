@@ -18,7 +18,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -29,7 +28,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -37,7 +35,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import io.comrad.R;
-import io.comrad.music.MusicActivity;
+import io.comrad.music.MusicListFragment;
 import io.comrad.music.PlayMusic;
 import io.comrad.music.Song;
 import io.comrad.p2p.messages.MessageType;
@@ -104,13 +102,13 @@ public class P2PActivity extends FragmentActivity  {
 
         final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         final List<String> peerList = new ArrayList<>();
-        RecyclerView peerView = findViewById(R.id.peersList);
+//        RecyclerView peerView = findViewById(R.id.peersList);
 
         LinearLayoutManager mng = new LinearLayoutManager(this);
-        peerView.setLayoutManager(mng);
+//        peerView.setLayoutManager(mng);
 
         final PeerAdapter peerAdapter = new PeerAdapter(peerList);
-        peerView.setAdapter(peerAdapter);
+//        peerView.setAdapter(peerAdapter);
 
         Button discoverButton = findViewById(R.id.discover);
         discoverButton.setOnClickListener(new View.OnClickListener() {
@@ -197,57 +195,19 @@ public class P2PActivity extends FragmentActivity  {
             }
         });
 
-        Button stopDiscovery = findViewById(R.id.stopDiscovery);
-        stopDiscovery.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Toast.makeText(getApplicationContext(), "Stopped discovering.", Toast.LENGTH_LONG).show();
-                bluetoothAdapter.cancelDiscovery();
-            }
-        });
-
-        Button sendMessage = findViewById(R.id.sendMessage);
-        sendMessage.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                handler.getNetwork().sendMessageToPeers(new P2PMessage(handler.getNetwork().getSelfMac(), handler.getNetwork().getBroadcastAddress(), MessageType.broadcast_message, "Hello world!"));
-            }
-        });
-
-        Button chooseMusic = findViewById(R.id.chooseMusic);
-        chooseMusic.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Intent intent = new Intent(v.getContext(), MusicActivity.class);
-                ArrayList<Song> arrayList = new ArrayList<>();
-
-                Set<Node> nodes = handler.getNetwork().getGraph().getNodes();
-                synchronized (nodes) {
-                    for (Node node : nodes) {
-                        if (node.getPlaylist() != null) {
-                            arrayList.addAll(node.getPlaylist());
-                        }
-                    }
-                }
-
-                System.out.println("<<<<" + arrayList.toString());
-                intent.putExtra("Nodes", (Serializable) arrayList);
-                startActivityForResult(intent, REQUEST_MUSIC_FILE);
-            }
-        });
+//        Button stopDiscovery = findViewById(R.id.stopDiscovery);
+//        stopDiscovery.setOnClickListener(new View.OnClickListener() {
+//            public void onClick(View v) {
+//                Toast.makeText(getApplicationContext(), "Stopped discovering.", Toast.LENGTH_LONG).show();
+//                bluetoothAdapter.cancelDiscovery();
+//            }
+//        });
 
         Button showGraph = findViewById(R.id.showGraph);
         showGraph.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 synchronized (handler.getNetwork().getGraph()) {
                     System.out.println(handler.getNetwork().getGraph());
-                }
-            }
-        });
-
-        Button send5mini = findViewById(R.id.send5smini);
-        send5mini.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                if (!(handler.getNetwork().getSelfMac().equalsIgnoreCase("6C:2F:2C:82:67:11"))) {
-                    P2PMessage message = new P2PMessage(handler.getNetwork().getSelfMac(), "6C:2F:2C:82:67:11", MessageType.send_message, "I am a song :D");
-                    handler.getNetwork().forwardMessage(message);
                 }
             }
         });
@@ -278,6 +238,21 @@ public class P2PActivity extends FragmentActivity  {
                 }
             }
         }
+    }
+
+    public void refreshPlaylist(Graph graph) {
+        ArrayList<Song> arrayList = new ArrayList<>();
+        Set<Node> nodes = graph.getNodes();
+
+        synchronized (nodes) {
+            for (Node node : nodes) {
+                if (node.getPlaylist() != null) {
+                    arrayList.addAll(node.getPlaylist());
+                }
+            }
+        }
+        MusicListFragment fragment = (MusicListFragment) getSupportFragmentManager().findFragmentById(R.id.MusicActivity);
+        fragment.setPlayList(arrayList);
     }
 
 
