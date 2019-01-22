@@ -19,10 +19,9 @@ public class P2PConnectedThread extends Thread {
     public P2PConnectedThread(BluetoothSocket socket, P2PMessageHandler handler) {
         this.handler = handler;
         this.socket = socket;
+
         InputStream tmpIn = null;
         OutputStream tmpOut = null;
-        input = null;
-        output = null;
 
         try {
             tmpIn = socket.getInputStream();
@@ -30,6 +29,7 @@ public class P2PConnectedThread extends Thread {
             handler.sendToastToUI( "Error occurred when creating input stream.");
             e.printStackTrace();
         }
+
         try {
             tmpOut = socket.getOutputStream();
         } catch (IOException e) {
@@ -55,7 +55,6 @@ public class P2PConnectedThread extends Thread {
                 handler.sendToastToUI("Input stream was disconnected.");
                 e.printStackTrace();
                 this.close();
-//                new P2PConnectThread(socket.getRemoteDevice(), handler).start();
                 break;
             }
         }
@@ -65,7 +64,6 @@ public class P2PConnectedThread extends Thread {
     public void write(P2PMessage message) {
         try {
             byte[] stream = message.toByteArray();
-            System.out.println("Size of to send message: " + stream.length);
             output.writeObject(message);
 
             AdhocMonitorService monitor = handler.getNetwork().getMonitor();

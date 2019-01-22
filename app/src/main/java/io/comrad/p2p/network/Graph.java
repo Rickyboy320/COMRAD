@@ -1,12 +1,12 @@
 
 package io.comrad.p2p.network;
 
+import io.comrad.music.Song;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import io.comrad.music.Song;
 
 public class Graph implements Serializable {
     private Node selfNode;
@@ -103,7 +103,6 @@ public class Graph implements Serializable {
         Node node = this.getNode(replacent);
         this.nodes.remove(node);
         this.nodes.add(new Node(replacer, node.getPlaylist()));
-        System.out.println("Replaced unknown MAC with: " + replacer);
     }
 
     public void apply(GraphUpdate update) {
@@ -114,11 +113,7 @@ public class Graph implements Serializable {
     }
 
     public void updateDijkstra() {
-        // TODO: this could possibly go wrong with concurrency...
         this.dijkstra = new Dijkstra(this);
-
-        System.out.println("Resulting graph: " + this);
-        System.out.println("Dijkstra paths: " + this.dijkstra.getPaths());
 
         this.nodes.retainAll(dijkstra.getPaths().keySet());
         this.nodes.add(selfNode);
@@ -169,8 +164,6 @@ public class Graph implements Serializable {
     }
 
     public GraphUpdate difference(Graph graph) {
-        System.out.println("Calculating difference. Current: " + this.nodes + ", " + this.edges + ". Comparing: " + graph.nodes + ", " + graph.edges);
-
         Set<Node> nodes = new HashSet<>(graph.nodes);
         Set<Edge> edges = new HashSet<>(graph.edges);
 

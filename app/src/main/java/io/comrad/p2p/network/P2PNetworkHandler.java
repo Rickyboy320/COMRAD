@@ -8,7 +8,6 @@ import io.comrad.p2p.messages.P2PMessage;
 import nl.erlkdev.adhocmonitor.AdhocMonitorService;
 import nl.erlkdev.adhocmonitor.NodeStatus;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,15 +17,16 @@ public class P2PNetworkHandler {
     private static int COUNTER = 0;
 
     private final P2PActivity activity;
-    private AdhocMonitorService monitor;
-    private final Graph network;
+    private final Graph graph;
 
     private final Map<String, P2PConnectedThread> peerThreads = new ConcurrentHashMap<>();
     public final Map<String, Set<Integer>> counters = new ConcurrentHashMap<>();
 
+    private AdhocMonitorService monitor;
+
     public P2PNetworkHandler(P2PActivity activity, List<Song> ownSongs) {
         this.activity = activity;
-        this.network = new Graph(P2PActivity.getBluetoothMac(activity.getApplicationContext()), ownSongs);
+        this.graph = new Graph(P2PActivity.getBluetoothMac(activity.getApplicationContext()), ownSongs);
     }
 
     public void addPeer(String mac, P2PConnectedThread thread) {
@@ -36,9 +36,8 @@ public class P2PNetworkHandler {
             this.monitor.getMonitorNode().setCurrentNeighbours(this.peerThreads.keySet().toArray(new String[0]));
         }
 
-        System.out.println("Sending network: " + this.network);
-        synchronized (this.network) {
-            P2PMessage p2pMessage = new P2PMessage(this.getSelfMac(), thread.getRemoteDevice().getAddress(), MessageType.handshake_network, this.network);
+        synchronized (this.graph) {
+            P2PMessage p2pMessage = new P2PMessage(this.getSelfMac(), thread.getRemoteDevice().getAddress(), MessageType.handshake_network, this.graph);
             thread.write(p2pMessage);
         }
     }
@@ -55,13 +54,9 @@ public class P2PNetworkHandler {
         P2PMessage message = new P2PMessage(this.getSelfMac(), this.getBroadcastAddress(), MessageType.update_network_structure, graphUpdate);
         this.broadcast(message);
 
-        synchronized (this.network) {
-            this.network.apply(graphUpdate);
+        synchronized (this.graph) {
+            this.graph.apply(graphUpdate);
         }
-    }
-
-    public ArrayList<Song> getOwnPlayList() {
-        return activity.getOwnPlayList();
     }
 
     public boolean hasPeer(String mac) {
@@ -75,10 +70,11 @@ public class P2PNetworkHandler {
     }
 
     public void forwardMessage(P2PMessage p2pMessage) {
-        synchronized (this.network) {
-            Node closestMac = this.network.getNext(p2pMessage.getDestinationMAC());
+        synchronized (this.graph) {
+            Node closestMac = this.graph.getNext(p2pMessage.getDestinationMAC());
 
             if (closestMac == null) {
+                //TODO: Handle special case where there's no more path.
                 System.out.println("Next node was null");
             } else {
                 this.peerThreads.get(closestMac.getMac()).write(p2pMessage);
@@ -112,13 +108,13 @@ public class P2PNetworkHandler {
     }
 
     public String getSelfMac() {
-        synchronized (network) {
-            return this.network.getSelfNode().getMac();
+        synchronized (graph) {
+            return this.graph.getSelfNode().getMac();
         }
     }
 
     public Graph getGraph() {
-        return this.network;
+        return this.graph;
     }
 
     public AdhocMonitorService getMonitor()
@@ -132,7 +128,6 @@ public class P2PNetworkHandler {
     }
 
     public void setMonitor(AdhocMonitorService monitor) {
-        System.out.println("Neighbours on attach: " + this.peerThreads.keySet());
         monitor.getMonitorNode().setCurrentNeighbours(this.peerThreads.keySet().toArray(new String[0]));
         monitor.getMonitorNode().setNodeStatus(NodeStatus.IDLE);
         this.monitor = monitor;

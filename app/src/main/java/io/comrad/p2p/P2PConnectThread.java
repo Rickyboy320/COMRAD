@@ -2,12 +2,11 @@ package io.comrad.p2p;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import io.comrad.p2p.messages.P2PMessageHandler;
 
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
-
-import io.comrad.p2p.messages.P2PMessageHandler;
 
 public class P2PConnectThread extends Thread {
 
@@ -18,8 +17,7 @@ public class P2PConnectThread extends Thread {
     private final BluetoothSocket socket;
 
     public P2PConnectThread(BluetoothDevice targetDevice, P2PMessageHandler handler) {
-        if(connecting.contains(targetDevice.getAddress()))
-        {
+        if(connecting.contains(targetDevice.getAddress())) {
             throw new IllegalStateException("Target Device is already connecting...");
         }
 
@@ -47,8 +45,6 @@ public class P2PConnectThread extends Thread {
             } catch(IOException e1) {
                 e1.printStackTrace();
             }
-            System.err.println("Failed to connect with: " + this.socket.getRemoteDevice().getAddress());
-            e.printStackTrace();
             return;
         }
 
@@ -56,8 +52,7 @@ public class P2PConnectThread extends Thread {
     }
 
     private void handleConnection() {
-        if(this.handler.getNetwork().hasPeer(socket.getRemoteDevice().getAddress()))
-        {
+        if(this.handler.getNetwork().hasPeer(socket.getRemoteDevice().getAddress())) {
             this.close();
             return;
         }
