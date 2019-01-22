@@ -17,6 +17,7 @@ public class P2PMessageHandler extends Handler {
     public static final int MESSAGE_READ = 2;
     public static final int MESSAGE_WRITE = 3;
     public static final int MESSAGE_SONG = 4;
+    public static final int MESSAGE_SONG_SEND = 5;
 
     public static final String TOAST = "Toast";
     public static final String SONG = "Song";
@@ -54,7 +55,10 @@ public class P2PMessageHandler extends Handler {
                 Toast.makeText(activity.getApplicationContext(), msg.getData().getString(P2PMessageHandler.TOAST), Toast.LENGTH_SHORT).show();
                 break;
             case P2PMessageHandler.MESSAGE_SONG:
-                activity.sendByteArrayToPlayMusic(msg.getData().getByteArray(P2PMessageHandler.SONG));
+                activity.saveMusicBytePacket(msg.getData().getByteArray(P2PMessageHandler.SONG));
+                break;
+            case P2PMessageHandler.MESSAGE_SONG_SEND:
+                activity.sendByteArrayToPlayMusic();
         }
     }
 
@@ -69,9 +73,14 @@ public class P2PMessageHandler extends Handler {
     public void sendSongToActivity(byte[] songBytes) {
         Message song = this.obtainMessage(P2PMessageHandler.MESSAGE_SONG);
         Bundle bundle = new Bundle();
-        bundle.putByteArray("Song", songBytes);
+        bundle.putByteArray(P2PMessageHandler.SONG, songBytes);
         song.setData(bundle);
         this.sendMessage(song);
+    }
+
+    public void sendSongFinshed() {
+        Message msg = this.obtainMessage(P2PMessageHandler.MESSAGE_SONG_SEND);
+        this.sendMessage(msg);
     }
 
     public  P2PNetworkHandler getNetwork() {

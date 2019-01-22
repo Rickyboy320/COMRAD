@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -24,6 +25,7 @@ public class P2PMessage implements Serializable {
     private MessageType type;
     private Serializable payload;
     private String sourceMac;
+    private int SONG_PACKET_SIZE = 256000;
 
     public P2PMessage(String sourceMac, String destinationMAC, MessageType type, Serializable payload) {
         this.sourceMac = sourceMac;
@@ -166,10 +168,25 @@ public class P2PMessage implements Serializable {
             if (this.getDestinationMAC().equalsIgnoreCase(handler.getNetwork().getSelfMac())) {
                 handler.sendToastToUI("We received a request from " + this.sourceMac);
 
-                P2PMessage message = new P2PMessage(handler.getNetwork().getSelfMac(), this.sourceMac, MessageType.send_song, handler.getNetwork().getByteArrayFromSong((Song) this.payload));
+                byte[] payload = handler.getNetwork().getByteArrayFromSong((Song) this.payload);
+                P2PMessage message;
+                byte[] tmpPayload;
+
+                for (int i = 0; i < payload.length; i += SONG_PACKET_SIZE) {
+                    try {
+                        tmpPayload = Arrays.copyOfRange(payload, i, i + SONG_PACKET_SIZE);
+                    } catch (IndexOutOfBoundsException e) {
+                        tmpPayload = Arrays.copyOfRange(payload, i, payload.length);
+                    }
+
+                    message = new P2PMessage(handler.getNetwork().getSelfMac(), this.sourceMac,
+                                                        MessageType.send_song, tmpPayload);
+                    handler.getNetwork().forwardMessage(message);
+                }
+
+                message = new P2PMessage(handler.getNetwork().getSelfMac(), this.sourceMac,
+                        MessageType.song_finished, null);
                 handler.getNetwork().forwardMessage(message);
-
-
             } else {
                 handler.getNetwork().forwardMessage(this);
             }
@@ -180,6 +197,8 @@ public class P2PMessage implements Serializable {
             } else {
                 handler.getNetwork().forwardMessage(this);
             }
+        } else if (this.type == MessageType.song_finished) {
+            handler.sendSongFinshed();
         }
     }
 

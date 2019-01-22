@@ -55,6 +55,8 @@ public class P2PActivity extends FragmentActivity  {
 
     private ArrayList<Song> ownSongs = new ArrayList<>();
 
+    private byte[] songBuffer;
+
     private AdhocMonitorService monitor;
 
     private final P2PMessageHandler handler = new P2PMessageHandler(this);
@@ -286,7 +288,8 @@ public class P2PActivity extends FragmentActivity  {
                         System.out.println("Node with closest '" + song + "': " + node);
                         if(node.equals(this.handler.getNetwork().getGraph().getSelfNode()))
                         {
-                            this.sendByteArrayToPlayMusic(this.getByteArrayFromSong(song));
+                            this.saveMusicBytePacket(this.getByteArrayFromSong(song));
+                            this.sendByteArrayToPlayMusic();
                         } else {
                             this.handler.getNetwork().forwardMessage(new P2PMessage(this.handler.getNetwork().getSelfMac(), node.getMac(), MessageType.request_song, song));
                         }
@@ -357,9 +360,15 @@ public class P2PActivity extends FragmentActivity  {
         return null;
     }
 
-    public void sendByteArrayToPlayMusic(byte[] songBytes) {
+    public void sendByteArrayToPlayMusic() {
         PlayMusic fragment = (PlayMusic) getSupportFragmentManager().findFragmentById(R.id.PlayMusic);
-        fragment.addSongBytes(songBytes);
+        fragment.addSongBytes(this.songBuffer);
+    }
+
+    public void saveMusicBytePacket(byte[] songBytes) {
+        for(int i = 0; i < songBytes.length; ++i) {
+            this.songBuffer[i] = songBytes[i];
+        }
     }
 
     /*
