@@ -4,10 +4,9 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import io.comrad.R;
 
 import java.util.List;
-
-import io.comrad.R;
 
 public class PeerAdapter extends RecyclerView.Adapter<PeerAdapter.TextViewHolder> {
     private List<String> list;
@@ -35,7 +34,6 @@ public class PeerAdapter extends RecyclerView.Adapter<PeerAdapter.TextViewHolder
     @Override
     public void onBindViewHolder(TextViewHolder holder, int position) {
         holder.view.setText(this.list.get(position));
-
     }
 
     @Override

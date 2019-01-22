@@ -37,18 +37,15 @@ public class GraphUpdate implements Serializable {
         this.removedEdges.add(new Edge(node1, node2));
     }
 
-    public Set<Edge> getAddedEdges()
-    {
+    public Set<Edge> getAddedEdges() {
         return this.addedEdges;
     }
 
-    public Set<Node> getAddedNodes()
-    {
+    public Set<Node> getAddedNodes() {
         return this.addedNodes;
     }
 
-    public Set<Edge> getRemovedEdges()
-    {
+    public Set<Edge> getRemovedEdges() {
         return this.removedEdges;
     }
 

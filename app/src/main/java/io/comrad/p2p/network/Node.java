@@ -1,6 +1,8 @@
 package io.comrad.p2p.network;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import io.comrad.music.Song;
@@ -10,7 +12,7 @@ public class Node implements Serializable {
     private List<Song> playlist;
 
     Node(String mac) {
-        this.mac = mac;
+        this(mac, new ArrayList<Song>());
     }
 
     Node(String mac, List<Song> playlist) {
@@ -42,6 +44,6 @@ public class Node implements Serializable {
 
     @Override
     public String toString() {
-        return this.mac;
+        return this.mac + " (" + this.playlist.size() + ")";
     }
 }

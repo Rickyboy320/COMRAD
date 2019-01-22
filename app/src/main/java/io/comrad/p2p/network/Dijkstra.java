@@ -1,10 +1,6 @@
 package io.comrad.p2p.network;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class Dijkstra {
     private Map<Node, Path> paths = new HashMap<>();
@@ -17,13 +13,11 @@ public class Dijkstra {
 
         unsettled.add(graph.getSelfNode());
 
-        while(unsettled.size() != 0)
-        {
+        while(unsettled.size() != 0) {
             Node currentNode = getSmallestDistance(unsettled, distances);
             unsettled.remove(currentNode);
 
-            for(Node node : graph.getPeers(currentNode))
-            {
+            for(Node node : graph.getPeers(currentNode)) {
                 if(!settled.contains(node)) {
                     int sourceDistance = getOrDefault(distances, currentNode, 0);
                     if (sourceDistance + 1 < getOrDefault(distances, node, Integer.MAX_VALUE)) {
@@ -41,7 +35,7 @@ public class Dijkstra {
             settled.add(currentNode);
         }
 
-        for (Node node : paths.keySet()){
+        for (Node node : paths.keySet()) {
             paths.get(node).addNode(node);
         }
     }
@@ -59,8 +53,7 @@ public class Dijkstra {
         Node smallestNode = null;
         for(Node node : nodes) {
             int distance = getOrDefault(distances, node, 0);
-            if(distance < smallestDistance)
-            {
+            if(distance < smallestDistance) {
                 smallestDistance = distance;
                 smallestNode = node;
             }
@@ -69,8 +62,7 @@ public class Dijkstra {
         return smallestNode;
     }
 
-    public class Path
-    {
+    public class Path {
         private LinkedList<Node> path = new LinkedList<>();
 
         public Path() {}
@@ -105,6 +97,10 @@ public class Dijkstra {
         @Override
         public String toString() {
             return this.path.toString();
+        }
+
+        public int length() {
+            return this.path.size();
         }
     }
 }

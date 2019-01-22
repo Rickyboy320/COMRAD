@@ -1,0 +1,3 @@
+[submodule "AdHoc-Monitor"]
+	path = AdHoc-Monitor
+	url = https://github.com/ERLKDev/AdHoc-Monitor.git

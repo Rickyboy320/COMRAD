@@ -1,38 +1,44 @@
 package io.comrad.p2p.network;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
 import io.comrad.music.Song;
 import io.comrad.p2p.P2PActivity;
 import io.comrad.p2p.P2PConnectedThread;
 import io.comrad.p2p.messages.MessageType;
 import io.comrad.p2p.messages.P2PMessage;
+import nl.erlkdev.adhocmonitor.AdhocMonitorService;
+import nl.erlkdev.adhocmonitor.NodeStatus;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import io.comrad.p2p.messages.P2PMessageHandler;
 
 public class P2PNetworkHandler {
     private static int COUNTER = 0;
 
     private final P2PActivity activity;
-    private final Graph network;
+    private final Graph graph;
 
     private final Map<String, P2PConnectedThread> peerThreads = new ConcurrentHashMap<>();
     public final Map<String, Set<Integer>> counters = new ConcurrentHashMap<>();
 
+    private AdhocMonitorService monitor;
+
     public P2PNetworkHandler(P2PActivity activity, List<Song> ownSongs, P2PMessageHandler handler) {
         this.activity = activity;
-        this.network = new Graph(P2PActivity.getBluetoothMac(activity.getApplicationContext()), ownSongs, handler);
+        this.graph = new Graph(P2PActivity.getBluetoothMac(activity.getApplicationContext()), ownSongs, handler);
     }
 
     public void addPeer(String mac, P2PConnectedThread thread) {
         this.peerThreads.put(mac, thread);
 
-        System.out.println("Sending network: " + this.network);
-        synchronized (this.network) {
-            P2PMessage p2pMessage = new P2PMessage(this.getSelfMac(), thread.getRemoteDevice().getAddress(), MessageType.handshake_network, this.network);
+        if (this.monitor != null) {
+            this.monitor.getMonitorNode().setCurrentNeighbours(this.peerThreads.keySet().toArray(new String[0]));
+        }
+
+        synchronized (this.graph) {
+            P2PMessage p2pMessage = new P2PMessage(this.getSelfMac(), thread.getRemoteDevice().getAddress(), MessageType.handshake_network, this.graph);
             thread.write(p2pMessage);
         }
     }
@@ -40,18 +46,18 @@ public class P2PNetworkHandler {
     public void removePeer(String mac) {
         this.peerThreads.remove(mac);
 
+        if (this.monitor != null) {
+            this.monitor.getMonitorNode().setCurrentNeighbours(this.peerThreads.keySet().toArray(new String[0]));
+        }
+
         GraphUpdate graphUpdate = new GraphUpdate();
         graphUpdate.removeEdge(this.getSelfMac(), mac);
         P2PMessage message = new P2PMessage(this.getSelfMac(), this.getBroadcastAddress(), MessageType.update_network_structure, graphUpdate);
         this.broadcast(message);
 
-        synchronized (this.network) {
-            this.network.apply(graphUpdate);
+        synchronized (this.graph) {
+            this.graph.apply(graphUpdate);
         }
-    }
-
-    public ArrayList<Song> getOwnPlayList() {
-        return activity.getOwnPlayList();
     }
 
     public boolean hasPeer(String mac) {
@@ -65,10 +71,11 @@ public class P2PNetworkHandler {
     }
 
     public void forwardMessage(P2PMessage p2pMessage) {
-        synchronized (this.network) {
-            Node closestMac = this.network.getNext(p2pMessage.getDestinationMAC());
+        synchronized (this.graph) {
+            Node closestMac = this.graph.getNext(p2pMessage.getDestinationMAC());
 
             if (closestMac == null) {
+                //TODO: Handle special case where there's no more path.
                 System.out.println("Next node was null");
             } else {
                 this.peerThreads.get(closestMac.getMac()).write(p2pMessage);
@@ -102,17 +109,28 @@ public class P2PNetworkHandler {
     }
 
     public String getSelfMac() {
-        synchronized (network) {
-            return this.network.getSelfNode().getMac();
+        synchronized (graph) {
+            return this.graph.getSelfNode().getMac();
         }
     }
 
     public Graph getGraph() {
-        return this.network;
+        return this.graph;
+    }
+
+    public AdhocMonitorService getMonitor()
+    {
+        return this.monitor;
     }
 
     public synchronized String getBroadcastAddress() {
         COUNTER++;
         return "b:" + COUNTER;
+    }
+
+    public void setMonitor(AdhocMonitorService monitor) {
+        monitor.getMonitorNode().setCurrentNeighbours(this.peerThreads.keySet().toArray(new String[0]));
+        monitor.getMonitorNode().setNodeStatus(NodeStatus.IDLE);
+        this.monitor = monitor;
     }
 }

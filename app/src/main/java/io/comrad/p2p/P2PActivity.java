@@ -3,21 +3,21 @@ package io.comrad.p2p;
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.ContentResolver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
+import android.content.*;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.os.ParcelUuid;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -28,6 +28,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -43,10 +44,11 @@ import io.comrad.p2p.messages.P2PMessage;
 import io.comrad.p2p.messages.P2PMessageHandler;
 import io.comrad.p2p.network.Graph;
 import io.comrad.p2p.network.Node;
+import nl.erlkdev.adhocmonitor.AdhocMonitorBinder;
+import nl.erlkdev.adhocmonitor.AdhocMonitorService;
 
-import static android.bluetooth.BluetoothAdapter.SCAN_MODE_CONNECTABLE;
-import static android.bluetooth.BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE;
-import static android.bluetooth.BluetoothAdapter.SCAN_MODE_NONE;
+import java.io.*;
+import java.util.*;
 
 public class P2PActivity extends FragmentActivity  {
     public final static String SERVICE_NAME = "COMRAD";
@@ -54,16 +56,18 @@ public class P2PActivity extends FragmentActivity  {
 
     private final static int REQUEST_ENABLE_BT = 1;
     private final static int REQUEST_DISCOVER = 2;
-    private final static int PERMISSION_REQUEST = 3;
-    static final int REQUEST_MUSIC_FILE = 4;
-    private static final int MY_PERMISSION_REQUEST = 5;
+    private final static int LOCATION_PERMISSION = 3;
+    private static final int REQUEST_MUSIC_FILE = 4;
+    private static final int MUSIC_PERMISSION = 5;
 
+    private ServiceConnection monitorService;
     private P2PServerThread serverThread;
 
     private P2PReceiver receiver;
 
     private ArrayList<Song> ownSongs = new ArrayList<>();
 
+    private AdhocMonitorService monitor;
 
     private final P2PMessageHandler handler = new P2PMessageHandler(this);
 
@@ -72,43 +76,21 @@ public class P2PActivity extends FragmentActivity  {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_p2p);
 
-        if(ContextCompat.checkSelfPermission(this,
-                Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            if(ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
-            } else {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
-            }
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MUSIC_PERMISSION);
         } else {
             getMusic();
         }
 
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST);
-
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, LOCATION_PERMISSION);
 
         addComponents();
-    }
-
-    public void sendByteArrayToPlayMusic(byte[] songBytes) {
-        PlayMusic fragment = (PlayMusic) getSupportFragmentManager().findFragmentById(R.id.PlayMusic);
-        fragment.addSongBytes(songBytes);
     }
 
     private void enableBluetoothServices() {
         this.handler.onBluetoothEnable(ownSongs);
 
         final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        final List<String> peerList = new ArrayList<>();
-//        RecyclerView peerView = findViewById(R.id.peersList);
-
-        LinearLayoutManager mng = new LinearLayoutManager(this);
-//        peerView.setLayoutManager(mng);
-
-        final PeerAdapter peerAdapter = new PeerAdapter(peerList);
-//        peerView.setAdapter(peerAdapter);
 
         Button discoverButton = findViewById(R.id.discover);
         discoverButton.setOnClickListener(new View.OnClickListener() {
@@ -120,16 +102,11 @@ public class P2PActivity extends FragmentActivity  {
                 if (bluetoothAdapter.isDiscovering()) {
                     bluetoothAdapter.cancelDiscovery();
                 }
-                peerList.clear();
-                peerAdapter.notifyDataSetChanged();
                 bluetoothAdapter.startDiscovery();
             }
         });
 
-
-
-
-        receiver = new P2PReceiver(peerAdapter, handler);
+        receiver = new P2PReceiver(handler);
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
         filter.addAction(BluetoothDevice.ACTION_UUID);
@@ -139,6 +116,42 @@ public class P2PActivity extends FragmentActivity  {
         this.serverThread.start();
 
         connectToBondedDevices(bluetoothAdapter, handler);
+
+        if(!this.handler.getNetwork().getSelfMac().equalsIgnoreCase("02:00:00:00:00:00")) {
+            reattachMonitor();
+        }
+    }
+
+    public void reattachMonitor() {
+        Intent adhocIntent = new Intent(this, AdhocMonitorService.class);
+
+        if(this.monitorService != null) {
+            this.unbindService(this.monitorService);
+        } else {
+            startService(adhocIntent);
+        }
+
+        this.monitorService = new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName className, IBinder service) {
+                Log.d("MonitorService", "Adhoc Monitor service is connected");
+                AdhocMonitorBinder adhocMonitorBinder = (AdhocMonitorBinder) service;
+                monitor = adhocMonitorBinder.getService();
+
+                /* Starts the monitor. */
+                monitor.startMonitor(handler.getNetwork().getSelfMac(), "145.109.45.90");
+
+                handler.onMonitorEnable(monitor);
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName arg0) {
+                Log.d("MonitorService", "Adhoc Monitor service is disconnected");
+            }
+        };
+
+        /* Bind monitor service. */
+        bindService(adhocIntent, monitorService, BIND_AUTO_CREATE);
     }
 
     /*
@@ -167,11 +180,9 @@ public class P2PActivity extends FragmentActivity  {
                 currentSize = songCursor.getInt(songSize);
                 ownSongs.add(new Song(currentTitle, currentArtist, currentLocation, currentSize));
             } while (songCursor.moveToNext());
-        }
-    }
 
-    public ArrayList<Song> getOwnPlayList() {
-        return ownSongs;
+            songCursor.close();
+        }
     }
 
     private void addComponents() {
@@ -195,14 +206,6 @@ public class P2PActivity extends FragmentActivity  {
             }
         });
 
-//        Button stopDiscovery = findViewById(R.id.stopDiscovery);
-//        stopDiscovery.setOnClickListener(new View.OnClickListener() {
-//            public void onClick(View v) {
-//                Toast.makeText(getApplicationContext(), "Stopped discovering.", Toast.LENGTH_LONG).show();
-//                bluetoothAdapter.cancelDiscovery();
-//            }
-//        });
-
         Button showGraph = findViewById(R.id.showGraph);
         showGraph.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -216,7 +219,6 @@ public class P2PActivity extends FragmentActivity  {
             enableBluetoothServices();
         }
     }
-
 
     private void connectToBondedDevices(BluetoothAdapter bluetoothAdapter, P2PMessageHandler handler) {
         Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
@@ -255,28 +257,13 @@ public class P2PActivity extends FragmentActivity  {
         }
     }
 
-
-    public static byte[] convertStreamToByteArray(InputStream is) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        byte[] buff = new byte[10240];
-        int i = Integer.MAX_VALUE;
-        while ((i = is.read(buff, 0, buff.length)) > 0) {
-            baos.write(buff, 0, i);
-        }
-
-        return baos.toByteArray(); // be sure to close InputStream in calling function
-    }
-
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_DISCOVER) {
-            if (resultCode == SCAN_MODE_NONE) {
-                Toast.makeText(getApplicationContext(), "This device is not connectable.", Toast.LENGTH_LONG).show();
-            } else if (resultCode == SCAN_MODE_CONNECTABLE) {
-                Toast.makeText(getApplicationContext(), "This device is not discoverable, but can be connected.", Toast.LENGTH_LONG).show();
-            } else if (resultCode == SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
-                Toast.makeText(getApplicationContext(), "This device is now discoverable!", Toast.LENGTH_LONG).show();
+            if (resultCode == RESULT_CANCELED) {
+                Toast.makeText(getApplicationContext(), "This device is not discoverable.", Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(getApplicationContext(), "This device is now discoverable for " + resultCode + " seconds.", Toast.LENGTH_SHORT).show();
             }
         }
 
@@ -298,34 +285,47 @@ public class P2PActivity extends FragmentActivity  {
         }
     }
 
-    public void requestSong(Song songResult) {
+    public void requestSong(Song song) {
         Graph graph = this.handler.getNetwork().getGraph();
         synchronized (graph) {
-            for (Node node : graph.getNodes()) {
-                if (node.equals(graph.getSelfNode())) {
-                    System.out.println("It's OUR music!!!!!");
-                    continue;
-                }
+            Node node = graph.getNearestSong(song);
+            if(node == null) {
+                throw new IllegalStateException("Song " + song + " was requested, but was not present in any of the nodes in the network.");
+            }
 
-                if (node.getPlaylist().contains(songResult)) {
-                    this.handler.getNetwork().forwardMessage(
-                            new P2PMessage(
-                                    this.handler.getNetwork().getSelfMac(),
-                                    node.getMac(),
-                                    MessageType.request_song,
-                                    songResult
-                            )
-                    );
-                    return;
-                }
+            if(node.equals(this.handler.getNetwork().getGraph().getSelfNode())) {
+                this.sendByteArrayToPlayMusic(this.getByteArrayFromSong(song));
+            } else {
+                this.handler.getNetwork().forwardMessage(new P2PMessage(this.handler.getNetwork().getSelfMac(), node.getMac(), MessageType.request_song, song));
             }
         }
-        System.out.println("JEBROER " + songResult + " could not be sent becasue we don't know the origin");
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        if(requestCode == MUSIC_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                getMusic();
+            } else {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MUSIC_PERMISSION);
+            }
+        }
+    }
+
+    public static byte[] convertStreamToByteArray(InputStream is) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte[] buff = new byte[10240];
+        int i;
+        while ((i = is.read(buff, 0, buff.length)) > 0) {
+            baos.write(buff, 0, i);
+        }
+
+        return baos.toByteArray();
     }
 
     public byte[] getByteArrayFromSong(Song song) {
         File songFile = new File(song.getSongLocation());
-        InputStream inputStream = null;
+        InputStream inputStream;
 
         try {
             inputStream = new FileInputStream(songFile);
@@ -334,8 +334,6 @@ public class P2PActivity extends FragmentActivity  {
             this.handler.sendToastToUI("Could find file.");
             return null;
         }
-
-        byte[] byteStream = null;
 
         try {
             return convertStreamToByteArray(inputStream);
@@ -346,16 +344,16 @@ public class P2PActivity extends FragmentActivity  {
         return null;
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        if (requestCode == PERMISSION_REQUEST) {
-            //TODO
-        }
+    public void sendByteArrayToPlayMusic(byte[] songBytes) {
+        PlayMusic fragment = (PlayMusic) getSupportFragmentManager().findFragmentById(R.id.PlayMusic);
+        fragment.addSongBytes(songBytes);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        unbindService(this.monitorService);
 
         unregisterReceiver(receiver);
         this.handler.getNetwork().closeAllConnections();
