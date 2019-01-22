@@ -26,6 +26,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 
 import io.comrad.R;
+import io.comrad.p2p.P2PActivity;
 
 import static android.content.ContentValues.TAG;
 
@@ -108,6 +109,7 @@ public class MusicListFragment extends Fragment {
 //                finish();
 
                 // TODO send back to activity
+                ((P2PActivity)getActivity()).requestSong(playList.get(i));
                 // playMp3Bytes(BYTE STREAM HERE);
             }
         });

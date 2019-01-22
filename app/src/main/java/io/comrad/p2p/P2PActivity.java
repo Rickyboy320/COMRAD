@@ -240,19 +240,19 @@ public class P2PActivity extends FragmentActivity  {
         }
     }
 
-    public void refreshPlaylist(Graph graph) {
+    public void refreshPlaylist(Set<Node> nodes) {
         ArrayList<Song> arrayList = new ArrayList<>();
-        Set<Node> nodes = graph.getNodes();
-
-        synchronized (nodes) {
-            for (Node node : nodes) {
-                if (node.getPlaylist() != null) {
-                    arrayList.addAll(node.getPlaylist());
-                }
+        for (Node node : nodes) {
+            if (node.getPlaylist() != null) {
+                arrayList.addAll(node.getPlaylist());
             }
         }
+
         MusicListFragment fragment = (MusicListFragment) getSupportFragmentManager().findFragmentById(R.id.MusicActivity);
-        fragment.setPlayList(arrayList);
+
+        if (fragment != null) {
+            fragment.setPlayList(arrayList);
+        }
     }
 
 
@@ -291,26 +291,36 @@ public class P2PActivity extends FragmentActivity  {
 
         if (requestCode == REQUEST_MUSIC_FILE) {
             if (resultCode == RESULT_OK) {
-                Song songResult = data.getParcelableExtra("song");
-                Graph graph = this.handler.getNetwork().getGraph();
-                synchronized (graph) {
-                    for (Node node : graph.getNodes()) {
-                        if (node.equals(graph.getSelfNode())) {
-                            System.out.println("It's OUR music!!!!!");
-                            continue;
-                        }
 
-                        if (node.getPlaylist().contains(songResult)) {
-                            this.handler.getNetwork().forwardMessage(new P2PMessage(this.handler.getNetwork().getSelfMac(), node.getMac(), MessageType.request_song, songResult));
-                            return;
-                        }
-                    }
-                }
-                System.out.println("JEBROER " + songResult + " could not be sent becasue we don't know the origin");
             } else {
                 // TODO: ERROR?
             }
         }
+    }
+
+    public void requestSong(Song songResult) {
+        Graph graph = this.handler.getNetwork().getGraph();
+        synchronized (graph) {
+            for (Node node : graph.getNodes()) {
+                if (node.equals(graph.getSelfNode())) {
+                    System.out.println("It's OUR music!!!!!");
+                    continue;
+                }
+
+                if (node.getPlaylist().contains(songResult)) {
+                    this.handler.getNetwork().forwardMessage(
+                            new P2PMessage(
+                                    this.handler.getNetwork().getSelfMac(),
+                                    node.getMac(),
+                                    MessageType.request_song,
+                                    songResult
+                            )
+                    );
+                    return;
+                }
+            }
+        }
+        System.out.println("JEBROER " + songResult + " could not be sent becasue we don't know the origin");
     }
 
     public byte[] getByteArrayFromSong(Song song) {

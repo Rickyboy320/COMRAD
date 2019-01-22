@@ -3,9 +3,11 @@ package io.comrad.p2p.messages;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v4.provider.SelfDestructiveThread;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Set;
 
 import io.comrad.music.Song;
@@ -56,8 +58,10 @@ public class P2PMessageHandler extends Handler {
                 break;
             case P2PMessageHandler.MESSAGE_SONG:
                 activity.sendByteArrayToPlayMusic(msg.getData().getByteArray(P2PMessageHandler.SONG));
-            case P2PMessageHandler.UPDATE_GRAPH:
-                activity.refreshPlaylist((Graph) msg.getData().getSerializable(P2PMessageHandler.GRAPH));
+                break;
+                case P2PMessageHandler.UPDATE_GRAPH:
+                activity.refreshPlaylist((Set<Node>) msg.getData().getSerializable(P2PMessageHandler.GRAPH));
+                break;
         }
     }
 
@@ -69,10 +73,10 @@ public class P2PMessageHandler extends Handler {
         this.sendMessage(toast);
     }
 
-    public void sendPlayListToActivity(Graph nodes) {
+    public void sendPlayListToActivity(HashSet<Node> nodes) {
         Message graph = this.obtainMessage(P2PMessageHandler.UPDATE_GRAPH);
         Bundle bundle = new Bundle();
-        bundle.putSerializable("Graph", nodes);
+        bundle.putSerializable(P2PMessageHandler.GRAPH, nodes);
         graph.setData(bundle);
         this.sendMessage(graph);
     }

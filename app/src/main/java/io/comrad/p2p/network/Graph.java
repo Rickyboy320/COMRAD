@@ -115,7 +115,8 @@ public class Graph implements Serializable {
         this.edges.addAll(update.getAddedEdges());
         this.edges.removeAll(update.getRemovedEdges());
         this.updateDijkstra();
-        this.handler.sendPlayListToActivity(this);
+
+        this.handler.sendPlayListToActivity(new HashSet<>(this.getNodes()));
     }
 
     public void updateDijkstra() {
