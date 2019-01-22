@@ -77,4 +77,8 @@ public class P2PMessageHandler extends Handler {
     public  P2PNetworkHandler getNetwork() {
         return this.networkHandler;
     }
+
+    public void reattachMonitor() {
+        activity.reattachMonitor();
+    }
 }

@@ -132,6 +132,7 @@ public class P2PNetworkHandler {
     }
 
     public void setMonitor(AdhocMonitorService monitor) {
+        System.out.println("Neighbours on attach: " + this.peerThreads.keySet());
         monitor.getMonitorNode().setCurrentNeighbours(this.peerThreads.keySet().toArray(new String[0]));
         monitor.getMonitorNode().setNodeStatus(NodeStatus.IDLE);
         this.monitor = monitor;

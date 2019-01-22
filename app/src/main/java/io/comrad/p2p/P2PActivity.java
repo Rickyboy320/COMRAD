@@ -196,12 +196,19 @@ public class P2PActivity extends FragmentActivity  {
 
         connectToBondedDevices(bluetoothAdapter, handler);
 
-        addMonitor();
+        if(!this.handler.getNetwork().getSelfMac().equalsIgnoreCase("02:00:00:00:00:00")) {
+            reattachMonitor();
+        }
     }
 
-    public void addMonitor() {
+    public void reattachMonitor() {
         Intent adhocIntent = new Intent(this, AdhocMonitorService.class);
-        startService(adhocIntent);
+
+        if(this.monitorService != null) {
+            this.unbindService(this.monitorService);
+        } else {
+            startService(adhocIntent);
+        }
 
         this.monitorService = new ServiceConnection() {
             @Override

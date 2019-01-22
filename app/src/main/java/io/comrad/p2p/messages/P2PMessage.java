@@ -133,6 +133,7 @@ public class P2PMessage implements Serializable {
                 {
                     handler.getNetwork().getGraph().setSelfNode(this.getDestinationMAC());
                     System.out.println("Received MAC from sender: " + handler.getNetwork().getSelfMac());
+                    handler.reattachMonitor();
                 }
 
                 GraphUpdate update = handler.getNetwork().getGraph().difference(graph);

@@ -69,7 +69,7 @@ public class P2PConnectedThread extends Thread {
             output.writeObject(message);
 
             AdhocMonitorService monitor = handler.getNetwork().getMonitor();
-            if(monitor != null) { monitor.getMonitorNode().addSendIO(message.getDestinationMAC(), stream.length); }
+            if(monitor != null) { monitor.getMonitorNode().addSendIO(this.socket.getRemoteDevice().getAddress(), stream.length); }
 
         } catch (IOException e) {
             handler.sendToastToUI("Error occurred when sending data.");
