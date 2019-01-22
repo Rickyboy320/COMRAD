@@ -91,21 +91,6 @@ public class P2PActivity extends FragmentActivity  {
         this.handler.onBluetoothEnable(ownSongs);
 
         final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-
-        Button discoverButton = findViewById(R.id.discover);
-        discoverButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Toast.makeText(getApplicationContext(), "Discovering devices...", Toast.LENGTH_LONG).show();
-
-                connectToBondedDevices(bluetoothAdapter, handler);
-
-                if (bluetoothAdapter.isDiscovering()) {
-                    bluetoothAdapter.cancelDiscovery();
-                }
-                bluetoothAdapter.startDiscovery();
-            }
-        });
-
         receiver = new P2PReceiver(handler);
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
@@ -196,15 +181,6 @@ public class P2PActivity extends FragmentActivity  {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
-
-        Button serverButton = findViewById(R.id.server);
-        serverButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-                discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 3600);
-                startActivityForResult(discoverableIntent, REQUEST_DISCOVER);
-            }
-        });
 
         Button showGraph = findViewById(R.id.showGraph);
         showGraph.setOnClickListener(new View.OnClickListener() {
