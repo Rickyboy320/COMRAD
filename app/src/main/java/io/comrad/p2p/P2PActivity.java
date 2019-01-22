@@ -3,20 +3,24 @@ package io.comrad.p2p;
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.*;
+import android.content.ComponentName;
+import android.content.ContentResolver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.ParcelUuid;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -28,10 +32,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -46,9 +48,6 @@ import io.comrad.p2p.network.Graph;
 import io.comrad.p2p.network.Node;
 import nl.erlkdev.adhocmonitor.AdhocMonitorBinder;
 import nl.erlkdev.adhocmonitor.AdhocMonitorService;
-
-import java.io.*;
-import java.util.*;
 
 public class P2PActivity extends FragmentActivity  {
     public final static String SERVICE_NAME = "COMRAD";
@@ -92,20 +91,6 @@ public class P2PActivity extends FragmentActivity  {
 
         final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
-        Button discoverButton = findViewById(R.id.discover);
-        discoverButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Toast.makeText(getApplicationContext(), "Discovering devices...", Toast.LENGTH_LONG).show();
-
-                connectToBondedDevices(bluetoothAdapter, handler);
-
-                if (bluetoothAdapter.isDiscovering()) {
-                    bluetoothAdapter.cancelDiscovery();
-                }
-                bluetoothAdapter.startDiscovery();
-            }
-        });
-
         receiver = new P2PReceiver(handler);
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
@@ -115,11 +100,40 @@ public class P2PActivity extends FragmentActivity  {
         this.serverThread = new P2PServerThread(BluetoothAdapter.getDefaultAdapter(), this.handler);
         this.serverThread.start();
 
-        connectToBondedDevices(bluetoothAdapter, handler);
+        startDiscovery(bluetoothAdapter);
 
         if(!this.handler.getNetwork().getSelfMac().equalsIgnoreCase("02:00:00:00:00:00")) {
             reattachMonitor();
         }
+    }
+
+    public void startDiscovery(final BluetoothAdapter adapter) {
+        final Handler runner = new Handler();
+        final Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                connectToBondedDevices(adapter, handler);
+
+                if (adapter.isDiscovering()) {
+                    adapter.cancelDiscovery();
+                }
+                adapter.startDiscovery();
+                runner.postDelayed(this, 2 * 60 * 1000);
+            }
+        };
+
+        final Runnable runnable2 = new Runnable() {
+            @Override
+            public void run() {
+                Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+                discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 3600);
+                startActivityForResult(discoverableIntent, REQUEST_DISCOVER);
+                runner.postDelayed(this, 3600 * 1000);
+            }
+        };
+
+        runner.post(runnable);
+        runner.post(runnable2);
     }
 
     public void reattachMonitor() {
@@ -196,15 +210,6 @@ public class P2PActivity extends FragmentActivity  {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
-
-        Button serverButton = findViewById(R.id.server);
-        serverButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-                discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 3600);
-                startActivityForResult(discoverableIntent, REQUEST_DISCOVER);
-            }
-        });
 
         Button showGraph = findViewById(R.id.showGraph);
         showGraph.setOnClickListener(new View.OnClickListener() {
