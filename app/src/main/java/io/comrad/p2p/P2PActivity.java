@@ -21,8 +21,22 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
 import io.comrad.R;
-import io.comrad.music.MusicActivity;
+import io.comrad.music.MusicListFragment;
 import io.comrad.music.PlayMusic;
 import io.comrad.music.Song;
 import io.comrad.p2p.messages.MessageType;
@@ -73,99 +87,10 @@ public class P2PActivity extends FragmentActivity  {
         addComponents();
     }
 
-    private void addComponents() {
-        final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (bluetoothAdapter == null) {
-            Toast.makeText(getApplicationContext(), "This device does not support bluetooth.", Toast.LENGTH_LONG).show();
-            return;
-        }
-
-        if (!bluetoothAdapter.isEnabled()) {
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-        }
-
-        Button serverButton = findViewById(R.id.server);
-        serverButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-                discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 3600);
-                startActivityForResult(discoverableIntent, REQUEST_DISCOVER);
-            }
-        });
-
-        Button stopDiscovery = findViewById(R.id.stopDiscovery);
-        stopDiscovery.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Toast.makeText(getApplicationContext(), "Stopped discovering.", Toast.LENGTH_LONG).show();
-                bluetoothAdapter.cancelDiscovery();
-            }
-        });
-
-        Button sendMessage = findViewById(R.id.sendMessage);
-        sendMessage.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                handler.getNetwork().sendMessageToPeers(new P2PMessage(handler.getNetwork().getSelfMac(), handler.getNetwork().getBroadcastAddress(), MessageType.broadcast_message, "Hello world!"));
-            }
-        });
-
-        Button chooseMusic = findViewById(R.id.chooseMusic);
-        chooseMusic.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Intent intent = new Intent(v.getContext(), MusicActivity.class);
-                ArrayList<Song> arrayList = new ArrayList<>();
-
-                synchronized (handler.getNetwork().getGraph()) {
-                    Set<Node> nodes = handler.getNetwork().getGraph().getNodes();
-                    for (Node node : nodes) {
-                        if (node.getPlaylist() != null) {
-                            arrayList.addAll(node.getPlaylist());
-                        }
-                    }
-                }
-
-                System.out.println("<<<<" + arrayList.toString());
-                intent.putExtra("Nodes", arrayList);
-                startActivityForResult(intent, REQUEST_MUSIC_FILE);
-            }
-        });
-
-        Button showGraph = findViewById(R.id.showGraph);
-        showGraph.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                synchronized (handler.getNetwork().getGraph()) {
-                    System.out.println(handler.getNetwork().getGraph());
-                }
-            }
-        });
-
-        Button send5mini = findViewById(R.id.send5smini);
-        send5mini.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                if (!(handler.getNetwork().getSelfMac().equalsIgnoreCase("6C:2F:2C:82:67:11"))) {
-                    P2PMessage message = new P2PMessage(handler.getNetwork().getSelfMac(), "6C:2F:2C:82:67:11", MessageType.send_message, "I am a song :D");
-                    handler.getNetwork().forwardMessage(message);
-                }
-            }
-        });
-
-        if (bluetoothAdapter.isEnabled()) {
-            enableBluetoothServices();
-        }
-    }
-
     private void enableBluetoothServices() {
         this.handler.onBluetoothEnable(ownSongs);
 
         final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        final List<String> peerList = new ArrayList<>();
-        RecyclerView peerView = findViewById(R.id.peersList);
-
-        LinearLayoutManager mng = new LinearLayoutManager(this);
-        peerView.setLayoutManager(mng);
-
-        final PeerAdapter peerAdapter = new PeerAdapter(peerList);
-        peerView.setAdapter(peerAdapter);
 
         Button discoverButton = findViewById(R.id.discover);
         discoverButton.setOnClickListener(new View.OnClickListener() {
@@ -177,13 +102,11 @@ public class P2PActivity extends FragmentActivity  {
                 if (bluetoothAdapter.isDiscovering()) {
                     bluetoothAdapter.cancelDiscovery();
                 }
-                peerList.clear();
-                peerAdapter.notifyDataSetChanged();
                 bluetoothAdapter.startDiscovery();
             }
         });
 
-        receiver = new P2PReceiver(peerAdapter, handler);
+        receiver = new P2PReceiver(handler);
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
         filter.addAction(BluetoothDevice.ACTION_UUID);
@@ -231,14 +154,79 @@ public class P2PActivity extends FragmentActivity  {
         bindService(adhocIntent, monitorService, BIND_AUTO_CREATE);
     }
 
+    /*
+     * Retrieves all music on the device and adds them to the class variable arrayList.
+     */
+    public void getMusic() {
+        ContentResolver contentResolver = getContentResolver();
+        Uri songUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        Cursor songCursor = contentResolver.query(songUri, null, null, null, null);
+
+        if (songCursor != null && songCursor.moveToFirst()) {
+            int songTitle = songCursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
+            int songArtist = songCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);
+            int songLocation = songCursor.getColumnIndex(MediaStore.Audio.Media.DATA);
+            int songSize = songCursor.getColumnIndex(MediaStore.Audio.Media.SIZE);
+            String currentTitle;
+            String currentArtist;
+            String currentLocation;
+            int currentSize;
+
+            // Loop over the found songs and add them to the arraylist
+            do {
+                currentTitle = songCursor.getString(songTitle);
+                currentArtist = songCursor.getString(songArtist);
+                currentLocation = songCursor.getString(songLocation);
+                currentSize = songCursor.getInt(songSize);
+                ownSongs.add(new Song(currentTitle, currentArtist, currentLocation, currentSize));
+            } while (songCursor.moveToNext());
+
+            songCursor.close();
+        }
+    }
+
+    private void addComponents() {
+        final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (bluetoothAdapter == null) {
+            Toast.makeText(getApplicationContext(), "This device does not support bluetooth.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        if (!bluetoothAdapter.isEnabled()) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        }
+
+        Button serverButton = findViewById(R.id.server);
+        serverButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+                discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 3600);
+                startActivityForResult(discoverableIntent, REQUEST_DISCOVER);
+            }
+        });
+
+        Button showGraph = findViewById(R.id.showGraph);
+        showGraph.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                synchronized (handler.getNetwork().getGraph()) {
+                    System.out.println(handler.getNetwork().getGraph());
+                }
+            }
+        });
+
+        if (bluetoothAdapter.isEnabled()) {
+            enableBluetoothServices();
+        }
+    }
+
     private void connectToBondedDevices(BluetoothAdapter bluetoothAdapter, P2PMessageHandler handler) {
         Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
 
-        Log.d(SERVICE_NAME, "Paired devices:");
+        System.out.println("Paired devices:");
         if (pairedDevices.size() > 0) {
             for (BluetoothDevice device : pairedDevices) {
-                Log.d(SERVICE_NAME, device.getAddress() + " : " + Arrays.toString(device.getUuids()));
-
+                System.out.println(device.getAddress() + " : " + Arrays.toString(device.getUuids()));
                 if (this.handler.getNetwork().hasPeer(device.getAddress()) || P2PConnectThread.isConnecting(device.getAddress())) {
                     continue;
                 }
@@ -251,6 +239,21 @@ public class P2PActivity extends FragmentActivity  {
                     }
                 }
             }
+        }
+    }
+
+    public void refreshPlaylist(Set<Node> nodes) {
+        ArrayList<Song> arrayList = new ArrayList<>();
+        for (Node node : nodes) {
+            if (node.getPlaylist() != null) {
+                arrayList.addAll(node.getPlaylist());
+            }
+        }
+
+        MusicListFragment fragment = (MusicListFragment) getSupportFragmentManager().findFragmentById(R.id.MusicActivity);
+
+        if (fragment != null) {
+            fragment.setPlayList(arrayList);
         }
     }
 
@@ -275,22 +278,25 @@ public class P2PActivity extends FragmentActivity  {
 
         if (requestCode == REQUEST_MUSIC_FILE) {
             if (resultCode == RESULT_OK) {
-                Song song = data.getParcelableExtra("song");
-                Graph graph = this.handler.getNetwork().getGraph();
-                synchronized (graph) {
-                    Node node = graph.getNearestSong(song);
-                    if(node == null) {
-                        throw new IllegalStateException("Song " + song + " was requested, but was not present in any of the nodes in the network.");
-                    }
 
-                    if(node.equals(this.handler.getNetwork().getGraph().getSelfNode())) {
-                        this.sendByteArrayToPlayMusic(this.getByteArrayFromSong(song));
-                    } else {
-                        this.handler.getNetwork().forwardMessage(new P2PMessage(this.handler.getNetwork().getSelfMac(), node.getMac(), MessageType.request_song, song));
-                    }
-                }
             } else {
                 // TODO: ERROR?
+            }
+        }
+    }
+
+    public void requestSong(Song song) {
+        Graph graph = this.handler.getNetwork().getGraph();
+        synchronized (graph) {
+            Node node = graph.getNearestSong(song);
+            if(node == null) {
+                throw new IllegalStateException("Song " + song + " was requested, but was not present in any of the nodes in the network.");
+            }
+
+            if(node.equals(this.handler.getNetwork().getGraph().getSelfNode())) {
+                this.sendByteArrayToPlayMusic(this.getByteArrayFromSong(song));
+            } else {
+                this.handler.getNetwork().forwardMessage(new P2PMessage(this.handler.getNetwork().getSelfMac(), node.getMac(), MessageType.request_song, song));
             }
         }
     }
@@ -304,18 +310,6 @@ public class P2PActivity extends FragmentActivity  {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MUSIC_PERMISSION);
             }
         }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        unbindService(this.monitorService);
-
-        unregisterReceiver(receiver);
-        this.handler.getNetwork().closeAllConnections();
-
-        serverThread.close();
     }
 
     public static byte[] convertStreamToByteArray(InputStream is) throws IOException {
@@ -355,35 +349,16 @@ public class P2PActivity extends FragmentActivity  {
         fragment.addSongBytes(songBytes);
     }
 
-    /*
-     * Retrieves all music on the device and adds them to the class variable arrayList.
-     */
-    public void getMusic() {
-        ContentResolver contentResolver = getContentResolver();
-        Uri songUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-        Cursor songCursor = contentResolver.query(songUri, null, null, null, null);
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
 
-        if (songCursor != null && songCursor.moveToFirst()) {
-            int songTitle = songCursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
-            int songArtist = songCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);
-            int songLocation = songCursor.getColumnIndex(MediaStore.Audio.Media.DATA);
-            int songSize = songCursor.getColumnIndex(MediaStore.Audio.Media.SIZE);
-            String currentTitle;
-            String currentArtist;
-            String currentLocation;
-            int currentSize;
+        unbindService(this.monitorService);
 
-            // Loop over the found songs and add them to the arraylist
-            do {
-                currentTitle = songCursor.getString(songTitle);
-                currentArtist = songCursor.getString(songArtist);
-                currentLocation = songCursor.getString(songLocation);
-                currentSize = songCursor.getInt(songSize);
-                ownSongs.add(new Song(currentTitle, currentArtist, currentLocation, currentSize));
-            } while (songCursor.moveToNext());
+        unregisterReceiver(receiver);
+        this.handler.getNetwork().closeAllConnections();
 
-            songCursor.close();
-        }
+        serverThread.close();
     }
 
     public static String getBluetoothMac(final Context context) {

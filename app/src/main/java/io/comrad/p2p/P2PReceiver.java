@@ -16,16 +16,14 @@ import java.util.UUID;
 public class P2PReceiver extends BroadcastReceiver
 {
     private P2PMessageHandler handler;
-    private PeerAdapter peerAdapter;
 
     private List<BluetoothDevice> unknownDevices = new ArrayList<>();
 
     private BluetoothDevice currentlyFetching = null;
 
-    P2PReceiver(PeerAdapter peerAdapter, P2PMessageHandler handler)
+    P2PReceiver(P2PMessageHandler handler)
     {
         this.handler = handler;
-        this.peerAdapter = peerAdapter;
     }
 
     @Override
@@ -43,15 +41,12 @@ public class P2PReceiver extends BroadcastReceiver
                 for (ParcelUuid uuid : device.getUuids()) {
                     if(uuid.getUuid().equals(P2PActivity.SERVICE_UUID)) {
                         new P2PConnectThread(device, handler).start();
-                        this.peerAdapter.getList().add("**" + device.getAddress());
                         return;
                     }
                 }
             }
 
-            this.peerAdapter.getList().add(device.getAddress());
             this.unknownDevices.add(device);
-            this.peerAdapter.notifyDataSetChanged();
         } else if(BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
             fetchNextDevice(null);
         } else if(BluetoothDevice.ACTION_UUID.equals(action)) {

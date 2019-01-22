@@ -8,18 +8,23 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import io.comrad.music.Song;
+import io.comrad.p2p.messages.P2PMessageHandler;
+
 public class Graph implements Serializable {
     private Node selfNode;
     private Set<Node> nodes;
     private Set<Edge> edges;
+    private transient P2PMessageHandler handler;
 
     private transient Dijkstra dijkstra;
 
-    public Graph(String selfMAC, List<Song> ownSongs) {
-        this(selfMAC, new HashSet<Node>(), new HashSet<Edge>(), ownSongs);
+    public Graph(String selfMAC, List<Song> ownSongs, P2PMessageHandler handler) {
+        this(selfMAC, new HashSet<Node>(), new HashSet<Edge>(), ownSongs, handler);
     }
 
-    public Graph(String selfMAC, Set<Node> nodes, Set<Edge> edges, List<Song> ownSongs) {
+    public Graph(String selfMAC, Set<Node> nodes, Set<Edge> edges, List<Song> ownSongs,
+                 P2PMessageHandler handler) {
         if(selfMAC == null) {
             throw new IllegalArgumentException("Mac was null");
         }
@@ -29,6 +34,9 @@ public class Graph implements Serializable {
 
         this.selfNode = new Node(selfMAC, ownSongs);
         this.nodes.add(this.selfNode);
+        this.handler = handler;
+
+        this.handler.sendPlayListToActivity(new HashSet<>(this.getNodes()));
     }
 
     public boolean hasNode(String mac) {
@@ -110,6 +118,8 @@ public class Graph implements Serializable {
         this.edges.addAll(update.getAddedEdges());
         this.edges.removeAll(update.getRemovedEdges());
         this.updateDijkstra();
+
+        this.handler.sendPlayListToActivity(new HashSet<>(this.getNodes()));
     }
 
     public void updateDijkstra() {
@@ -153,6 +163,7 @@ public class Graph implements Serializable {
         }
 
         for(Node node : dijkstra.getPaths().keySet()) {
+            node = this.getNode(node.getMac());
             int pathLength = dijkstra.getPaths().get(node).length();
             if(node.getPlaylist().contains(song) && pathLength < smallestPath) {
                 smallestPath = pathLength;

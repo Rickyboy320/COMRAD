@@ -22,7 +22,7 @@ import static android.content.ContentValues.TAG;
 
 public class PlayMusic extends Fragment  {
 
-    private Song current;
+    Song current;
     private byte[] currentBytes;
     private MediaPlayer mediaPlayer = new MediaPlayer();
 
