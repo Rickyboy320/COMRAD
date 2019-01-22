@@ -4,12 +4,12 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.widget.Toast;
-
-import java.util.ArrayList;
-
 import io.comrad.music.Song;
 import io.comrad.p2p.P2PActivity;
 import io.comrad.p2p.network.P2PNetworkHandler;
+import nl.erlkdev.adhocmonitor.AdhocMonitorService;
+
+import java.util.ArrayList;
 
 public class P2PMessageHandler extends Handler {
 
@@ -30,6 +30,10 @@ public class P2PMessageHandler extends Handler {
 
     public void onBluetoothEnable(ArrayList<Song> ownSongs) {
         this.networkHandler = new P2PNetworkHandler(this.activity, ownSongs);
+    }
+
+    public void onMonitorEnable(AdhocMonitorService monitor) {
+        this.networkHandler.setMonitor(monitor);
     }
 
     @Override
