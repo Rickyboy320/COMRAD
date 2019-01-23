@@ -3,21 +3,16 @@ package io.comrad.p2p.messages;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v4.provider.SelfDestructiveThread;
 import android.widget.Toast;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
-
 import io.comrad.music.Song;
 import io.comrad.p2p.P2PActivity;
-import io.comrad.p2p.network.Graph;
 import io.comrad.p2p.network.Node;
 import io.comrad.p2p.network.P2PNetworkHandler;
 import nl.erlkdev.adhocmonitor.AdhocMonitorService;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 public class P2PMessageHandler extends Handler {
 
@@ -28,7 +23,7 @@ public class P2PMessageHandler extends Handler {
     public static final int MESSAGE_SONG_FINISHED = 5;
 
     public static final String TOAST = "Toast";
-    public static final String SONG_ID = "Song ID";
+    public static final String OFFSET = "Song Offset";
     public static final String SONG = "Song";
     public static final String NODES = "Nodes";
     public static final String SONG_SIZE = "Song Size";
@@ -54,14 +49,11 @@ public class P2PMessageHandler extends Handler {
             case P2PMessageHandler.MESSAGE_TOAST:
                 Toast.makeText(activity.getApplicationContext(), msg.getData().getString(P2PMessageHandler.TOAST), Toast.LENGTH_SHORT).show();
                 break;
-            case P2PMessageHandler.MESSAGE_SONG_SIZE:
-                activity.setSongSize(msg.getData().getInt(P2PMessageHandler.SONG_SIZE));
-                break;
             case P2PMessageHandler.MESSAGE_SONG:
                 Bundle data = msg.getData();
-                int songID = data.getInt(P2PMessageHandler.SONG_ID);
+                int offset = data.getInt(P2PMessageHandler.OFFSET);
                 byte[] song = data.getByteArray(P2PMessageHandler.SONG);
-                activity.saveMusicBytePacket(songID, song);
+                activity.saveMusicBytePacket(offset, song);
                 break;
             case P2PMessageHandler.MESSAGE_SONG_FINISHED:
                 activity.sendByteArrayToPlayMusic();
@@ -88,18 +80,10 @@ public class P2PMessageHandler extends Handler {
         this.sendMessage(graph);
     }
 
-    public void sendSongSizeToActivity(int songSize) {
-        Message msg = this.obtainMessage(P2PMessageHandler.MESSAGE_SONG_SIZE);
-        Bundle bundle = new Bundle();
-        bundle.putInt(P2PMessageHandler.SONG_SIZE, songSize);
-        msg.setData(bundle);
-        this.sendMessage(msg);
-    }
-
-    public void sendSongToActivity(int id, byte[] songBytes) {
+    public void sendSongToActivity(int offset, byte[] songBytes) {
         Message song = this.obtainMessage(P2PMessageHandler.MESSAGE_SONG);
         Bundle bundle = new Bundle();
-        bundle.putInt(P2PMessageHandler.SONG_ID, id);
+        bundle.putInt(P2PMessageHandler.OFFSET, offset);
         bundle.putByteArray(P2PMessageHandler.SONG, songBytes);
         song.setData(bundle);
         this.sendMessage(song);

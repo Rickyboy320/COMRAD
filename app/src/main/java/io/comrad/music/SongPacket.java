@@ -4,15 +4,15 @@ import java.io.Serializable;
 
 public class SongPacket implements Serializable {
     public final transient static int SONG_PACKET_SIZE = 256000;
-    private int id;
+    private int offset;
     private byte[] data;
 
-    public SongPacket(int id, byte[] data) {
-        this.id = id;
+    public SongPacket(int offset, byte[] data) {
+        this.offset = offset;
         this.data = data;
     }
 
-    public int get_id() { return this.id; }
+    public int getOffset() { return this.offset; }
 
-    public byte[] get_data() { return this.data; }
+    public byte[] getData() { return this.data; }
 }

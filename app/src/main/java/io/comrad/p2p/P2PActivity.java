@@ -34,8 +34,6 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.UUID;
 
-import static io.comrad.music.SongPacket.SONG_PACKET_SIZE;
-
 public class P2PActivity extends FragmentActivity  {
     public final static String SERVICE_NAME = "COMRAD";
     public final static UUID SERVICE_UUID = UUID.fromString("7337958a-460f-4b0c-942e-5fa111fb2bee");
@@ -281,8 +279,10 @@ public class P2PActivity extends FragmentActivity  {
                 throw new IllegalStateException("Song " + song + " was requested, but was not present in any of the nodes in the network.");
             }
 
+            System.out.println(song.getSongSize());
+            this.setSongSize(song.getSongSize());
+
             if(node.equals(this.handler.getNetwork().getGraph().getSelfNode())) {
-                this.setSongSize(song.getSongSize());
                 this.saveMusicBytePacket(0, this.getByteArrayFromSong(song));
                 this.sendByteArrayToPlayMusic();
             } else {
@@ -349,8 +349,9 @@ public class P2PActivity extends FragmentActivity  {
         fragment.addSongBytes(this.songBuffer);
     }
 
-    public void saveMusicBytePacket(int id, byte[] songBytes) {
-        System.arraycopy(songBytes, 0, this.songBuffer, id * SONG_PACKET_SIZE, songBytes.length);
+    public void saveMusicBytePacket(int offset, byte[] songBytes) {
+        System.out.println("id: " + offset);
+        System.arraycopy(songBytes, 0, this.songBuffer, offset, songBytes.length);
     }
 
     @Override
