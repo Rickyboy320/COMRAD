@@ -7,35 +7,15 @@ import android.content.*;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
-import android.nfc.Tag;
-import android.os.Build;
-import android.os.Bundle;
-import android.os.IBinder;
-import android.os.ParcelUuid;
+import android.os.*;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
 import io.comrad.R;
 import io.comrad.music.MusicListFragment;
 import io.comrad.music.PlayMusic;
@@ -49,7 +29,10 @@ import nl.erlkdev.adhocmonitor.AdhocMonitorBinder;
 import nl.erlkdev.adhocmonitor.AdhocMonitorService;
 
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.UUID;
 
 import static io.comrad.music.SongPacket.SONG_PACKET_SIZE;
 
@@ -76,6 +59,8 @@ public class P2PActivity extends FragmentActivity  {
 
     private final P2PMessageHandler handler = new P2PMessageHandler(this);
 
+    private long requestStart;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -97,20 +82,6 @@ public class P2PActivity extends FragmentActivity  {
 
         final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
-        Button discoverButton = findViewById(R.id.discover);
-        discoverButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Toast.makeText(getApplicationContext(), "Discovering devices...", Toast.LENGTH_LONG).show();
-
-                connectToBondedDevices(bluetoothAdapter, handler);
-
-                if (bluetoothAdapter.isDiscovering()) {
-                    bluetoothAdapter.cancelDiscovery();
-                }
-                bluetoothAdapter.startDiscovery();
-            }
-        });
-
         receiver = new P2PReceiver(handler);
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
@@ -120,11 +91,40 @@ public class P2PActivity extends FragmentActivity  {
         this.serverThread = new P2PServerThread(BluetoothAdapter.getDefaultAdapter(), this.handler);
         this.serverThread.start();
 
-        connectToBondedDevices(bluetoothAdapter, handler);
+        startDiscovery(bluetoothAdapter);
 
         if(!this.handler.getNetwork().getSelfMac().equalsIgnoreCase("02:00:00:00:00:00")) {
             reattachMonitor();
         }
+    }
+
+    public void startDiscovery(final BluetoothAdapter adapter) {
+        final Handler runner = new Handler();
+        final Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                connectToBondedDevices(adapter, handler);
+
+                if (adapter.isDiscovering()) {
+                    adapter.cancelDiscovery();
+                }
+                adapter.startDiscovery();
+                runner.postDelayed(this, 2 * 60 * 1000);
+            }
+        };
+
+        final Runnable runnable2 = new Runnable() {
+            @Override
+            public void run() {
+                Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+                discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 3600);
+                startActivityForResult(discoverableIntent, REQUEST_DISCOVER);
+                runner.postDelayed(this, 3600 * 1000);
+            }
+        };
+
+        runner.post(runnable);
+        runner.post(runnable2);
     }
 
     public void reattachMonitor() {
@@ -201,15 +201,6 @@ public class P2PActivity extends FragmentActivity  {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
-
-        Button serverButton = findViewById(R.id.server);
-        serverButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-                discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 3600);
-                startActivityForResult(discoverableIntent, REQUEST_DISCOVER);
-            }
-        });
 
         Button showGraph = findViewById(R.id.showGraph);
         showGraph.setOnClickListener(new View.OnClickListener() {
@@ -295,6 +286,7 @@ public class P2PActivity extends FragmentActivity  {
                 this.saveMusicBytePacket(0, this.getByteArrayFromSong(song));
                 this.sendByteArrayToPlayMusic();
             } else {
+                requestStart = System.currentTimeMillis();
                 this.handler.getNetwork().forwardMessage(new P2PMessage(this.handler.getNetwork().getSelfMac(), node.getMac(), MessageType.request_song, song));
             }
         }
@@ -348,6 +340,11 @@ public class P2PActivity extends FragmentActivity  {
     }
 
     public void sendByteArrayToPlayMusic() {
+        if(requestStart != 0) {
+            System.out.println("Time taken to receive song: " + (System.currentTimeMillis() - requestStart));
+        }
+
+        requestStart = 0;
         PlayMusic fragment = (PlayMusic) getSupportFragmentManager().findFragmentById(R.id.PlayMusic);
         fragment.addSongBytes(this.songBuffer);
     }

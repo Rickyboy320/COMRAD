@@ -18,6 +18,15 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
+
 import io.comrad.music.Song;
 import io.comrad.p2p.network.Graph;
 import io.comrad.p2p.network.GraphUpdate;
@@ -102,7 +111,7 @@ public class P2PMessage implements Serializable {
 
         if (this.type == MessageType.handshake_network) {
             Graph graph = (Graph) this.payload;
-            graph.replace("02:00:00:00:00:00", this.sourceMac);
+            graph.replace("02:00:00:00:00:00", sender.getAddress());
 
             synchronized (handler.getNetwork().getGraph()) {
                 if(handler.getNetwork().getSelfMac().equalsIgnoreCase("02:00:00:00:00:00"))

@@ -82,6 +82,7 @@ public class PlayMusic extends Fragment  {
             tempMp3.deleteOnExit();
             FileOutputStream fos = new FileOutputStream(tempMp3);
             fos.write(mp3SoundByteArray);
+            fos.flush();
             fos.close();
 
             FileInputStream fis = new FileInputStream(tempMp3);
