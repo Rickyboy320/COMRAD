@@ -7,6 +7,7 @@ import android.content.*;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.nfc.Tag;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -49,6 +50,8 @@ import nl.erlkdev.adhocmonitor.AdhocMonitorService;
 
 import java.io.*;
 import java.util.*;
+
+import static io.comrad.music.SongPacket.SONG_PACKET_SIZE;
 
 public class P2PActivity extends FragmentActivity  {
     public final static String SERVICE_NAME = "COMRAD";
@@ -288,7 +291,7 @@ public class P2PActivity extends FragmentActivity  {
             }
 
             if(node.equals(this.handler.getNetwork().getGraph().getSelfNode())) {
-                this.saveMusicBytePacket(this.getByteArrayFromSong(song));
+                this.saveMusicBytePacket(0, this.getByteArrayFromSong(song));
                 this.sendByteArrayToPlayMusic();
             } else {
                 this.handler.getNetwork().forwardMessage(new P2PMessage(this.handler.getNetwork().getSelfMac(), node.getMac(), MessageType.request_song, song));
@@ -339,15 +342,24 @@ public class P2PActivity extends FragmentActivity  {
         return null;
     }
 
+    public void setSongSize(int size) {
+        this.songBuffer = new byte[size + 10];
+    }
+
     public void sendByteArrayToPlayMusic() {
+        System.out.println("!~! Sending music to the media player..");
         PlayMusic fragment = (PlayMusic) getSupportFragmentManager().findFragmentById(R.id.PlayMusic);
         fragment.addSongBytes(this.songBuffer);
     }
 
-    public void saveMusicBytePacket(byte[] songBytes) {
-        for(int i = 0; i < songBytes.length; ++i) {
-            this.songBuffer[i] = songBytes[i];
-        }
+    public void saveMusicBytePacket(int id, byte[] songBytes) {
+        System.out.println("\n!~! Check for print");
+        System.out.println("\n!~! Set buffer Size to: " + this.songBuffer.length);
+        System.arraycopy(songBytes, 0, this.songBuffer, id * SONG_PACKET_SIZE, songBytes.length);
+
+//        for (int i = id * SONG_PACKET_SIZE; i < songBytes.length; ++i) {
+//            this.songBuffer[i] = songBytes[i];
+//        }
     }
 
     @Override

@@ -24,11 +24,14 @@ public class P2PMessageHandler extends Handler {
     public static final int MESSAGE_TOAST = 1;
     public static final int MESSAGE_SONG = 2;
     public static final int UPDATE_GRAPH = 3;
-    public static final int MESSAGE_SONG_SEND = 4;
+    public static final int MESSAGE_SONG_SIZE = 4;
+    public static final int MESSAGE_SONG_FINISHED = 5;
 
     public static final String TOAST = "Toast";
+    public static final String SONG_ID = "Song ID";
     public static final String SONG = "Song";
     public static final String NODES = "Nodes";
+    public static final String SONG_SIZE = "Song Size";
 
     private final P2PActivity activity;
     private P2PNetworkHandler networkHandler;
@@ -51,10 +54,16 @@ public class P2PMessageHandler extends Handler {
             case P2PMessageHandler.MESSAGE_TOAST:
                 Toast.makeText(activity.getApplicationContext(), msg.getData().getString(P2PMessageHandler.TOAST), Toast.LENGTH_SHORT).show();
                 break;
-            case P2PMessageHandler.MESSAGE_SONG:
-                activity.saveMusicBytePacket(msg.getData().getByteArray(P2PMessageHandler.SONG));
+            case P2PMessageHandler.MESSAGE_SONG_SIZE:
+                activity.setSongSize(msg.getData().getInt(P2PMessageHandler.SONG_SIZE));
                 break;
-            case P2PMessageHandler.MESSAGE_SONG_SEND:
+            case P2PMessageHandler.MESSAGE_SONG:
+                Bundle data = msg.getData();
+                int songID = data.getInt(P2PMessageHandler.SONG_ID);
+                byte[] song = data.getByteArray(P2PMessageHandler.SONG);
+                activity.saveMusicBytePacket(songID, song);
+                break;
+            case P2PMessageHandler.MESSAGE_SONG_FINISHED:
                 activity.sendByteArrayToPlayMusic();
                 break;
             case P2PMessageHandler.UPDATE_GRAPH:
@@ -79,16 +88,25 @@ public class P2PMessageHandler extends Handler {
         this.sendMessage(graph);
     }
 
-    public void sendSongToActivity(byte[] songBytes) {
+    public void sendSongSizeToActivity(int songSize) {
+        Message msg = this.obtainMessage(P2PMessageHandler.MESSAGE_SONG_SIZE);
+        Bundle bundle = new Bundle();
+        bundle.putInt(P2PMessageHandler.SONG_SIZE, songSize);
+        msg.setData(bundle);
+        this.sendMessage(msg);
+    }
+
+    public void sendSongToActivity(int id, byte[] songBytes) {
         Message song = this.obtainMessage(P2PMessageHandler.MESSAGE_SONG);
         Bundle bundle = new Bundle();
+        bundle.putInt(P2PMessageHandler.SONG_ID, id);
         bundle.putByteArray(P2PMessageHandler.SONG, songBytes);
         song.setData(bundle);
         this.sendMessage(song);
     }
 
     public void sendSongFinshed() {
-        Message msg = this.obtainMessage(P2PMessageHandler.MESSAGE_SONG_SEND);
+        Message msg = this.obtainMessage(P2PMessageHandler.MESSAGE_SONG_FINISHED);
         this.sendMessage(msg);
     }
 

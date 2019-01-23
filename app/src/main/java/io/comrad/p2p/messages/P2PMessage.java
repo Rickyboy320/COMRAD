@@ -1,7 +1,7 @@
 package io.comrad.p2p.messages;
 
+import io.comrad.music.SongPacket;
 import android.bluetooth.BluetoothDevice;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -11,7 +11,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import io.comrad.music.Song;
@@ -22,9 +24,9 @@ import java.io.*;
 import java.util.HashSet;
 import java.util.Set;
 
-public class P2PMessage implements Serializable {
-    private final transient static int SONG_PACKET_SIZE = 256000;
+import static io.comrad.music.SongPacket.SONG_PACKET_SIZE;
 
+public class P2PMessage implements Serializable {
     private String sourceMac;
     private String destinationMAC;
     private MessageType type;
@@ -118,21 +120,20 @@ public class P2PMessage implements Serializable {
             synchronized (handler.getNetwork().getGraph()) {
                 handler.getNetwork().getGraph().apply(update);
             }
-        } else if (this.type == MessageType.send_message) {
-            if (this.getDestinationMAC().equalsIgnoreCase(handler.getNetwork().getSelfMac())) {
-                handler.sendToastToUI("We received a message from " + this.sourceMac);
-                handler.sendSongToActivity((byte[]) this.payload);
-            } else {
-                handler.getNetwork().forwardMessage(this);
-            }
         } else if (this.type == MessageType.request_song) {
             if (this.getDestinationMAC().equalsIgnoreCase(handler.getNetwork().getSelfMac())) {
                 handler.sendToastToUI("We received a request from " + this.sourceMac);
 
+                /* Send buffer size to receiving node. */
+                handler.sendSongSizeToActivity(((Song) this.payload).getSongSize());
+
+                /* Setup payload buffers for sending the song. */
                 byte[] payload = handler.getNetwork().getByteArrayFromSong((Song) this.payload);
                 P2PMessage message;
                 byte[] tmpPayload;
+                SongPacket songPacket;
 
+                /* Send songs in bursts to the receiver. */
                 for (int i = 0; i < payload.length; i += SONG_PACKET_SIZE) {
                     try {
                         tmpPayload = Arrays.copyOfRange(payload, i, i + SONG_PACKET_SIZE);
@@ -140,8 +141,9 @@ public class P2PMessage implements Serializable {
                         tmpPayload = Arrays.copyOfRange(payload, i, payload.length);
                     }
 
+                    songPacket = new SongPacket(i, tmpPayload);
                     message = new P2PMessage(handler.getNetwork().getSelfMac(), this.sourceMac,
-                                                        MessageType.send_song, tmpPayload);
+                                                        MessageType.send_song, songPacket);
                     handler.getNetwork().forwardMessage(message);
                 }
 
@@ -154,7 +156,8 @@ public class P2PMessage implements Serializable {
         } else if (this.type == MessageType.send_song) {
             if (this.getDestinationMAC().equalsIgnoreCase(handler.getNetwork().getSelfMac())) {
                 handler.sendToastToUI("We received a song from " + this.sourceMac);
-                handler.sendSongToActivity((byte[]) this.payload);
+                SongPacket songPacket = (SongPacket) this.payload;
+                handler.sendSongToActivity(songPacket.get_id(), songPacket.get_data());
             } else {
                 handler.getNetwork().forwardMessage(this);
             }
