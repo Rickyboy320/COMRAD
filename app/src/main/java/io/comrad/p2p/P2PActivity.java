@@ -343,23 +343,19 @@ public class P2PActivity extends FragmentActivity  {
     }
 
     public void setSongSize(int size) {
-        this.songBuffer = new byte[size + 10];
+        System.out.println("!~! SET THE SIZE");
+        this.songBuffer = new byte[size];
     }
 
     public void sendByteArrayToPlayMusic() {
-        System.out.println("!~! Sending music to the media player..");
         PlayMusic fragment = (PlayMusic) getSupportFragmentManager().findFragmentById(R.id.PlayMusic);
         fragment.addSongBytes(this.songBuffer);
     }
 
     public void saveMusicBytePacket(int id, byte[] songBytes) {
-        System.out.println("\n!~! Check for print");
+        System.out.println("\n!~! Check for print, with ID: " + id);
         System.out.println("\n!~! Set buffer Size to: " + this.songBuffer.length);
         System.arraycopy(songBytes, 0, this.songBuffer, id * SONG_PACKET_SIZE, songBytes.length);
-
-//        for (int i = id * SONG_PACKET_SIZE; i < songBytes.length; ++i) {
-//            this.songBuffer[i] = songBytes[i];
-//        }
     }
 
     @Override

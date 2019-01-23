@@ -2,6 +2,8 @@ package io.comrad.p2p.messages;
 
 import io.comrad.music.SongPacket;
 import android.bluetooth.BluetoothDevice;
+import android.util.Log;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -24,6 +26,7 @@ import java.io.*;
 import java.util.HashSet;
 import java.util.Set;
 
+import static android.content.ContentValues.TAG;
 import static io.comrad.music.SongPacket.SONG_PACKET_SIZE;
 
 public class P2PMessage implements Serializable {
@@ -120,36 +123,39 @@ public class P2PMessage implements Serializable {
             synchronized (handler.getNetwork().getGraph()) {
                 handler.getNetwork().getGraph().apply(update);
             }
+        } else if (this.type == MessageType.song_size) {
+            handler.sendSongSizeToActivity((int) this.payload);
         } else if (this.type == MessageType.request_song) {
             if (this.getDestinationMAC().equalsIgnoreCase(handler.getNetwork().getSelfMac())) {
                 handler.sendToastToUI("We received a request from " + this.sourceMac);
 
                 /* Send buffer size to receiving node. */
-                handler.sendSongSizeToActivity(((Song) this.payload).getSongSize());
+                P2PMessage msg = new P2PMessage(handler.getNetwork().getSelfMac(), this.sourceMac,
+                        MessageType.song_size, ((Song) this.payload).getSongSize());
+                handler.getNetwork().forwardMessage(msg);
 
                 /* Setup payload buffers for sending the song. */
                 byte[] payload = handler.getNetwork().getByteArrayFromSong((Song) this.payload);
-                P2PMessage message;
                 byte[] tmpPayload;
                 SongPacket songPacket;
 
                 /* Send songs in bursts to the receiver. */
                 for (int i = 0; i < payload.length; i += SONG_PACKET_SIZE) {
-                    try {
-                        tmpPayload = Arrays.copyOfRange(payload, i, i + SONG_PACKET_SIZE);
-                    } catch (IndexOutOfBoundsException e) {
+                    if (i == payload.length / SONG_PACKET_SIZE) {
                         tmpPayload = Arrays.copyOfRange(payload, i, payload.length);
+                    } else {
+                        tmpPayload = Arrays.copyOfRange(payload, i, i + SONG_PACKET_SIZE);
                     }
 
                     songPacket = new SongPacket(i, tmpPayload);
-                    message = new P2PMessage(handler.getNetwork().getSelfMac(), this.sourceMac,
+                    msg = new P2PMessage(handler.getNetwork().getSelfMac(), this.sourceMac,
                                                         MessageType.send_song, songPacket);
-                    handler.getNetwork().forwardMessage(message);
+                    handler.getNetwork().forwardMessage(msg);
                 }
 
-                message = new P2PMessage(handler.getNetwork().getSelfMac(), this.sourceMac,
+                msg = new P2PMessage(handler.getNetwork().getSelfMac(), this.sourceMac,
                         MessageType.song_finished, null);
-                handler.getNetwork().forwardMessage(message);
+                handler.getNetwork().forwardMessage(msg);
             } else {
                 handler.getNetwork().forwardMessage(this);
             }
