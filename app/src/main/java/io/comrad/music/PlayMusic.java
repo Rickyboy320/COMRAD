@@ -66,7 +66,6 @@ public class PlayMusic extends Fragment  {
         final Button button = playmusic.findViewById(R.id.play);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Log.d(TAG, "HEY");
                 PlayCurrentSong();
             }
         });
@@ -89,7 +88,9 @@ public class PlayMusic extends Fragment  {
 
             // resetting mediaplayer instance to evade problems
             mediaPlayer.reset();
+            Log.d(TAG, "!~! mediaPlayer has been reset!");
             mediaPlayer.setDataSource(fis.getFD());
+            Log.d(TAG, "!~! mediaPlayer source has been set!");
 
             mediaPlayer.prepareAsync();
             mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {

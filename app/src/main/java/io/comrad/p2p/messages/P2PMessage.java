@@ -161,7 +161,7 @@ public class P2PMessage implements Serializable {
             }
         } else if (this.type == MessageType.send_song) {
             if (this.getDestinationMAC().equalsIgnoreCase(handler.getNetwork().getSelfMac())) {
-                handler.sendToastToUI("We received a song from " + this.sourceMac);
+                handler.sendToastToUI("We received a song packet from " + this.sourceMac);
                 SongPacket songPacket = (SongPacket) this.payload;
                 handler.sendSongToActivity(songPacket.get_id(), songPacket.get_data());
             } else {
