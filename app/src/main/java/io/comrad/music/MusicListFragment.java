@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.provider.MediaStore;
 import android.support.v4.content.ContextCompat;
+import android.text.Layout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -37,7 +38,6 @@ public class MusicListFragment extends Fragment {
 
     private static final int MY_PERMISSION_REQUEST = 1;
     ArrayList<Song> playList;
-    ListView listView;
     ArrayAdapter<Song> adapter;
 
     public MusicListFragment() {
@@ -47,6 +47,7 @@ public class MusicListFragment extends Fragment {
     public void setPlayList(ArrayList<Song> playList) {
         this.playList = playList;
         showMusic();
+//        playList.add(new Song("Hey", "hey", "hey", ))
     }
 
     @Override
@@ -79,6 +80,8 @@ public class MusicListFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View musiclist = inflater.inflate(R.layout.fragment_music, container, false);
+
+
 //        final Button button = playmusic.findViewById(R.id.play);
 //        button.setOnClickListener(new View.OnClickListener() {
 //            public void onClick(View v) {
@@ -94,8 +97,9 @@ public class MusicListFragment extends Fragment {
      * Calls functions to retrieve all music on the device and shows them in a listview.
      */
     public void showMusic() {
-        listView = getActivity().findViewById(R.id.musicView);
-        adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, playList);
+        ListView listView = (ListView) getActivity().findViewById(R.id.musicView);
+        adapter = new SongAdapter(getActivity(), R.layout.song_item, playList);
+
         listView.setAdapter((adapter));
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -170,7 +174,7 @@ public class MusicListFragment extends Fragment {
                             Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
                         Toast.makeText(getActivity(), "Permission granted!", Toast.LENGTH_SHORT).show();
 
-                        showMusic();
+//                        showMusic();
                     }
                 } else {
                     Toast.makeText(getActivity(), "No permission granted!", Toast.LENGTH_SHORT).show();

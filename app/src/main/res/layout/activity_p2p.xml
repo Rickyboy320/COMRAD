@@ -1,42 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:screenOrientation="portrait"
     android:configChanges="orientation|keyboardHidden"
 
     >
 
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/my_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:elevation="4dp"
+        android:layout_alignParentTop="true"
+        android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
+
+        <TextView
+            android:id="@+id/toolbar_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="COMRAD"
+            android:textColor="@color/colorAccent"
+            android:textSize="20sp"
+
+        />
+    </android.support.v7.widget.Toolbar>
+
     <Button
         android:id="@+id/showGraph"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@id/discover"
-        android:layout_marginStart="20dp"
         android:layout_marginLeft="0dp"
-        android:layout_marginBottom="-98dp"
+        android:layout_marginTop="60dp"
+        android:gravity="center"
         android:text="Show Graph" />
-
-    <Button
-        android:id="@+id/discover"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_above="@id/server"
-        android:layout_marginStart="0dp"
-        android:layout_marginLeft="0dp"
-        android:layout_marginBottom="-100dp"
-        android:text="Discover Devices" />
-
-    <Button
-        android:id="@+id/server"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
-        android:layout_marginStart="0dp"
-        android:layout_marginLeft="0dp"
-        android:layout_marginTop="10dp"
-        android:text="Become discoverable?" />
 
     <!--<Button-->
         <!--android:id="@+id/stopDiscovery"-->
@@ -66,8 +69,7 @@
         android:name="io.comrad.music.MusicListFragment"
         class="io.comrad.music.MusicListFragment"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
-        android:layout_below="@id/server"
+        android:layout_height="match_parent"
         android:layout_marginTop="100dp" />
 
 

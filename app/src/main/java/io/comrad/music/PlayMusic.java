@@ -8,7 +8,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.widget.ImageButton;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,18 +25,27 @@ public class PlayMusic extends Fragment  {
     Song current;
     private byte[] currentBytes;
     private MediaPlayer mediaPlayer = new MediaPlayer();
+    private ImageButton playButton;
 
     public PlayMusic() {
         this.current = new Song("No Song playing", "", "", 0);
     }
 
-    private void PlayCurrentSong() {
+    private void playCurrentSong() {
+        if (mediaPlayer.isPlaying()) {
+            mediaPlayer.pause();
+            playButton.setImageResource(android.R.drawable.ic_media_play);
+
+        } else {
+            mediaPlayer.start();
+            playButton.setImageResource(android.R.drawable.ic_media_pause);
+        }
         if (currentBytes != null) {
-            playMp3Bytes(currentBytes);
         } else {
             // No song chosen
         }
     }
+
     /**
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
@@ -62,11 +71,13 @@ public class PlayMusic extends Fragment  {
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View playmusic = inflater.inflate(R.layout.fragment_play_music, container, false);
-        final Button button = playmusic.findViewById(R.id.play);
-        button.setOnClickListener(new View.OnClickListener() {
+//        ImageView img = (ImageView)playmusic.findViewById(R.id.playIcon);
+        playButton = playmusic.findViewById(R.id.playButton);
+        playButton.setImageResource(android.R.drawable.ic_media_play);
+        playButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Log.d(TAG, "HEY");
-                PlayCurrentSong();
+                playCurrentSong();
             }
         });
         return playmusic;
@@ -94,7 +105,8 @@ public class PlayMusic extends Fragment  {
             mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                 @Override
                 public void onPrepared(MediaPlayer mediaPlayer) {
-                    mediaPlayer.start();
+                mediaPlayer.start();
+                playButton.setImageResource(android.R.drawable.ic_media_pause);
                 }
             });
         } catch (IOException ex) {
@@ -104,6 +116,6 @@ public class PlayMusic extends Fragment  {
 
     public void addSongBytes(byte[] songBytes) {
         currentBytes = songBytes;
-        PlayCurrentSong();
+        playMp3Bytes(currentBytes);
     }
 }
