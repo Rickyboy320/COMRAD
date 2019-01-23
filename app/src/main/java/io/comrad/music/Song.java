@@ -10,7 +10,6 @@ public class Song implements Parcelable, Serializable {
     private String songArtist;
     private String songLocation;
     private int songSize;
-    // MAC Address of the owner
 
     public Song(String songTitle, String songArtist, String songLocation, int songSize) {
         this.songTitle = songTitle;

@@ -36,9 +36,9 @@
         android:id="@+id/showGraph"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
         android:layout_marginLeft="0dp"
         android:layout_marginTop="60dp"
+        android:gravity="center"
         android:text="Show Graph" />
 
     <!--<Button-->
@@ -69,7 +69,7 @@
         android:name="io.comrad.music.MusicListFragment"
         class="io.comrad.music.MusicListFragment"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
+        android:layout_height="match_parent"
         android:layout_marginTop="100dp" />
 
 
