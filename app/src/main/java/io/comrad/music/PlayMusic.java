@@ -9,14 +9,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import io.comrad.R;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
-
-import io.comrad.R;
 
 import static android.content.ContentValues.TAG;
 
@@ -85,12 +83,16 @@ public class PlayMusic extends Fragment  {
             fos.flush();
             fos.close();
 
-            FileInputStream fis = new FileInputStream(tempMp3);
-
             // resetting mediaplayer instance to evade problems
             mediaPlayer.reset();
             Log.d(TAG, "!~! mediaPlayer has been reset!");
-            mediaPlayer.setDataSource(fis.getFD());
+
+            FileInputStream inputStream = new FileInputStream(tempMp3);
+
+            mediaPlayer.setDataSource(inputStream.getFD(), 0, mp3SoundByteArray.length);
+
+            inputStream.close();
+
             Log.d(TAG, "!~! mediaPlayer source has been set!");
 
             mediaPlayer.prepareAsync();
