@@ -89,7 +89,6 @@ public class P2PMessageHandler extends Handler {
     }
 
     public void sendSongSizeToActivity(int songSize) {
-        System.out.println("Received call to set songSize");
         Message msg = this.obtainMessage(P2PMessageHandler.MESSAGE_SONG_SIZE);
         Bundle bundle = new Bundle();
         bundle.putInt(P2PMessageHandler.SONG_SIZE, songSize);
