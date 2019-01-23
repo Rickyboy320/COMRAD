@@ -291,6 +291,7 @@ public class P2PActivity extends FragmentActivity  {
             }
 
             if(node.equals(this.handler.getNetwork().getGraph().getSelfNode())) {
+                this.setSongSize(song.getSongSize());
                 this.saveMusicBytePacket(0, this.getByteArrayFromSong(song));
                 this.sendByteArrayToPlayMusic();
             } else {
@@ -329,7 +330,7 @@ public class P2PActivity extends FragmentActivity  {
             inputStream = new FileInputStream(songFile);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-            this.handler.sendToastToUI("Could find file.");
+            this.handler.sendToastToUI("Could not find file.");
             return null;
         }
 
