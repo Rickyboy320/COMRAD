@@ -5,26 +5,32 @@
     android:orientation="vertical"
     android:gravity="center"
     android:layout_height="93dp"
-
+    android:background="@null"
     tools:context=".music.PlayMusic">
 
 
-    <TextView
-        android:id="@+id/songTitle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Artist Song" />
+    <!--<TextView-->
+        <!--android:id="@+id/songTitle"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:text="Artist Song" />-->
 
-    <Button
-        android:id="@+id/play"
+    <ImageButton
+        android:id="@+id/playButton"
         android:layout_width="70dp"
         android:layout_height="70dp"
+        android:layout_marginBottom="2dp"
         android:background="@drawable/button_bg_round"
-        android:gravity="center"
-        android:text="▶"
-        android:textSize="50sp" />
-        <!--android:layout_width="201dp"-->
-        <!--android:layout_height="59dp"-->
+        android:gravity="center">
 
+        <!--<ImageView-->
+            <!--android:id="@+id/playIcon"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="match_parent">-->
+        <!--</ImageView>-->
+    </ImageButton>
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:src="@drawable/my_ima" -->
 
 </LinearLayout>
