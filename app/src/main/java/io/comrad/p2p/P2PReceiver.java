@@ -72,6 +72,11 @@ public class P2PReceiver extends BroadcastReceiver
         }
     }
 
+    public void abort()
+    {
+        this.currentlyFetching = null;
+    }
+
     private void fetchNextDevice(BluetoothDevice previousDevice)
     {
         if((currentlyFetching == null && previousDevice != null) || (previousDevice == null && currentlyFetching != null)) {

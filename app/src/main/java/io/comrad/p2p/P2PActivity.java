@@ -20,6 +20,7 @@ import io.comrad.R;
 import io.comrad.music.MusicListFragment;
 import io.comrad.music.PlayMusic;
 import io.comrad.music.Song;
+import io.comrad.music.SongRequest;
 import io.comrad.p2p.messages.MessageType;
 import io.comrad.p2p.messages.P2PMessage;
 import io.comrad.p2p.messages.P2PMessageHandler;
@@ -51,6 +52,7 @@ public class P2PActivity extends FragmentActivity  {
 
     private ArrayList<Song> ownSongs = new ArrayList<>();
 
+    private int currentId = 0;
     private byte[] songBuffer;
 
     private AdhocMonitorService monitor;
@@ -58,6 +60,8 @@ public class P2PActivity extends FragmentActivity  {
     private final P2PMessageHandler handler = new P2PMessageHandler(this);
 
     private long requestStart;
+
+    private boolean isIdle = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,13 +105,21 @@ public class P2PActivity extends FragmentActivity  {
         final Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                connectToBondedDevices(adapter, handler);
 
-                if (adapter.isDiscovering()) {
-                    adapter.cancelDiscovery();
+                System.out.println("Discovering if idle: " + isIdle);
+                if(isIdle) {
+                    connectToBondedDevices(adapter, handler);
+
+                    if (adapter.isDiscovering()) {
+                        adapter.cancelDiscovery();
+                    }
+                    adapter.startDiscovery();
+
+                    runner.postDelayed(this, 60 * 1000);
                 }
-                adapter.startDiscovery();
-                runner.postDelayed(this, 2 * 60 * 1000);
+                else {
+                    runner.postDelayed(this, 10 * 1000);
+                }
             }
         };
 
@@ -279,15 +291,17 @@ public class P2PActivity extends FragmentActivity  {
                 throw new IllegalStateException("Song " + song + " was requested, but was not present in any of the nodes in the network.");
             }
 
+            this.currentId++;
+
             System.out.println(song.getSongSize());
             this.setSongSize(song.getSongSize());
 
             if(node.equals(this.handler.getNetwork().getGraph().getSelfNode())) {
-                this.saveMusicBytePacket(0, this.getByteArrayFromSong(song));
-                this.sendByteArrayToPlayMusic();
+                this.saveMusicBytePacket(this.currentId, 0, this.getByteArrayFromSong(song));
+                this.sendByteArrayToPlayMusic(this.currentId);
             } else {
                 requestStart = System.currentTimeMillis();
-                this.handler.getNetwork().forwardMessage(new P2PMessage(this.handler.getNetwork().getSelfMac(), node.getMac(), MessageType.request_song, song));
+                this.handler.getNetwork().forwardMessage(new P2PMessage(this.handler.getNetwork().getSelfMac(), node.getMac(), MessageType.request_song, new SongRequest(this.currentId, song)));
             }
         }
     }
@@ -335,11 +349,27 @@ public class P2PActivity extends FragmentActivity  {
         return null;
     }
 
+    public void setIdle(boolean idle)
+    {
+        System.out.println("Setting idle state: " + idle);
+
+        this.isIdle = idle;
+
+        if(!idle) {
+            BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
+            receiver.abort();
+        }
+    }
+
     public void setSongSize(int size) {
         this.songBuffer = new byte[size];
     }
 
-    public void sendByteArrayToPlayMusic() {
+    public void sendByteArrayToPlayMusic(int id) {
+        if(id != currentId) {
+            return;
+        }
+
         if(requestStart != 0) {
             System.out.println("Time taken to receive song: " + (System.currentTimeMillis() - requestStart));
         }
@@ -349,8 +379,13 @@ public class P2PActivity extends FragmentActivity  {
         fragment.addSongBytes(this.songBuffer);
     }
 
-    public void saveMusicBytePacket(int offset, byte[] songBytes) {
-        System.out.println("id: " + offset);
+    public void saveMusicBytePacket(int id, int offset, byte[] songBytes) {
+        System.out.println("id: " + id);
+        if (id != this.currentId) {
+            return;
+        }
+
+        System.out.println("offset: " + offset);
         System.arraycopy(songBytes, 0, this.songBuffer, offset, songBytes.length);
         setProgress(this.songBuffer.length, offset);
     }
