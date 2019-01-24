@@ -19,17 +19,25 @@
         android:id="@+id/playButton"
         android:layout_width="70dp"
         android:layout_height="70dp"
-        android:layout_marginBottom="2dp"
+        android:layout_marginBottom="1dp"
         android:background="@drawable/button_bg_round"
         android:gravity="center">
 
         <!--<ImageView-->
-            <!--android:id="@+id/playIcon"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="match_parent">-->
+        <!--android:id="@+id/playIcon"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent">-->
         <!--</ImageView>-->
     </ImageButton>
-        <!--android:layout_width="wrap_content"-->
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="-5dp"
+        android:gravity="bottom" />
+    <!--android:layout_width="wrap_content"-->
         <!--android:layout_height="wrap_content"-->
         <!--android:src="@drawable/my_ima" -->
 
