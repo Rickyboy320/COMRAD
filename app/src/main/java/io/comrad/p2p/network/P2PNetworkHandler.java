@@ -95,10 +95,6 @@ public class P2PNetworkHandler {
         }
     }
 
-    public byte[] getByteArrayFromSong(Song song) {
-        return activity.getByteArrayFromSong(song);
-    }
-
     public void broadcastExcluding(P2PMessage message, String address) {
         for(P2PConnectedThread thread : this.peerThreads.values()) {
             if(!thread.getRemoteDevice().getAddress().equalsIgnoreCase(address))

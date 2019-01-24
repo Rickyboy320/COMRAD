@@ -32,7 +32,9 @@ import io.comrad.p2p.network.Node;
 import nl.erlkdev.adhocmonitor.AdhocMonitorBinder;
 import nl.erlkdev.adhocmonitor.AdhocMonitorService;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
@@ -300,8 +302,14 @@ public class P2PActivity extends FragmentActivity  {
             System.out.println(song.getSongSize());
 
             if(node.equals(this.handler.getNetwork().getGraph().getSelfNode())) {
-                this.saveMusicBytePacket(this.currentId, 0, this.getByteArrayFromSong(song));
-                this.sendByteArrayToPlayMusic(this.currentId);
+                try {
+                    this.saveMusicBytePacket(this.currentId, 0, convertStreamToByteArray(song.getStream(this.handler)));
+                    this.finishSong(this.currentId);
+                } catch(IOException e) {
+                    e.printStackTrace();
+                    this.handler.sendToastToUI("Could not play " + song.getSongTitle() + ".");
+                    return;
+                }
             } else {
                 requestStart = System.currentTimeMillis();
                 this.handler.getNetwork().forwardMessage(new P2PMessage(this.handler.getNetwork().getSelfMac(), node.getMac(), MessageType.request_song, new SongRequest(this.currentId, song)));
@@ -329,27 +337,7 @@ public class P2PActivity extends FragmentActivity  {
         }
 
         return baos.toByteArray();
-    }
 
-    public byte[] getByteArrayFromSong(Song song) {
-        File songFile = new File(song.getSongLocation());
-        InputStream inputStream;
-
-        try {
-            inputStream = new FileInputStream(songFile);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            this.handler.sendToastToUI("Could not find file.");
-            return null;
-        }
-
-        try {
-            return convertStreamToByteArray(inputStream);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return null;
     }
 
     public void setIdle(boolean idle)
@@ -364,8 +352,7 @@ public class P2PActivity extends FragmentActivity  {
         }
     }
 
-
-    public void sendByteArrayToPlayMusic(int id) {
+    public void finishSong(int id) {
         if(id != currentId) {
             return;
         }

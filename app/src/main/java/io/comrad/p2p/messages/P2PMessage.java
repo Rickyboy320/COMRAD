@@ -8,7 +8,6 @@ import io.comrad.p2p.network.Graph;
 import io.comrad.p2p.network.GraphUpdate;
 
 import java.io.*;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -116,27 +115,38 @@ public class P2PMessage implements Serializable {
 
                 SongRequest songRequest = (SongRequest) this.payload;
 
-                /* Setup payload buffers for sending the song. */
-                byte[] payload = handler.getNetwork().getByteArrayFromSong(songRequest.getSong());
-                byte[] tmpPayload;
-                SongPacket songPacket;
+                InputStream stream = songRequest.getSong().getStream(handler);
 
                 /* Send songs in bursts to the receiver. */
-                for (int i = 0; i < payload.length; i += SONG_PACKET_SIZE) {
-                    if (i + SONG_PACKET_SIZE >= payload.length) {
-                        tmpPayload = Arrays.copyOfRange(payload, i, payload.length);
-                    } else {
-                        tmpPayload = Arrays.copyOfRange(payload, i, i + SONG_PACKET_SIZE);
-                    }
+                try {
+                    int offset = 0;
 
-                    songPacket = new SongPacket(songRequest.getRequestId(), i, tmpPayload);
-                    P2PMessage msg = new P2PMessage(handler.getNetwork().getSelfMac(), this.sourceMac,
-                                                        MessageType.send_song, songPacket);
-                    handler.getNetwork().forwardMessage(msg);
+                    while(stream.available() != 0) {
+                        byte[] packet = new byte[SONG_PACKET_SIZE];
+                        int read = stream.read(packet, 0, SONG_PACKET_SIZE);
+                        if(read == -1) {
+                            break;
+                        }
+
+                        SongPacket songPacket = new SongPacket(songRequest.getRequestId(), offset, packet);
+                        P2PMessage msg = new P2PMessage(handler.getNetwork().getSelfMac(), this.sourceMac,
+                                MessageType.send_song, songPacket);
+                        handler.getNetwork().forwardMessage(msg);
+
+                        offset += read;
+                    }
+                } catch(IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    try {
+                        stream.close();
+                    } catch(IOException e) {
+                        e.printStackTrace();
+                    }
                 }
 
-                P2PMessage msg = new P2PMessage(handler.getNetwork().getSelfMac(), this.sourceMac,
-                        MessageType.song_finished, songRequest.getRequestId());
+
+                P2PMessage msg = new P2PMessage(handler.getNetwork().getSelfMac(), this.sourceMac, MessageType.song_finished, songRequest.getRequestId());
                 handler.getNetwork().forwardMessage(msg);
             } else {
                 handler.getNetwork().forwardMessage(this);

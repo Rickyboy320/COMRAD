@@ -58,7 +58,7 @@ public class P2PMessageHandler extends Handler {
                 break;
             case P2PMessageHandler.MESSAGE_SONG_FINISHED:
                 id = msg.getData().getInt(P2PMessageHandler.REQUEST_ID);
-                activity.sendByteArrayToPlayMusic(id);
+                activity.finishSong(id);
                 break;
             case P2PMessageHandler.UPDATE_GRAPH:
                 activity.refreshPlaylist((Set<Node>) msg.getData().getSerializable(P2PMessageHandler.NODES));
