@@ -4,9 +4,9 @@ import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.os.Parcel;
 import android.os.Parcelable;
+import io.comrad.p2p.messages.P2PMessageHandler;
 
-import java.io.IOException;
-import java.io.Serializable;
+import java.io.*;
 
 public class Song implements Parcelable, Serializable {
     private String songTitle;
@@ -96,6 +96,21 @@ public class Song implements Parcelable, Serializable {
         }
 
         return false;
+    }
+
+    public InputStream getStream(P2PMessageHandler handler) {
+        File songFile = new File(this.getSongLocation());
+        InputStream inputStream;
+
+        try {
+            inputStream = new FileInputStream(songFile);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            handler.sendToastToUI("Could not find file.");
+            return null;
+        }
+
+        return inputStream;
     }
 
     public class SongMetaData implements Serializable {
