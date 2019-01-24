@@ -20,17 +20,13 @@ public class P2PMessageHandler extends Handler {
     public static final int MESSAGE_TOAST = 1;
     public static final int MESSAGE_SONG = 2;
     public static final int UPDATE_GRAPH = 3;
-    public static final int MESSAGE_SONG_SIZE = 4;
-    public static final int MESSAGE_SONG_FINISHED = 5;
-    public static final int MESSAGE_METADATA = 6;
+    public static final int MESSAGE_SONG_FINISHED = 4;
 
     public static final String TOAST = "Toast";
     public static final String OFFSET = "Song Offset";
     public static final String SONG = "Song";
     public static final String REQUEST_ID = "Song Request Id";
     public static final String NODES = "Nodes";
-    public static final String SONG_CHANNELS = "Song Channels";
-    public static final String SONG_SAMPLERATE = "Song Samplerate";
 
     private final P2PActivity activity;
     private P2PNetworkHandler networkHandler;
@@ -67,11 +63,6 @@ public class P2PMessageHandler extends Handler {
             case P2PMessageHandler.UPDATE_GRAPH:
                 activity.refreshPlaylist((Set<Node>) msg.getData().getSerializable(P2PMessageHandler.NODES));
                 break;
-            case P2PMessageHandler.MESSAGE_METADATA:
-                int samplerate = msg.getData().getInt(P2PMessageHandler.SONG_SAMPLERATE);
-                int channels = msg.getData().getInt(P2PMessageHandler.SONG_CHANNELS);
-                activity.prepareAudioTrack(samplerate, channels);
-                break;
         }
     }
 
@@ -105,15 +96,6 @@ public class P2PMessageHandler extends Handler {
         Message msg = this.obtainMessage(P2PMessageHandler.MESSAGE_SONG_FINISHED);
         Bundle bundle = new Bundle();
         bundle.putInt(P2PMessageHandler.REQUEST_ID, id);
-        msg.setData(bundle);
-        this.sendMessage(msg);
-    }
-
-    public void sendSongMetadata(Song.SongMetaData metaData) {
-        Message msg = this.obtainMessage(P2PMessageHandler.MESSAGE_METADATA);
-        Bundle bundle = new Bundle();
-        bundle.putInt(P2PMessageHandler.SONG_CHANNELS, metaData.getNumChannels());
-        bundle.putInt(P2PMessageHandler.SONG_SAMPLERATE, metaData.getSampleRate());
         msg.setData(bundle);
         this.sendMessage(msg);
     }
