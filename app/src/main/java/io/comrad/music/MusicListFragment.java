@@ -2,6 +2,8 @@ package io.comrad.music;
 
 import android.Manifest;
 import android.app.Activity;
+import android.media.MediaExtractor;
+import android.media.MediaFormat;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.content.ContentResolver;
@@ -24,12 +26,14 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 import io.comrad.R;
 import io.comrad.p2p.P2PActivity;
 
 import static android.content.ContentValues.TAG;
+import static android.media.MediaFormat.KEY_CHANNEL_COUNT;
 
 
 public class MusicListFragment extends Fragment {
@@ -105,16 +109,8 @@ public class MusicListFragment extends Fragment {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-//                Intent result = new Intent();
                 Log.d("songClick", playList.get(i).toString());
-
-//                result.putExtra("song", (Parcelable)playList.get(i));
-//                setResult(Activity.RESULT_OK, result);
-//                finish();
-
-                // TODO send back to activity
                 ((P2PActivity)getActivity()).requestSong(playList.get(i));
-                // playMp3Bytes(BYTE STREAM HERE);
             }
         });
     }

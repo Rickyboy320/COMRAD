@@ -119,6 +119,8 @@ public class P2PMessage implements Serializable {
                 byte[] payload = handler.getNetwork().getByteArrayFromSong(songRequest.getSong());
                 byte[] tmpPayload;
                 SongPacket songPacket;
+                P2PMessage songMetaData = new P2PMessage(handler.getNetwork().getSelfMac(),
+                        this.sourceMac, MessageType.song_meta, songRequest.getSong().getSongMetaData());
 
                 /* Send songs in bursts to the receiver. */
                 for (int i = 0; i < payload.length; i += SONG_PACKET_SIZE) {
@@ -158,6 +160,8 @@ public class P2PMessage implements Serializable {
             } else {
                 handler.getNetwork().forwardMessage(this);
             }
+        } else if (this.type == MessageType.song_meta) {
+            
         }
     }
 
