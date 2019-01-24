@@ -1,8 +1,11 @@
 package io.comrad.music;
 
+import android.media.MediaExtractor;
+import android.media.MediaFormat;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.io.IOException;
 import java.io.Serializable;
 
 public class Song implements Parcelable, Serializable {
@@ -49,6 +52,20 @@ public class Song implements Parcelable, Serializable {
         }
     };
 
+    public SongMetaData getSongMetaData() {
+        MediaExtractor extractor = new MediaExtractor();
+        try {
+            extractor.setDataSource(this.getSongLocation());
+            MediaFormat format = extractor.getTrackFormat(0);
+            SongMetaData metaData = new SongMetaData(format.getInteger(MediaFormat.KEY_SAMPLE_RATE), format.getInteger(MediaFormat.KEY_CHANNEL_COUNT));
+
+            return metaData;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
 
     @Override
     public String toString() {
@@ -79,5 +96,23 @@ public class Song implements Parcelable, Serializable {
         }
 
         return false;
+    }
+
+    public class SongMetaData implements Serializable {
+        private int sampleRate;
+        private int numChannels;
+
+        public SongMetaData(int sampleRate, int numChannels) {
+            this.sampleRate = sampleRate;
+            this.numChannels = numChannels;
+        }
+
+        public int getSampleRate() {
+            return sampleRate;
+        }
+
+        public int getNumChannels() {
+            return numChannels;
+        }
     }
 }

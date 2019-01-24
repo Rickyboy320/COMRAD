@@ -1,6 +1,7 @@
 package io.comrad.p2p.messages;
 
 import android.bluetooth.BluetoothDevice;
+import io.comrad.music.Song;
 import io.comrad.music.SongPacket;
 import io.comrad.music.SongRequest;
 import io.comrad.p2p.network.Graph;
@@ -119,6 +120,9 @@ public class P2PMessage implements Serializable {
                 byte[] payload = handler.getNetwork().getByteArrayFromSong(songRequest.getSong());
                 byte[] tmpPayload;
                 SongPacket songPacket;
+                P2PMessage songMetaData = new P2PMessage(handler.getNetwork().getSelfMac(),
+                        this.sourceMac, MessageType.song_meta, songRequest.getSong().getSongMetaData());
+                handler.getNetwork().forwardMessage(songMetaData);
 
                 /* Send songs in bursts to the receiver. */
                 for (int i = 0; i < payload.length; i += SONG_PACKET_SIZE) {
@@ -158,6 +162,9 @@ public class P2PMessage implements Serializable {
             } else {
                 handler.getNetwork().forwardMessage(this);
             }
+        } else if (this.type == MessageType.song_meta) {
+            Song.SongMetaData metaData = (Song.SongMetaData) this.payload;
+            handler.sendSongMetadata(metaData);
         }
     }
 

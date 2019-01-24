@@ -1,35 +1,27 @@
 package io.comrad.music;
 
 import android.Manifest;
-import android.app.Activity;
-import android.support.annotation.NonNull;
-import android.support.v4.app.Fragment;
 import android.content.ContentResolver;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
-import android.text.Layout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
-
-import java.util.ArrayList;
-
 import io.comrad.R;
 import io.comrad.p2p.P2PActivity;
 
-import static android.content.ContentValues.TAG;
+import java.util.ArrayList;
 
 
 public class MusicListFragment extends Fragment {
@@ -105,16 +97,8 @@ public class MusicListFragment extends Fragment {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-//                Intent result = new Intent();
                 Log.d("songClick", playList.get(i).toString());
-
-//                result.putExtra("song", (Parcelable)playList.get(i));
-//                setResult(Activity.RESULT_OK, result);
-//                finish();
-
-                // TODO send back to activity
                 ((P2PActivity)getActivity()).requestSong(playList.get(i));
-                // playMp3Bytes(BYTE STREAM HERE);
             }
         });
     }

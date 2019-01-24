@@ -56,7 +56,7 @@ public class P2PActivity extends FragmentActivity  {
     private ArrayList<Song> ownSongs = new ArrayList<>();
 
     private int currentId = 0;
-    private int songSize = 0;
+    private Song currentSong;
     private AudioTrack audioTrack;
 
     private AdhocMonitorService monitor;
@@ -296,12 +296,13 @@ public class P2PActivity extends FragmentActivity  {
             }
 
             this.currentId++;
+            this.currentSong = song;
 
             System.out.println(song.getSongSize());
 
             if(node.equals(this.handler.getNetwork().getGraph().getSelfNode())) {
-                //TODO: Request
-                this.prepareAudioTrack(song.getMetadata());
+                Song.SongMetaData metaData = song.getSongMetaData();
+                this.prepareAudioTrack(metaData.getSampleRate(), metaData.getNumChannels());
                 this.saveMusicBytePacket(this.currentId, 0, this.getByteArrayFromSong(song));
                 this.sendByteArrayToPlayMusic(this.currentId);
             } else {
@@ -366,7 +367,7 @@ public class P2PActivity extends FragmentActivity  {
         }
     }
 
-    public void prepareAudioTrack(int samplerate, int channels, int size) {
+    public void prepareAudioTrack(int samplerate, int channels) {
         int channelType;
         switch(channels)
         {
@@ -386,11 +387,17 @@ public class P2PActivity extends FragmentActivity  {
                 throw new IllegalArgumentException("Amount of channels is not supported: " + channels);
         }
 
-        audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, samplerate,
+        int size = AudioTrack.getMinBufferSize(samplerate, channelType, AudioFormat.ENCODING_PCM_8BIT);
+
+        this.audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, samplerate,
                 channelType, AudioFormat.ENCODING_PCM_8BIT,
                 size, AudioTrack.MODE_STREAM);
 
-        this.songSize = size;
+        System.out.println("Samplerate: " + samplerate + ", channels: " + channels + ", size: " + size);
+        System.out.println("Channel type stereo: " + (channelType == AudioFormat.CHANNEL_OUT_STEREO));
+
+        PlayMusic fragment = (PlayMusic) getSupportFragmentManager().findFragmentById(R.id.PlayMusic);
+        fragment.setAudioTrack(this.audioTrack);
     }
 
     public void sendByteArrayToPlayMusic(int id) {
@@ -403,8 +410,6 @@ public class P2PActivity extends FragmentActivity  {
         }
 
         requestStart = 0;
-        PlayMusic fragment = (PlayMusic) getSupportFragmentManager().findFragmentById(R.id.PlayMusic);
-        fragment.setAudioTrack(this.audioTrack);
     }
 
     public void saveMusicBytePacket(int id, int offset, byte[] songBytes) {
@@ -415,7 +420,7 @@ public class P2PActivity extends FragmentActivity  {
 
         System.out.println("offset: " + offset);
         audioTrack.write(songBytes, offset, songBytes.length);
-        setProgress(this.songSize, offset + songBytes.length);
+        setProgress(this.currentSong.getSongSize(), offset + songBytes.length);
     }
 
     public void setProgress(int size, int offset) {
