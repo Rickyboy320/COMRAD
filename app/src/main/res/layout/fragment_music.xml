@@ -10,5 +10,11 @@
         android:id="@+id/musicView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:divider="@null"
+        android:dividerHeight="0dp"
+        android:clipToPadding="false"
+        android:scrollbarStyle="outsideInset"
+        android:overScrollFooter="@android:color/transparent"
+        android:footerDividersEnabled="false"
     />
 </android.support.constraint.ConstraintLayout>
