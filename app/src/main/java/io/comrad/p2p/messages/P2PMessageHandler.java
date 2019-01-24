@@ -5,6 +5,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.widget.Toast;
 import io.comrad.music.Song;
+import io.comrad.music.SongPacket;
 import io.comrad.p2p.P2PActivity;
 import io.comrad.p2p.network.Node;
 import io.comrad.p2p.network.P2PNetworkHandler;
@@ -25,6 +26,7 @@ public class P2PMessageHandler extends Handler {
     public static final String TOAST = "Toast";
     public static final String OFFSET = "Song Offset";
     public static final String SONG = "Song";
+    public static final String REQUEST_ID = "Song Request Id";
     public static final String NODES = "Nodes";
     public static final String SONG_SIZE = "Song Size";
 
@@ -51,12 +53,14 @@ public class P2PMessageHandler extends Handler {
                 break;
             case P2PMessageHandler.MESSAGE_SONG:
                 Bundle data = msg.getData();
+                int id = data.getInt(P2PMessageHandler.REQUEST_ID);
                 int offset = data.getInt(P2PMessageHandler.OFFSET);
                 byte[] song = data.getByteArray(P2PMessageHandler.SONG);
-                activity.saveMusicBytePacket(offset, song);
+                activity.saveMusicBytePacket(id, offset, song);
                 break;
             case P2PMessageHandler.MESSAGE_SONG_FINISHED:
-                activity.sendByteArrayToPlayMusic();
+                id = msg.getData().getInt(P2PMessageHandler.REQUEST_ID);
+                activity.sendByteArrayToPlayMusic(id);
                 break;
             case P2PMessageHandler.UPDATE_GRAPH:
                 activity.refreshPlaylist((Set<Node>) msg.getData().getSerializable(P2PMessageHandler.NODES));
@@ -80,17 +84,21 @@ public class P2PMessageHandler extends Handler {
         this.sendMessage(graph);
     }
 
-    public void sendSongToActivity(int offset, byte[] songBytes) {
+    public void sendSongToActivity(SongPacket songPacket) {
         Message song = this.obtainMessage(P2PMessageHandler.MESSAGE_SONG);
         Bundle bundle = new Bundle();
-        bundle.putInt(P2PMessageHandler.OFFSET, offset);
-        bundle.putByteArray(P2PMessageHandler.SONG, songBytes);
+        bundle.putInt(P2PMessageHandler.REQUEST_ID, songPacket.getRequestId());
+        bundle.putInt(P2PMessageHandler.OFFSET, songPacket.getOffset());
+        bundle.putByteArray(P2PMessageHandler.SONG, songPacket.getData());
         song.setData(bundle);
         this.sendMessage(song);
     }
 
-    public void sendSongFinshed() {
+    public void sendSongFinshed(int id) {
         Message msg = this.obtainMessage(P2PMessageHandler.MESSAGE_SONG_FINISHED);
+        Bundle bundle = new Bundle();
+        bundle.putInt(P2PMessageHandler.REQUEST_ID, id);
+        msg.setData(bundle);
         this.sendMessage(msg);
     }
 
@@ -100,5 +108,9 @@ public class P2PMessageHandler extends Handler {
 
     public void reattachMonitor() {
         activity.reattachMonitor();
+    }
+
+    public void setIdle(boolean idle) {
+        this.activity.setIdle(idle);
     }
 }

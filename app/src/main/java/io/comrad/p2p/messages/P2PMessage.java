@@ -1,8 +1,8 @@
 package io.comrad.p2p.messages;
 
 import android.bluetooth.BluetoothDevice;
-import io.comrad.music.Song;
 import io.comrad.music.SongPacket;
+import io.comrad.music.SongRequest;
 import io.comrad.p2p.network.Graph;
 import io.comrad.p2p.network.GraphUpdate;
 
@@ -108,11 +108,15 @@ public class P2PMessage implements Serializable {
                 handler.getNetwork().getGraph().apply(update);
             }
         } else if (this.type == MessageType.request_song) {
+            handler.setIdle(false);
+
             if (this.getDestinationMAC().equalsIgnoreCase(handler.getNetwork().getSelfMac())) {
                 handler.sendToastToUI("We received a request from " + this.sourceMac);
 
+                SongRequest songRequest = (SongRequest) this.payload;
+
                 /* Setup payload buffers for sending the song. */
-                byte[] payload = handler.getNetwork().getByteArrayFromSong((Song) this.payload);
+                byte[] payload = handler.getNetwork().getByteArrayFromSong(songRequest.getSong());
                 byte[] tmpPayload;
                 SongPacket songPacket;
 
@@ -124,28 +128,36 @@ public class P2PMessage implements Serializable {
                         tmpPayload = Arrays.copyOfRange(payload, i, i + SONG_PACKET_SIZE);
                     }
 
-                    songPacket = new SongPacket(i, tmpPayload);
+                    songPacket = new SongPacket(songRequest.getRequestId(), i, tmpPayload);
                     P2PMessage msg = new P2PMessage(handler.getNetwork().getSelfMac(), this.sourceMac,
                                                         MessageType.send_song, songPacket);
                     handler.getNetwork().forwardMessage(msg);
                 }
 
                 P2PMessage msg = new P2PMessage(handler.getNetwork().getSelfMac(), this.sourceMac,
-                        MessageType.song_finished, null);
+                        MessageType.song_finished, songRequest.getRequestId());
                 handler.getNetwork().forwardMessage(msg);
             } else {
                 handler.getNetwork().forwardMessage(this);
             }
         } else if (this.type == MessageType.send_song) {
+            handler.setIdle(false);
+
             if (this.getDestinationMAC().equalsIgnoreCase(handler.getNetwork().getSelfMac())) {
                 handler.sendToastToUI("We received a song packet from " + this.sourceMac);
                 SongPacket songPacket = (SongPacket) this.payload;
-                handler.sendSongToActivity(songPacket.getOffset(), songPacket.getData());
+                handler.sendSongToActivity(songPacket);
             } else {
                 handler.getNetwork().forwardMessage(this);
             }
         } else if (this.type == MessageType.song_finished) {
-            handler.sendSongFinshed();
+            handler.setIdle(true);
+
+            if (this.getDestinationMAC().equalsIgnoreCase(handler.getNetwork().getSelfMac())) {
+                handler.sendSongFinshed((int) this.payload);
+            } else {
+                handler.getNetwork().forwardMessage(this);
+            }
         }
     }
 
