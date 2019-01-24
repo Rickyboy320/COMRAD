@@ -387,7 +387,7 @@ public class P2PActivity extends FragmentActivity  {
 
         System.out.println("offset: " + offset);
         System.arraycopy(songBytes, 0, this.songBuffer, offset, songBytes.length);
-        setProgress(this.songBuffer.length, offset);
+        setProgress(this.songBuffer.length, offset + songBytes.length);
     }
 
     public void setProgress(int size, int offset) {
