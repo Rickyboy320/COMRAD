@@ -4,6 +4,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.widget.Toast;
+
+import io.comrad.music.PlayMusic;
 import io.comrad.music.Song;
 import io.comrad.p2p.P2PActivity;
 import io.comrad.p2p.network.Node;
@@ -54,6 +56,7 @@ public class P2PMessageHandler extends Handler {
                 int offset = data.getInt(P2PMessageHandler.OFFSET);
                 byte[] song = data.getByteArray(P2PMessageHandler.SONG);
                 activity.saveMusicBytePacket(offset, song);
+
                 break;
             case P2PMessageHandler.MESSAGE_SONG_FINISHED:
                 activity.sendByteArrayToPlayMusic();

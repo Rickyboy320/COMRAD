@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import io.comrad.R;
 import android.widget.ImageButton;
+import android.widget.ProgressBar;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -124,5 +125,12 @@ public class PlayMusic extends Fragment  {
     public void addSongBytes(byte[] songBytes) {
         currentBytes = songBytes;
         playMp3Bytes(currentBytes);
+    }
+
+    public void incrementProgress(int size, int diff) {
+        ProgressBar progressbar = getActivity().findViewById(R.id.progressBar);
+        double percentage =  (float)diff / (float)size * 100;
+        System.out.println("LALALALAL" + diff + " " + size);
+        progressbar.setProgress((int) Math.round(percentage));
     }
 }

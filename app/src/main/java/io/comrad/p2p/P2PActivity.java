@@ -352,6 +352,12 @@ public class P2PActivity extends FragmentActivity  {
     public void saveMusicBytePacket(int offset, byte[] songBytes) {
         System.out.println("id: " + offset);
         System.arraycopy(songBytes, 0, this.songBuffer, offset, songBytes.length);
+        setProgress(this.songBuffer.length, offset);
+    }
+
+    public void setProgress(int size, int offset) {
+        PlayMusic fragment = (PlayMusic) getSupportFragmentManager().findFragmentById(R.id.PlayMusic);
+        fragment.incrementProgress(size, offset);
     }
 
     @Override
