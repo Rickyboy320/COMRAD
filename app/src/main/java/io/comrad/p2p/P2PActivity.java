@@ -158,7 +158,7 @@ public class P2PActivity extends FragmentActivity  {
                 monitor = adhocMonitorBinder.getService();
 
                 /* Starts the monitor. */
-                monitor.startMonitor(handler.getNetwork().getSelfMac(), "145.109.45.90");
+                monitor.startMonitor(handler.getNetwork().getSelfMac(), "145.109.55.63");
 
                 handler.onMonitorEnable(monitor);
             }
