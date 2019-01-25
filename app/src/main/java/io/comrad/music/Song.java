@@ -1,9 +1,12 @@
 package io.comrad.music;
 
+import android.media.MediaExtractor;
+import android.media.MediaFormat;
 import android.os.Parcel;
 import android.os.Parcelable;
+import io.comrad.p2p.messages.P2PMessageHandler;
 
-import java.io.Serializable;
+import java.io.*;
 
 public class Song implements Parcelable, Serializable {
     private String songTitle;
@@ -49,6 +52,20 @@ public class Song implements Parcelable, Serializable {
         }
     };
 
+    public SongMetaData getSongMetaData() {
+        MediaExtractor extractor = new MediaExtractor();
+        try {
+            extractor.setDataSource(this.getSongLocation());
+            MediaFormat format = extractor.getTrackFormat(0);
+            SongMetaData metaData = new SongMetaData(format.getInteger(MediaFormat.KEY_SAMPLE_RATE), format.getInteger(MediaFormat.KEY_CHANNEL_COUNT));
+
+            return metaData;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
 
     @Override
     public String toString() {
@@ -79,5 +96,38 @@ public class Song implements Parcelable, Serializable {
         }
 
         return false;
+    }
+
+    public InputStream getStream(P2PMessageHandler handler) {
+        File songFile = new File(this.getSongLocation());
+        InputStream inputStream;
+
+        try {
+            inputStream = new FileInputStream(songFile);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            handler.sendToastToUI("Could not find file.");
+            return null;
+        }
+
+        return inputStream;
+    }
+
+    public class SongMetaData implements Serializable {
+        private int sampleRate;
+        private int numChannels;
+
+        public SongMetaData(int sampleRate, int numChannels) {
+            this.sampleRate = sampleRate;
+            this.numChannels = numChannels;
+        }
+
+        public int getSampleRate() {
+            return sampleRate;
+        }
+
+        public int getNumChannels() {
+            return numChannels;
+        }
     }
 }

@@ -4,8 +4,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.widget.Toast;
-
-import io.comrad.music.PlayMusic;
 import io.comrad.music.Song;
 import io.comrad.music.SongPacket;
 import io.comrad.p2p.P2PActivity;
@@ -22,15 +20,13 @@ public class P2PMessageHandler extends Handler {
     public static final int MESSAGE_TOAST = 1;
     public static final int MESSAGE_SONG = 2;
     public static final int UPDATE_GRAPH = 3;
-    public static final int MESSAGE_SONG_SIZE = 4;
-    public static final int MESSAGE_SONG_FINISHED = 5;
+    public static final int MESSAGE_SONG_FINISHED = 4;
 
     public static final String TOAST = "Toast";
     public static final String OFFSET = "Song Offset";
     public static final String SONG = "Song";
     public static final String REQUEST_ID = "Song Request Id";
     public static final String NODES = "Nodes";
-    public static final String SONG_SIZE = "Song Size";
 
     private final P2PActivity activity;
     private P2PNetworkHandler networkHandler;
@@ -62,7 +58,7 @@ public class P2PMessageHandler extends Handler {
                 break;
             case P2PMessageHandler.MESSAGE_SONG_FINISHED:
                 id = msg.getData().getInt(P2PMessageHandler.REQUEST_ID);
-                activity.sendByteArrayToPlayMusic(id);
+                activity.finishSong(id);
                 break;
             case P2PMessageHandler.UPDATE_GRAPH:
                 activity.refreshPlaylist((Set<Node>) msg.getData().getSerializable(P2PMessageHandler.NODES));
@@ -115,4 +111,5 @@ public class P2PMessageHandler extends Handler {
     public void setIdle(boolean idle) {
         this.activity.setIdle(idle);
     }
+
 }

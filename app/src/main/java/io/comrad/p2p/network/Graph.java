@@ -2,14 +2,12 @@
 package io.comrad.p2p.network;
 
 import io.comrad.music.Song;
+import io.comrad.p2p.messages.P2PMessageHandler;
 
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import io.comrad.music.Song;
-import io.comrad.p2p.messages.P2PMessageHandler;
 
 public class Graph implements Serializable {
     private Node selfNode;
@@ -145,6 +143,12 @@ public class Graph implements Serializable {
     }
 
     public Node getNext(String macTarget) {
+        /* Link has fallen away, we do not know where to send it to. */
+        if(!hasNode(macTarget))
+        {
+            return null;
+        }
+
         Node target = getNode(macTarget);
         Dijkstra.Path path = getPath(target);
         if(path == null)

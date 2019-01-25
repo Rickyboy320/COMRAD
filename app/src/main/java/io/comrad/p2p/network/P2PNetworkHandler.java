@@ -5,6 +5,7 @@ import io.comrad.p2p.P2PActivity;
 import io.comrad.p2p.P2PConnectedThread;
 import io.comrad.p2p.messages.MessageType;
 import io.comrad.p2p.messages.P2PMessage;
+import io.comrad.p2p.messages.P2PMessageHandler;
 import nl.erlkdev.adhocmonitor.AdhocMonitorService;
 import nl.erlkdev.adhocmonitor.NodeStatus;
 
@@ -12,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import io.comrad.p2p.messages.P2PMessageHandler;
 
 public class P2PNetworkHandler {
     private static int COUNTER = 0;
@@ -76,7 +76,7 @@ public class P2PNetworkHandler {
 
             if (closestMac == null) {
                 //TODO: Handle special case where there's no more path.
-                System.out.println("Next node was null");
+                System.out.println("Next node was null, could not continue sending.");
             } else {
                 this.peerThreads.get(closestMac.getMac()).write(p2pMessage);
             }
@@ -93,10 +93,6 @@ public class P2PNetworkHandler {
         for(P2PConnectedThread thread : this.peerThreads.values()) {
             thread.write(message);
         }
-    }
-
-    public byte[] getByteArrayFromSong(Song song) {
-        return activity.getByteArrayFromSong(song);
     }
 
     public void broadcastExcluding(P2PMessage message, String address) {

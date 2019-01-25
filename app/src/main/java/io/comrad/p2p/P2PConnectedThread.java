@@ -2,11 +2,16 @@ package io.comrad.p2p;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+
 import io.comrad.p2p.messages.P2PMessage;
 import io.comrad.p2p.messages.P2PMessageHandler;
 import nl.erlkdev.adhocmonitor.AdhocMonitorService;
-
-import java.io.*;
 
 public class P2PConnectedThread extends Thread {
 
@@ -47,6 +52,12 @@ public class P2PConnectedThread extends Thread {
     }
 
     public void run() {
+        if(input == null || output == null) {
+            handler.sendToastToUI("Failed to setup proper connection.");
+            this.close();
+            return;
+        }
+
         while (true) {
             try {
                 P2PMessage message = P2PMessage.readMessage(input);
@@ -64,6 +75,7 @@ public class P2PConnectedThread extends Thread {
     public void write(P2PMessage message) {
         try {
             byte[] stream = message.toByteArray();
+            System.out.println("Size of to send:"  + stream.length);
             output.writeObject(message);
 
             AdhocMonitorService monitor = handler.getNetwork().getMonitor();
@@ -72,6 +84,7 @@ public class P2PConnectedThread extends Thread {
         } catch (IOException e) {
             handler.sendToastToUI("Error occurred when sending data.");
             e.printStackTrace();
+            this.close();
         }
     }
 
@@ -79,10 +92,16 @@ public class P2PConnectedThread extends Thread {
     public void close() {
         try {
             socket.close();
+
+            if (input != null) {
+                input.close();
+            }
+            if (output != null) {
+                output.close();
+            }
         } catch (IOException e) {
             handler.sendToastToUI("Could not close the connect socket.");
             e.printStackTrace();
-            return;
         }
 
         handler.getNetwork().removePeer(this.socket.getRemoteDevice().getAddress());
