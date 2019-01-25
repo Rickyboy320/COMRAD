@@ -151,7 +151,6 @@ public class P2PMessage implements Serializable {
                     }
                 }
 
-
                 P2PMessage msg = new P2PMessage(handler.getNetwork().getSelfMac(), this.sourceMac, MessageType.song_finished, songRequest.getRequestId());
                 handler.getNetwork().forwardMessage(msg);
             } else {

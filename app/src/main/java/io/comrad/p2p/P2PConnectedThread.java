@@ -92,13 +92,6 @@ public class P2PConnectedThread extends Thread {
     public void close() {
         try {
             socket.close();
-
-            if (input != null) {
-                input.close();
-            }
-            if (output != null) {
-                output.close();
-            }
         } catch (IOException e) {
             handler.sendToastToUI("Could not close the connect socket.");
             e.printStackTrace();
