@@ -2,18 +2,13 @@ package io.comrad.p2p;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
-
 import io.comrad.p2p.messages.P2PMessage;
 import io.comrad.p2p.messages.P2PMessageHandler;
 import nl.erlkdev.adhocmonitor.AdhocMonitorService;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class P2PWriteThread extends Thread {
 
@@ -21,7 +16,10 @@ public class P2PWriteThread extends Thread {
 
     private final BluetoothSocket socket;
     private ObjectOutputStream output;
-    private List<P2PMessage> messages = new ArrayList<>();
+
+    private List<P2PMessage> lowPriority = new ArrayList<>();
+    private List<P2PMessage> mediumPriority = new ArrayList<>();
+    private List<P2PMessage> highPriority = new ArrayList<>();
 
     public P2PWriteThread(BluetoothSocket socket, P2PMessageHandler handler) {
         this.handler = handler;
@@ -55,11 +53,21 @@ public class P2PWriteThread extends Thread {
 
         while (true) {
             try {
-                if(messages.size() == 0) { continue; }
-
                 P2PMessage message;
-                synchronized (messages) {
-                    message = messages.remove(0);
+                if(highPriority.size() > 0) {
+                    synchronized (highPriority) {
+                        message = highPriority.remove(0);
+                    }
+                } else if(mediumPriority.size() > 0) {
+                    synchronized (mediumPriority) {
+                        message = mediumPriority.remove(0);
+                    }
+                } else if(lowPriority.size() > 0) {
+                    synchronized (lowPriority) {
+                        message = lowPriority.remove(0);
+                    }
+                } else {
+                    continue;
                 }
 
                 byte[] stream = message.toByteArray();
@@ -79,8 +87,22 @@ public class P2PWriteThread extends Thread {
 
     // Call this from the activity_p2p activity to send data to the remote device.
     public void write(P2PMessage message) {
-        synchronized (messages) {
-            messages.add(message);
+        switch(message.getType().getPriority()) {
+            case LOW:
+                synchronized (lowPriority) {
+                    lowPriority.add(message);
+                }
+                break;
+            case MEDIUM:
+                synchronized (mediumPriority) {
+                    mediumPriority.add(message);
+                }
+                break;
+            case HIGH:
+                synchronized (highPriority) {
+                    highPriority.add(message);
+                }
+                break;
         }
     }
 
