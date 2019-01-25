@@ -64,16 +64,15 @@ public class PlayMusic extends Fragment  {
     public void newBufferMessage(byte[] message) {
         MediaPlayer media = new MediaPlayer();
         prepareNextMediaPlayer(message, media);
-        mediaPlayers.add(media);
     }
 
-    private boolean prepareMediaPlayer(byte[] mp3SoundByteArray, MediaPlayer mediaPlayer) {
+    private boolean prepareMediaPlayer(byte[] soundArray, MediaPlayer mediaPlayer) {
         try {
             /* create temp file that will hold byte array */
-            File tempMp3 = File.createTempFile("tmpSong" + cacheIndex++, "mp3", getActivity().getCacheDir());
-            tempMp3.deleteOnExit();
-            FileOutputStream fos = new FileOutputStream(tempMp3);
-            fos.write(mp3SoundByteArray);
+            File tempFile = File.createTempFile("tmpSong" + cacheIndex++, "", getActivity().getCacheDir());
+            tempFile.deleteOnExit();
+            FileOutputStream fos = new FileOutputStream(tempFile);
+            fos.write(soundArray);
             fos.flush();
             fos.close();
 
@@ -81,9 +80,9 @@ public class PlayMusic extends Fragment  {
             mediaPlayer.reset();
             Log.d(TAG, "!~! mediaPlayers.get(mediaPlayerIndex) has been reset!");
 
-            FileInputStream inputStream = new FileInputStream(tempMp3);
+            FileInputStream inputStream = new FileInputStream(tempFile);
 
-            mediaPlayer.setDataSource(inputStream.getFD(), 0, mp3SoundByteArray.length);
+            mediaPlayer.setDataSource(inputStream.getFD());
 
             inputStream.close();
 
@@ -94,6 +93,7 @@ public class PlayMusic extends Fragment  {
                 @Override
                 public void onCompletion(MediaPlayer mp) {
                     mediaPlayers.remove(0);
+                    mp.release();
                 }
             });
             return true;
@@ -103,18 +103,21 @@ public class PlayMusic extends Fragment  {
         return false;
     }
 
-    private void prepareNextMediaPlayer(byte[] mp3SoundByteArray, MediaPlayer mediaPlayer) {
-        boolean success = prepareMediaPlayer(mp3SoundByteArray, mediaPlayer);
+    private void prepareNextMediaPlayer(byte[] soundArray, MediaPlayer mediaPlayer) {
+        boolean success = prepareMediaPlayer(soundArray, mediaPlayer);
         if (success) {
             mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                 @Override
                 public void onPrepared(MediaPlayer mediaPlayer) {
-                    if (mediaPlayers.size() == 1) {
-                        mediaPlayers.get(0).start();
-                        return;
+                    mediaPlayers.add(mediaPlayer);
+
+                    if(mediaPlayers.size() == 1) {
+                        mediaPlayer.start();
+                    } else if(mediaPlayers.size() > 1) {
+                        mediaPlayers.get(mediaPlayers.size() - 2).setNextMediaPlayer(mediaPlayer);
                     }
-                    mediaPlayers.get(mediaPlayers.size() - 2).setNextMediaPlayer(mediaPlayer);
-//                    playButton.setImageResource(android.R.drawable.ic_media_pause);
+
+                    //                    playButton.setImageResource(android.R.drawable.ic_media_pause);
                 }
             });
         } else {
@@ -127,5 +130,15 @@ public class PlayMusic extends Fragment  {
         ProgressBar progressbar = getActivity().findViewById(R.id.progressBar);
         double percentage =  (float)diff / (float)size * 100;
         progressbar.setProgress((int) Math.round(percentage));
+    }
+
+    public void clearBuffers() {
+        System.out.println("Resetting buffers");
+        for(MediaPlayer mp : this.mediaPlayers) {
+            mp.stop();
+            mp.release();
+        }
+
+        this.mediaPlayers.clear();
     }
 }

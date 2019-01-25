@@ -314,7 +314,6 @@ public class P2PActivity extends FragmentActivity  {
                         this.saveMusicBytePacket(this.currentId, offset, packet);
                         offset += read;
                     }
-                    this.saveMusicBytePacket(this.currentId, 0, convertStreamToByteArray(song.getStream(this.handler)));
                     this.finishSong(this.currentId);
                 } catch(IOException e) {
                     e.printStackTrace();
@@ -337,18 +336,6 @@ public class P2PActivity extends FragmentActivity  {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MUSIC_PERMISSION);
             }
         }
-    }
-
-    public static byte[] convertStreamToByteArray(InputStream is) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        byte[] buff = new byte[10240];
-        int i;
-        while ((i = is.read(buff, 0, buff.length)) > 0) {
-            baos.write(buff, 0, i);
-        }
-
-        return baos.toByteArray();
-
     }
 
     public void setIdle(boolean idle)
@@ -377,10 +364,10 @@ public class P2PActivity extends FragmentActivity  {
 
     public void saveMusicBytePacket(int id, int offset, byte[] songBytes) {
         System.out.println("id: " + id);
-        //if (id != this.currentId) {
-        //    return;
-        //}
         PlayMusic fragment = (PlayMusic) getSupportFragmentManager().findFragmentById(R.id.PlayMusic);
+        if (offset == 0) {
+            fragment.clearBuffers();
+        }
         fragment.newBufferMessage(songBytes);
         setProgress(this.currentSong.getSongSize(), offset + songBytes.length);
     }

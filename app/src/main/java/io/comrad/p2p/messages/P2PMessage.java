@@ -175,7 +175,9 @@ public class P2PMessage implements Serializable {
     public static P2PMessage readMessage(ObjectInputStream byteStream) throws IOException {
         P2PMessage msg = null;
 
+
         try {
+            System.out.println(byteStream.available());
             msg = (P2PMessage) byteStream.readObject();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
