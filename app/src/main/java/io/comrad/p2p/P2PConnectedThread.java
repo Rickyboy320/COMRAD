@@ -64,6 +64,7 @@ public class P2PConnectedThread extends Thread {
     public void write(P2PMessage message) {
         try {
             byte[] stream = message.toByteArray();
+            System.out.println("Size of to send:"  + stream.length);
             output.writeObject(message);
 
             AdhocMonitorService monitor = handler.getNetwork().getMonitor();
@@ -72,6 +73,7 @@ public class P2PConnectedThread extends Thread {
         } catch (IOException e) {
             handler.sendToastToUI("Error occurred when sending data.");
             e.printStackTrace();
+            this.close();
         }
     }
 

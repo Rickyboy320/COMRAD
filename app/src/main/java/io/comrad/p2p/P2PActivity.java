@@ -29,11 +29,15 @@ import io.comrad.p2p.network.Node;
 import nl.erlkdev.adhocmonitor.AdhocMonitorBinder;
 import nl.erlkdev.adhocmonitor.AdhocMonitorService;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.UUID;
+
+import static io.comrad.music.SongPacket.SONG_PACKET_SIZE;
 
 public class P2PActivity extends FragmentActivity  {
     public final static String SERVICE_NAME = "COMRAD";
@@ -53,7 +57,7 @@ public class P2PActivity extends FragmentActivity  {
     private ArrayList<Song> ownSongs = new ArrayList<>();
 
     private int currentId = 0;
-    private byte[] songBuffer;
+    private Song currentSong;
 
     private AdhocMonitorService monitor;
 
@@ -292,13 +296,30 @@ public class P2PActivity extends FragmentActivity  {
             }
 
             this.currentId++;
+            this.currentSong = song;
 
             System.out.println(song.getSongSize());
-            this.setSongSize(song.getSongSize());
 
             if(node.equals(this.handler.getNetwork().getGraph().getSelfNode())) {
-                this.saveMusicBytePacket(this.currentId, 0, this.getByteArrayFromSong(song));
-                this.sendByteArrayToPlayMusic(this.currentId);
+                InputStream stream = song.getStream(this.handler);
+                try {
+                    int offset = 0;
+                    while(stream.available() != 0) {
+                        byte[] packet = new byte[SONG_PACKET_SIZE];
+                        int read = stream.read(packet, 0, SONG_PACKET_SIZE);
+                        if(read == -1) {
+                            break;
+                        }
+
+                        this.saveMusicBytePacket(this.currentId, offset, packet);
+                        offset += read;
+                    }
+                    this.finishSong(this.currentId);
+                } catch(IOException e) {
+                    e.printStackTrace();
+                    this.handler.sendToastToUI("Could not play " + song.getSongTitle() + ".");
+                    return;
+                }
             } else {
                 requestStart = System.currentTimeMillis();
                 this.handler.getNetwork().forwardMessage(new P2PMessage(this.handler.getNetwork().getSelfMac(), node.getMac(), MessageType.request_song, new SongRequest(this.currentId, song)));
@@ -317,38 +338,6 @@ public class P2PActivity extends FragmentActivity  {
         }
     }
 
-    public static byte[] convertStreamToByteArray(InputStream is) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        byte[] buff = new byte[10240];
-        int i;
-        while ((i = is.read(buff, 0, buff.length)) > 0) {
-            baos.write(buff, 0, i);
-        }
-
-        return baos.toByteArray();
-    }
-
-    public byte[] getByteArrayFromSong(Song song) {
-        File songFile = new File(song.getSongLocation());
-        InputStream inputStream;
-
-        try {
-            inputStream = new FileInputStream(songFile);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            this.handler.sendToastToUI("Could not find file.");
-            return null;
-        }
-
-        try {
-            return convertStreamToByteArray(inputStream);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-
     public void setIdle(boolean idle)
     {
         System.out.println("Setting idle state: " + idle);
@@ -361,11 +350,7 @@ public class P2PActivity extends FragmentActivity  {
         }
     }
 
-    public void setSongSize(int size) {
-        this.songBuffer = new byte[size];
-    }
-
-    public void sendByteArrayToPlayMusic(int id) {
+    public void finishSong(int id) {
         if(id != currentId) {
             return;
         }
@@ -375,19 +360,16 @@ public class P2PActivity extends FragmentActivity  {
         }
 
         requestStart = 0;
-        PlayMusic fragment = (PlayMusic) getSupportFragmentManager().findFragmentById(R.id.PlayMusic);
-        fragment.addSongBytes(this.songBuffer);
     }
 
     public void saveMusicBytePacket(int id, int offset, byte[] songBytes) {
         System.out.println("id: " + id);
-        if (id != this.currentId) {
-            return;
+        PlayMusic fragment = (PlayMusic) getSupportFragmentManager().findFragmentById(R.id.PlayMusic);
+        if (offset == 0) {
+            fragment.clearBuffers();
         }
-
-        System.out.println("offset: " + offset);
-        System.arraycopy(songBytes, 0, this.songBuffer, offset, songBytes.length);
-        setProgress(this.songBuffer.length, offset + songBytes.length);
+        fragment.newBufferMessage(songBytes);
+        setProgress(this.currentSong.getSongSize(), offset + songBytes.length);
     }
 
     public void setProgress(int size, int offset) {
