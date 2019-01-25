@@ -186,7 +186,6 @@ public class P2PMessage implements Serializable {
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
-        //TODO: IOException on closing of stream during reading.
 
         if(msg == null) {
             throw new IllegalArgumentException("Byte stream could not be converted to a message, but instead was: null");
