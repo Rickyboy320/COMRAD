@@ -115,6 +115,7 @@ public class PlayMusic extends Fragment  {
 
                     if(mediaPlayers.size() == 1) {
                         mediaPlayer.start();
+                        playButton.setImageResource(android.R.drawable.ic_media_pause);
                     } else if(mediaPlayers.size() > 1) {
                         mediaPlayers.get(mediaPlayers.size() - 2).setNextMediaPlayer(mediaPlayer);
                     }
