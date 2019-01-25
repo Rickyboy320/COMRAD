@@ -1,5 +1,10 @@
 package io.comrad.p2p.network;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import io.comrad.music.Song;
 import io.comrad.p2p.P2PActivity;
 import io.comrad.p2p.P2PConnectedThread;
@@ -8,11 +13,6 @@ import io.comrad.p2p.messages.P2PMessage;
 import io.comrad.p2p.messages.P2PMessageHandler;
 import nl.erlkdev.adhocmonitor.AdhocMonitorService;
 import nl.erlkdev.adhocmonitor.NodeStatus;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class P2PNetworkHandler {
     private static int COUNTER = 0;
@@ -72,13 +72,13 @@ public class P2PNetworkHandler {
 
     public void forwardMessage(P2PMessage p2pMessage) {
         synchronized (this.graph) {
-            Node closestMac = this.graph.getNext(p2pMessage.getDestinationMAC());
+            Node closestNode = this.graph.getNext(p2pMessage.getDestinationMAC());
 
-            if (closestMac == null) {
+            if (closestNode == null || !this.peerThreads.containsKey(closestNode.getMac())) {
                 //TODO: Handle special case where there's no more path.
                 System.out.println("Next node was null, could not continue sending.");
             } else {
-                this.peerThreads.get(closestMac.getMac()).write(p2pMessage);
+                this.peerThreads.get(closestNode.getMac()).write(p2pMessage);
             }
         }
     }

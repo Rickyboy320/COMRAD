@@ -3,11 +3,20 @@ package io.comrad.p2p;
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.*;
+import android.content.ComponentName;
+import android.content.ContentResolver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.*;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.ParcelUuid;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
@@ -16,6 +25,14 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.UUID;
+
 import io.comrad.R;
 import io.comrad.music.MusicListFragment;
 import io.comrad.music.PlayMusic;
@@ -28,14 +45,6 @@ import io.comrad.p2p.network.Graph;
 import io.comrad.p2p.network.Node;
 import nl.erlkdev.adhocmonitor.AdhocMonitorBinder;
 import nl.erlkdev.adhocmonitor.AdhocMonitorService;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Set;
-import java.util.UUID;
 
 import static io.comrad.music.SongPacket.SONG_PACKET_SIZE;
 
@@ -56,7 +65,8 @@ public class P2PActivity extends FragmentActivity  {
 
     private ArrayList<Song> ownSongs = new ArrayList<>();
 
-    private int currentId = 0;
+    private int requestId = 0;
+    private int playingId = 0;
     private Song currentSong;
 
     private AdhocMonitorService monitor;
@@ -295,7 +305,7 @@ public class P2PActivity extends FragmentActivity  {
                 throw new IllegalStateException("Song " + song + " was requested, but was not present in any of the nodes in the network.");
             }
 
-            this.currentId++;
+            this.requestId++;
             this.currentSong = song;
 
             System.out.println(song.getSongSize());
@@ -311,10 +321,10 @@ public class P2PActivity extends FragmentActivity  {
                             break;
                         }
 
-                        this.saveMusicBytePacket(this.currentId, offset, packet);
+                        this.saveMusicBytePacket(this.requestId, offset, packet);
                         offset += read;
                     }
-                    this.finishSong(this.currentId);
+                    this.finishSong(this.requestId);
                 } catch(IOException e) {
                     e.printStackTrace();
                     this.handler.sendToastToUI("Could not play " + song.getSongTitle() + ".");
@@ -322,7 +332,7 @@ public class P2PActivity extends FragmentActivity  {
                 }
             } else {
                 requestStart = System.currentTimeMillis();
-                this.handler.getNetwork().forwardMessage(new P2PMessage(this.handler.getNetwork().getSelfMac(), node.getMac(), MessageType.request_song, new SongRequest(this.currentId, song)));
+                this.handler.getNetwork().forwardMessage(new P2PMessage(this.handler.getNetwork().getSelfMac(), node.getMac(), MessageType.request_song, new SongRequest(this.requestId, song)));
             }
         }
     }
@@ -351,7 +361,7 @@ public class P2PActivity extends FragmentActivity  {
     }
 
     public void finishSong(int id) {
-        if(id != currentId) {
+        if(id != requestId) {
             return;
         }
 
@@ -367,7 +377,14 @@ public class P2PActivity extends FragmentActivity  {
         PlayMusic fragment = (PlayMusic) getSupportFragmentManager().findFragmentById(R.id.PlayMusic);
         if (offset == 0) {
             fragment.clearBuffers();
+            playingId = id;
         }
+
+        if(playingId != id) {
+            System.out.println("Plaing ID: " + playingId);
+            return;
+        }
+
         fragment.newBufferMessage(songBytes);
         setProgress(this.currentSong.getSongSize(), offset + songBytes.length);
     }

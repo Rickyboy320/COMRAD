@@ -136,6 +136,7 @@ public class P2PMessage implements Serializable {
                         SongPacket songPacket = new SongPacket(songRequest.getRequestId(), offset, packet);
                         P2PMessage msg = new P2PMessage(handler.getNetwork().getSelfMac(), this.sourceMac,
                                 MessageType.send_song, songPacket);
+                        System.out.println("Source: " + msg.sourceMac + ", Dest: " + msg.destinationMAC + " PayLoad: " + msg.payload);
                         handler.getNetwork().forwardMessage(msg);
 
                         offset += read;
