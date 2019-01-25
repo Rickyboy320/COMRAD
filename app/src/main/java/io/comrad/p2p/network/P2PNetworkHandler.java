@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import io.comrad.music.Song;
 import io.comrad.p2p.P2PActivity;
-import io.comrad.p2p.P2PConnectedThread;
+import io.comrad.p2p.P2PWriteThread;
 import io.comrad.p2p.messages.MessageType;
 import io.comrad.p2p.messages.P2PMessage;
 import io.comrad.p2p.messages.P2PMessageHandler;
@@ -20,7 +20,7 @@ public class P2PNetworkHandler {
     private final P2PActivity activity;
     private final Graph graph;
 
-    private final Map<String, P2PConnectedThread> peerThreads = new ConcurrentHashMap<>();
+    private final Map<String, P2PWriteThread> peerThreads = new ConcurrentHashMap<>();
     public final Map<String, Set<Integer>> counters = new ConcurrentHashMap<>();
 
     private AdhocMonitorService monitor;
@@ -30,7 +30,7 @@ public class P2PNetworkHandler {
         this.graph = new Graph(P2PActivity.getBluetoothMac(activity.getApplicationContext()), ownSongs, handler);
     }
 
-    public void addPeer(String mac, P2PConnectedThread thread) {
+    public void addPeer(String mac, P2PWriteThread thread) {
         this.peerThreads.put(mac, thread);
 
         if (this.monitor != null) {
@@ -65,7 +65,7 @@ public class P2PNetworkHandler {
     }
 
     public void sendMessageToPeers(P2PMessage p2pMessage) {
-        for(P2PConnectedThread thread : this.peerThreads.values()) {
+        for(P2PWriteThread thread : this.peerThreads.values()) {
             thread.write(p2pMessage);
         }
     }
@@ -84,19 +84,19 @@ public class P2PNetworkHandler {
     }
 
     public void closeAllConnections() {
-        for(P2PConnectedThread thread : this.peerThreads.values()) {
+        for(P2PWriteThread thread : this.peerThreads.values()) {
             thread.close();
         }
     }
 
     public void broadcast(P2PMessage message) {
-        for(P2PConnectedThread thread : this.peerThreads.values()) {
+        for(P2PWriteThread thread : this.peerThreads.values()) {
             thread.write(message);
         }
     }
 
     public void broadcastExcluding(P2PMessage message, String address) {
-        for(P2PConnectedThread thread : this.peerThreads.values()) {
+        for(P2PWriteThread thread : this.peerThreads.values()) {
             if(!thread.getRemoteDevice().getAddress().equalsIgnoreCase(address))
             {
                 thread.write(message);

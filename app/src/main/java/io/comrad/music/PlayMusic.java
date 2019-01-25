@@ -1,9 +1,7 @@
 package io.comrad.music;
 
-import android.media.AudioTrack;
 import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -94,7 +92,10 @@ public class PlayMusic extends Fragment  {
             mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer mp) {
-                    mediaPlayers.remove(0);
+                    if (mediaPlayers.size() > 0) {
+                        mediaPlayers.remove(0);
+                    }
+
                     mp.release();
                 }
             });
@@ -115,6 +116,7 @@ public class PlayMusic extends Fragment  {
 
                     if(mediaPlayers.size() == 1) {
                         mediaPlayer.start();
+                        playButton.setImageResource(android.R.drawable.ic_media_pause);
                     } else if(mediaPlayers.size() > 1) {
                         mediaPlayers.get(mediaPlayers.size() - 2).setNextMediaPlayer(mediaPlayer);
                     }
