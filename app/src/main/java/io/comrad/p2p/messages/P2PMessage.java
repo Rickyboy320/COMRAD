@@ -1,15 +1,20 @@
 package io.comrad.p2p.messages;
 
 import android.bluetooth.BluetoothDevice;
-import io.comrad.music.Song;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
+
 import io.comrad.music.SongPacket;
 import io.comrad.music.SongRequest;
 import io.comrad.p2p.network.Graph;
 import io.comrad.p2p.network.GraphUpdate;
-
-import java.io.*;
-import java.util.HashSet;
-import java.util.Set;
 
 import static io.comrad.music.SongPacket.SONG_PACKET_SIZE;
 
@@ -177,7 +182,6 @@ public class P2PMessage implements Serializable {
 
 
         try {
-            System.out.println(byteStream.available());
             msg = (P2PMessage) byteStream.readObject();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
