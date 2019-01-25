@@ -31,13 +31,15 @@ public class PlayMusic extends Fragment  {
 
 
     private void playCurrentSong() {
-        if (mediaPlayers.get(0).isPlaying()) {
-            mediaPlayers.get(0).pause();
-            playButton.setImageResource(android.R.drawable.ic_media_play);
+        if (mediaPlayers.size() >= 1) {
+            if (mediaPlayers.get(0).isPlaying()) {
+                mediaPlayers.get(0).pause();
+                playButton.setImageResource(android.R.drawable.ic_media_play);
 
-        } else {
-            mediaPlayers.get(0).start();
-            playButton.setImageResource(android.R.drawable.ic_media_pause);
+            } else {
+                mediaPlayers.get(0).start();
+                playButton.setImageResource(android.R.drawable.ic_media_pause);
+            }
         }
     }
 
