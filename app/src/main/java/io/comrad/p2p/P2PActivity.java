@@ -6,9 +6,6 @@ import android.bluetooth.BluetoothDevice;
 import android.content.*;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.media.AudioFormat;
-import android.media.AudioManager;
-import android.media.AudioTrack;
 import android.net.Uri;
 import android.os.*;
 import android.provider.MediaStore;
@@ -39,6 +36,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.UUID;
+
+import static io.comrad.music.SongPacket.SONG_PACKET_SIZE;
 
 public class P2PActivity extends FragmentActivity  {
     public final static String SERVICE_NAME = "COMRAD";
@@ -302,7 +301,19 @@ public class P2PActivity extends FragmentActivity  {
             System.out.println(song.getSongSize());
 
             if(node.equals(this.handler.getNetwork().getGraph().getSelfNode())) {
+                InputStream stream = song.getStream(this.handler);
                 try {
+                    int offset = 0;
+                    while(stream.available() != 0) {
+                        byte[] packet = new byte[SONG_PACKET_SIZE];
+                        int read = stream.read(packet, 0, SONG_PACKET_SIZE);
+                        if(read == -1) {
+                            break;
+                        }
+
+                        this.saveMusicBytePacket(this.currentId, offset, packet);
+                        offset += read;
+                    }
                     this.saveMusicBytePacket(this.currentId, 0, convertStreamToByteArray(song.getStream(this.handler)));
                     this.finishSong(this.currentId);
                 } catch(IOException e) {
@@ -366,9 +377,9 @@ public class P2PActivity extends FragmentActivity  {
 
     public void saveMusicBytePacket(int id, int offset, byte[] songBytes) {
         System.out.println("id: " + id);
-        if (id != this.currentId) {
-            return;
-        }
+        //if (id != this.currentId) {
+        //    return;
+        //}
         PlayMusic fragment = (PlayMusic) getSupportFragmentManager().findFragmentById(R.id.PlayMusic);
         fragment.newBufferMessage(songBytes);
         setProgress(this.currentSong.getSongSize(), offset + songBytes.length);
