@@ -120,8 +120,6 @@ public class PlayMusic extends Fragment  {
                     } else if(mediaPlayers.size() > 1) {
                         mediaPlayers.get(mediaPlayers.size() - 2).setNextMediaPlayer(mediaPlayer);
                     }
-
-                    //                    playButton.setImageResource(android.R.drawable.ic_media_pause);
                 }
             });
         } else {
