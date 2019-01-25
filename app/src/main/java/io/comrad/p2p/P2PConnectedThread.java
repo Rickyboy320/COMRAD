@@ -102,7 +102,6 @@ public class P2PConnectedThread extends Thread {
         } catch (IOException e) {
             handler.sendToastToUI("Could not close the connect socket.");
             e.printStackTrace();
-            return;
         }
 
         handler.getNetwork().removePeer(this.socket.getRemoteDevice().getAddress());
