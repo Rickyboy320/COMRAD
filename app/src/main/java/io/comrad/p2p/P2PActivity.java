@@ -371,12 +371,13 @@ public class P2PActivity extends FragmentActivity  {
         System.out.println("id: " + id);
         PlayMusic fragment = (PlayMusic) getSupportFragmentManager().findFragmentById(R.id.PlayMusic);
         if (offset == 0) {
+            System.out.println("Time taken to play song: " + (System.currentTimeMillis() - requestStart));
             fragment.clearBuffers();
             playingId = id;
         }
 
         if(playingId != id) {
-            System.out.println("Plaing ID: " + playingId);
+            System.out.println("Playing ID: " + playingId);
             return;
         }
 
