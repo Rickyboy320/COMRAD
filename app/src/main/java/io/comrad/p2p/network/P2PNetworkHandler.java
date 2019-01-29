@@ -1,10 +1,5 @@
 package io.comrad.p2p.network;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
 import io.comrad.music.Song;
 import io.comrad.p2p.P2PActivity;
 import io.comrad.p2p.P2PWriteThread;
@@ -13,6 +8,11 @@ import io.comrad.p2p.messages.P2PMessage;
 import io.comrad.p2p.messages.P2PMessageHandler;
 import nl.erlkdev.adhocmonitor.AdhocMonitorService;
 import nl.erlkdev.adhocmonitor.NodeStatus;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class P2PNetworkHandler {
     private static int COUNTER = 0;
@@ -101,6 +101,12 @@ public class P2PNetworkHandler {
             {
                 thread.write(message);
             }
+        }
+    }
+
+    public void clearPendingSongPackets(String destinationMAC) {
+        for(P2PWriteThread thread : this.peerThreads.values()) {
+            thread.clearPendingSongPackets(destinationMAC);
         }
     }
 

@@ -1,20 +1,14 @@
 package io.comrad.p2p.messages;
 
 import android.bluetooth.BluetoothDevice;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
-
 import io.comrad.music.SongPacket;
 import io.comrad.music.SongRequest;
 import io.comrad.p2p.network.Graph;
 import io.comrad.p2p.network.GraphUpdate;
+
+import java.io.*;
+import java.util.HashSet;
+import java.util.Set;
 
 import static io.comrad.music.SongPacket.SONG_PACKET_SIZE;
 
@@ -121,6 +115,8 @@ public class P2PMessage implements Serializable {
                 SongRequest songRequest = (SongRequest) this.payload;
 
                 InputStream stream = songRequest.getSong().getStream(handler);
+
+                handler.getNetwork().clearPendingSongPackets(this.getSourceMac());
 
                 /* Send songs in bursts to the receiver. */
                 try {

@@ -111,5 +111,4 @@ public class P2PMessageHandler extends Handler {
     public void setIdle(boolean idle) {
         this.activity.setIdle(idle);
     }
-
 }

@@ -2,6 +2,7 @@ package io.comrad.p2p;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import io.comrad.p2p.messages.MessageType;
 import io.comrad.p2p.messages.P2PMessage;
 import io.comrad.p2p.messages.P2PMessageHandler;
 import nl.erlkdev.adhocmonitor.AdhocMonitorService;
@@ -104,6 +105,48 @@ public class P2PWriteThread extends Thread {
                 }
                 break;
         }
+    }
+
+    public void clearPendingSongPackets(String destination)
+    {
+        List<P2PMessage> remove = new ArrayList<>();
+        switch(MessageType.send_song.getPriority()) {
+            case LOW:
+                synchronized (lowPriority) {
+                    for(P2PMessage msg : lowPriority) {
+                        if(msg.getType() == MessageType.send_song && msg.getDestinationMAC().equalsIgnoreCase(destination)) {
+                            remove.add(msg);
+                        }
+                    }
+
+                    lowPriority.removeAll(remove);
+                }
+                break;
+            case MEDIUM:
+                synchronized (mediumPriority) {
+                    for(P2PMessage msg : mediumPriority) {
+                        if(msg.getType() == MessageType.send_song && msg.getDestinationMAC().equalsIgnoreCase(destination)) {
+                            remove.add(msg);
+                        }
+                    }
+
+                    mediumPriority.removeAll(remove);
+                }
+                break;
+            case HIGH:
+                synchronized (highPriority) {
+                    for(P2PMessage msg : highPriority) {
+                        if(msg.getType() == MessageType.send_song && msg.getDestinationMAC().equalsIgnoreCase(destination)) {
+                            remove.add(msg);
+                        }
+                    }
+
+                    highPriority.removeAll(remove);
+                }
+                break;
+        }
+
+
     }
 
     // Call this method from the activity_p2p activity to shut down the connection.

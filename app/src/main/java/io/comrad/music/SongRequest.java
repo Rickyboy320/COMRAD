@@ -15,4 +15,7 @@ public class SongRequest implements Serializable {
     public int getRequestId() { return this.requestId; }
 
     public Song getSong() { return this.song; }
+
+    @Override
+    public String toString() { return this.requestId + ": " + this.song.toString(); }
 }
