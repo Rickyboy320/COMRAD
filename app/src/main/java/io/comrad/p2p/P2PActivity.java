@@ -3,20 +3,11 @@ package io.comrad.p2p;
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.ComponentName;
-import android.content.ContentResolver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.ServiceConnection;
+import android.content.*;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Build;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.IBinder;
-import android.os.ParcelUuid;
+import android.os.*;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
@@ -25,14 +16,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Set;
-import java.util.UUID;
-
 import io.comrad.R;
 import io.comrad.music.MusicListFragment;
 import io.comrad.music.PlayMusic;
@@ -45,6 +28,13 @@ import io.comrad.p2p.network.Graph;
 import io.comrad.p2p.network.Node;
 import nl.erlkdev.adhocmonitor.AdhocMonitorBinder;
 import nl.erlkdev.adhocmonitor.AdhocMonitorService;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.UUID;
 
 import static io.comrad.music.SongPacket.SONG_PACKET_SIZE;
 
@@ -328,7 +318,12 @@ public class P2PActivity extends FragmentActivity  {
                 } catch(IOException e) {
                     e.printStackTrace();
                     this.handler.sendToastToUI("Could not play " + song.getSongTitle() + ".");
-                    return;
+                } finally {
+                    try {
+                        stream.close();
+                    } catch(IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             } else {
                 requestStart = System.currentTimeMillis();
