@@ -10,13 +10,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
-import io.comrad.R;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+
+import io.comrad.R;
 
 import static android.content.ContentValues.TAG;
 
@@ -128,7 +129,7 @@ public class PlayMusic extends Fragment  {
     }
 
     public void incrementProgress(int size, int diff) {
-        System.out.println("Progress")
+        System.out.println("Progress");
         ProgressBar progressbar = getActivity().findViewById(R.id.progressBar);
         double percentage =  (float)diff / (float)size * 100;
         progressbar.setProgress((int) Math.round(percentage));
