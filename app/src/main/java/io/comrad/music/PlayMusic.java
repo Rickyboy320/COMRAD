@@ -10,7 +10,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
-import io.comrad.R;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -18,11 +17,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import io.comrad.R;
+
 import static android.content.ContentValues.TAG;
 
 
 public class PlayMusic extends Fragment  {
     private ImageButton playButton;
+
     private ArrayList<MediaPlayer> mediaPlayers = new ArrayList<>();
 
     private void playCurrentSong() {
@@ -86,10 +88,11 @@ public class PlayMusic extends Fragment  {
 
             Log.d(TAG, "!~! mediaPlayers.get(mediaPlayerIndex) source has been set!");
 
-            mediaPlayer.prepareAsync();
             mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer mp) {
+                    System.out.println("Cleaning up mp: " + mp);
+                    System.out.println("Current mp list: " + mediaPlayers);
                     mp.stop();
                     mp.release();
 
@@ -98,6 +101,8 @@ public class PlayMusic extends Fragment  {
                     }
                 }
             });
+
+            mediaPlayer.prepareAsync();
             return true;
         } catch (IOException ex) {
             ex.printStackTrace();
