@@ -1,13 +1,14 @@
 
 package io.comrad.p2p.network;
 
-import io.comrad.music.Song;
-import io.comrad.p2p.messages.P2PMessageHandler;
-
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import io.comrad.music.Song;
+import io.comrad.p2p.messages.P2PMessageHandler;
 
 public class Graph implements Serializable {
     private Node selfNode;
@@ -190,5 +191,10 @@ public class Graph implements Serializable {
     @Override
     public String toString() {
         return "Nodes: " + this.nodes + ", Edges: " + this.edges;
+    }
+
+    @Override
+    public Graph clone() {
+        return new Graph(this.selfNode.getMac(), new HashSet<>(nodes), new HashSet<>(edges), new ArrayList<>(this.selfNode.getPlaylist()), this.handler);
     }
 }
