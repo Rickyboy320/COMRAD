@@ -10,14 +10,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
+import io.comrad.R;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-
-import io.comrad.R;
 
 import static android.content.ContentValues.TAG;
 
@@ -67,7 +66,7 @@ public class PlayMusic extends Fragment  {
     private boolean prepareMediaPlayer(byte[] soundArray, MediaPlayer mediaPlayer) {
         try {
             /* create temp file that will hold byte array */
-            File tempFile = File.createTempFile("tmpSong", null, getActivity().getCacheDir());
+            File tempFile = File.createTempFile("tmpSong", ".sng", getActivity().getCacheDir());
             System.out.println("Creating file: " + tempFile.getAbsolutePath());
             tempFile.deleteOnExit();
             FileOutputStream fos = new FileOutputStream(tempFile);
@@ -91,12 +90,12 @@ public class PlayMusic extends Fragment  {
             mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer mp) {
-                    if (mediaPlayers.size() > 0) {
-                        mediaPlayers.remove(0);
-                    }
-
                     mp.stop();
                     mp.release();
+
+                    if (mediaPlayers.size() > 0) {
+                        mediaPlayers.remove(mp);
+                    }
                 }
             });
             return true;
@@ -143,5 +142,15 @@ public class PlayMusic extends Fragment  {
         }
 
         this.mediaPlayers.clear();
+
+        File dir = getActivity().getCacheDir();
+        for(File file : dir.listFiles()) {
+            if(file.getName().endsWith(".sng")) {
+                boolean deleted = file.delete();
+                if(!deleted) {
+                    System.out.println("Could not delete: " + file.getName());
+                }
+            }
+        }
     }
 }
