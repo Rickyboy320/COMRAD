@@ -226,15 +226,6 @@ public class P2PActivity extends FragmentActivity  {
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
 
-        Button showGraph = findViewById(R.id.showGraph);
-        showGraph.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                synchronized (handler.getNetwork().getGraph()) {
-                    System.out.println(handler.getNetwork().getGraph());
-                }
-            }
-        });
-
         if (bluetoothAdapter.isEnabled()) {
             enableBluetoothServices();
         }
