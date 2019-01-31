@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 
 G = nx.Graph(layout='spectral_layout')
 
-nodes = ["Samsung \nS7", "Samsung \nS5 Mini", "Samsung \nS3 Neo"]
-edges = [("Samsung \nS7", "Samsung \nS5 Mini"),  ("Samsung \nS5 Mini", "Samsung \nS3 Neo")]
+nodes = ["   Samsung \nS7", "Samsung \nS5 Mini", "Samsung \nS3 Neo"]
+edges = [("   Samsung \nS7", "Samsung \nS5 Mini"),  ("Samsung \nS5 Mini", "Samsung \nS3 Neo")]
 # nx.drawing.layout("spectral_layout")
 
 for node in nodes:
@@ -15,7 +15,9 @@ for edge in edges:
     G.add_edge(edge[0], edge[1])
 
 nx.draw_spring(G, with_labels=True, font_weight='bold')
-plt.savefig("test_network.png")
+l,r = plt.xlim()
+plt.xlim(l-2,r+2)
+plt.savefig("test_network.pdf", format="pdf")
 
 plt.clf()
 

@@ -155,7 +155,9 @@ for key in packet:
 
 plt.plot(x, y_play, label="Time until playing")
 plt.plot(x, y_full, label="Full stream")
-plt.title("Playing and full transfer speed vs packet size (Mean over 3 runs)")
+plt.scatter(x, y_play)
+plt.scatter(x, y_full)
+plt.title("Playing and full transfer speed vs packet size\n 6.29 MB audio file duration 4 min 34 seconds(Mean over 3 runs)")
 plt.xlabel('Packet size in bytes')
 plt.ylabel('Time from request to playing and full transfer in milliseconds')
 # ax.legend(loc=2)
