@@ -2,14 +2,19 @@ package io.comrad.p2p;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
+
 import io.comrad.p2p.messages.MessageType;
 import io.comrad.p2p.messages.P2PMessage;
 import io.comrad.p2p.messages.P2PMessageHandler;
 import nl.erlkdev.adhocmonitor.AdhocMonitorService;
-
-import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
 
 public class P2PWriteThread extends Thread {
 
@@ -186,7 +191,7 @@ public class P2PWriteThread extends Thread {
         }
 
         public void run() {
-            if(output == null) {
+            if(input == null) {
                 handler.sendToastToUI("Failed to setup proper connection.");
                 close();
                 return;

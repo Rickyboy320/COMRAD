@@ -24,6 +24,7 @@ import static android.content.ContentValues.TAG;
 
 public class PlayMusic extends Fragment  {
     private ImageButton playButton;
+
     private ArrayList<MediaPlayer> mediaPlayers = new ArrayList<>();
 
     private void playCurrentSong() {
@@ -67,7 +68,7 @@ public class PlayMusic extends Fragment  {
     private boolean prepareMediaPlayer(byte[] soundArray, MediaPlayer mediaPlayer) {
         try {
             /* create temp file that will hold byte array */
-            File tempFile = File.createTempFile("tmpSong", null, getActivity().getCacheDir());
+            File tempFile = File.createTempFile("tmpSong", ".sng", getActivity().getCacheDir());
             System.out.println("Creating file: " + tempFile.getAbsolutePath());
             tempFile.deleteOnExit();
             FileOutputStream fos = new FileOutputStream(tempFile);
@@ -87,18 +88,21 @@ public class PlayMusic extends Fragment  {
 
             Log.d(TAG, "!~! mediaPlayers.get(mediaPlayerIndex) source has been set!");
 
-            mediaPlayer.prepareAsync();
             mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer mp) {
-                    if (mediaPlayers.size() > 0) {
-                        mediaPlayers.remove(0);
-                    }
-
+                    System.out.println("Cleaning up mp: " + mp);
+                    System.out.println("Current mp list: " + mediaPlayers);
                     mp.stop();
                     mp.release();
+
+                    if (mediaPlayers.size() > 0) {
+                        mediaPlayers.remove(mp);
+                    }
                 }
             });
+
+            mediaPlayer.prepareAsync();
             return true;
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -143,5 +147,15 @@ public class PlayMusic extends Fragment  {
         }
 
         this.mediaPlayers.clear();
+
+        File dir = getActivity().getCacheDir();
+        for(File file : dir.listFiles()) {
+            if(file.getName().endsWith(".sng")) {
+                boolean deleted = file.delete();
+                if(!deleted) {
+                    System.out.println("Could not delete: " + file.getName());
+                }
+            }
+        }
     }
 }

@@ -4,16 +4,17 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
+
 import io.comrad.music.Song;
 import io.comrad.music.SongPacket;
 import io.comrad.p2p.P2PActivity;
 import io.comrad.p2p.network.Node;
 import io.comrad.p2p.network.P2PNetworkHandler;
 import nl.erlkdev.adhocmonitor.AdhocMonitorService;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
 
 public class P2PMessageHandler extends Handler {
 
@@ -47,9 +48,11 @@ public class P2PMessageHandler extends Handler {
     public void handleMessage(Message msg) {
         switch (msg.what) {
             case P2PMessageHandler.MESSAGE_TOAST:
+                System.out.println("Toast");
                 Toast.makeText(activity.getApplicationContext(), msg.getData().getString(P2PMessageHandler.TOAST), Toast.LENGTH_SHORT).show();
                 break;
             case P2PMessageHandler.MESSAGE_SONG:
+                System.out.println("Message song");
                 Bundle data = msg.getData();
                 int id = data.getInt(P2PMessageHandler.REQUEST_ID);
                 int offset = data.getInt(P2PMessageHandler.OFFSET);
@@ -57,16 +60,19 @@ public class P2PMessageHandler extends Handler {
                 activity.saveMusicBytePacket(id, offset, song);
                 break;
             case P2PMessageHandler.MESSAGE_SONG_FINISHED:
+                System.out.println("Finishing song");
                 id = msg.getData().getInt(P2PMessageHandler.REQUEST_ID);
                 activity.finishSong(id);
                 break;
             case P2PMessageHandler.UPDATE_GRAPH:
+                System.out.println("Updating graph");
                 activity.refreshPlaylist((Set<Node>) msg.getData().getSerializable(P2PMessageHandler.NODES));
                 break;
         }
     }
 
     public void sendToastToUI(String message) {
+        System.out.println("Prepping toast: " + message);
         Message toast = this.obtainMessage(P2PMessageHandler.MESSAGE_TOAST);
         Bundle bundle = new Bundle();
         bundle.putString(P2PMessageHandler.TOAST, message);
